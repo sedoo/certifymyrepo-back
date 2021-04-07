@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<!-- 
+	1. copy this file in ./src/main/resources
+	2. add in application.yml the property logging.file: ../logs/myApp.log
+	 if you use the following directory tree
+		myApp
+		|_logs
+		|_services
+			|_myApp.jar
+	 -->
+    
+    <property name="LOG_FILE"
+        value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}spring.log}" />
+    
+    <!-- 
+    The rollover period is inferred from the value of this property.
+    A monthly rollover is specified with this pattern.
+    Pattern without .gz extension to disable the default compression
+    -->
+    <property name="ROLLING_FILE_NAME_PATTERN" value="${LOG_FILE}.%d{yyyy-MM}.%i" />
+    
+    <!-- 
+    The maxFileSize option can be specified in bytes, kilobytes, megabytes or gigabytes by suffixing a numeric value with KB, MB and respectively GB. 
+    For example, 5000000, 5000KB, 5MB and 2GB are all valid values, with the first three being equivalent. 
+    -->
+    <property name="LOG_FILE_MAX_SIZE" value="5MB" />
+    
+    <!-- Controls the maximum number of archive files to keep, asynchronously deleting older files. 
+    As we specified monthly rollover, and set maxHistory to 6, then 6 months worth of archives files will be kept with files older than 6 months deleted. -->
+    <property name="LOG_FILE_MAX_HISTORY" value="6" />
+    
+    <!-- 
+    The optional totalSizeCap property controls the total size of all archive files. 
+    Oldest archives are deleted asynchronously when the total size cap is exceeded. 
+    The totalSizeCap property requires maxHistory property to be set as well.
+    Moreover, the "max history" restriction is always applied first and the "total size cap" restriction applied second. 
+    -->
+    <property name="LOG_TOTAL_SIZE_CAP" value="50MB" />
+    
+    <!-- Import default spring boot logback appender -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    
+    <!-- Spring boot application used as service (service myApp start) must disable console appender on production environment -->
+    <springProfile name="prod">
+	    <root level="INFO">
+	        <appender-ref ref="FILE" />
+	    </root>
+  	</springProfile>
+    <springProfile name="!prod">
+	    <root level="INFO">
+	        <appender-ref ref="CONSOLE" />
+	    </root>
+  	</springProfile>
+
+</configuration>

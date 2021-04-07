@@ -1,0 +1,138 @@
+{
+	"orcid-identifier": {
+		"uri": "https://orcid.org/0000-0000-0000-0000",
+		"path": "0000-0000-0000-0000",
+		"host": "orcid.org"
+	},
+	"preferences": {
+		"locale": "en"
+	},
+	"history": {
+		"creation-method": "DIRECT",
+		"completion-date": null,
+		"submission-date": {
+			"value": 1568279868075
+		},
+		"last-modified-date": {
+			"value": 1617275519386
+		},
+		"claimed": true,
+		"source": null,
+		"deactivation-date": null,
+		"verified-email": true,
+		"verified-primary-email": true
+	},
+	"person": {
+		"last-modified-date": null,
+		"name": {
+			"created-date": {
+				"value": 1568279868330
+			},
+			"last-modified-date": {
+				"value": 1568279868330
+			},
+			"given-names": {
+				"value": "Toto"
+			},
+			"family-name": {
+				"value": "Titi"
+			},
+			"credit-name": null,
+			"source": null,
+			"visibility": "public",
+			"path": "0000-0000-0000-0000"
+		},
+		"other-names": {
+			"last-modified-date": null,
+			"other-name": [],
+			"path": "/0000-0000-0000-0000/other-names"
+		},
+		"biography": null,
+		"researcher-urls": {
+			"last-modified-date": null,
+			"researcher-url": [],
+			"path": "/0000-0000-0000-0000/researcher-urls"
+		},
+		"emails": {
+			"last-modified-date": null,
+			"email": [],
+			"path": "/0000-0000-0000-0000/email"
+		},
+		"addresses": {
+			"last-modified-date": null,
+			"address": [],
+			"path": "/0000-0000-0000-0000/address"
+		},
+		"keywords": {
+			"last-modified-date": null,
+			"keyword": [],
+			"path": "/0000-0000-0000-0000/keywords"
+		},
+		"external-identifiers": {
+			"last-modified-date": null,
+			"external-identifier": [],
+			"path": "/0000-0000-0000-0000/external-identifiers"
+		},
+		"path": "/0000-0000-0000-0000/person"
+	},
+	"activities-summary": {
+		"last-modified-date": null,
+		"distinctions": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/distinctions"
+		},
+		"educations": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/educations"
+		},
+		"employments": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/employments"
+		},
+		"fundings": {
+			"last-modified-date": null,
+			"group": [],
+			"path": "/0000-0000-0000-0000/fundings"
+		},
+		"invited-positions": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/invited-positions"
+		},
+		"memberships": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/memberships"
+		},
+		"peer-reviews": {
+			"last-modified-date": null,
+			"group": [],
+			"path": "/0000-0000-0000-0000/peer-reviews"
+		},
+		"qualifications": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/qualifications"
+		},
+		"research-resources": {
+			"last-modified-date": null,
+			"group": [],
+			"path": "/0000-0000-0000-0000/research-resources"
+		},
+		"services": {
+			"last-modified-date": null,
+			"affiliation-group": [],
+			"path": "/0000-0000-0000-0000/services"
+		},
+		"works": {
+			"last-modified-date": null,
+			"group": [],
+			"path": "/0000-0000-0000-0000/works"
+		},
+		"path": "/0000-0000-0000-0000/activities"
+	},
+	"path": "/0000-0000-0000-0000"
+}

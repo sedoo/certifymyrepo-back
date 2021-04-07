@@ -1,0 +1,78 @@
+temporary:
+   cronExpression: 0 30 20 * * *
+   storageDuration: 2
+
+server:
+    port: 8485
+    max-http-header-size: 128000
+spring:
+   data.mongodb:
+      host: localhost
+      port: 27017
+      database: crusoe
+      username: crusoe
+      password: ${MONGODB_PASSWORD}
+   servlet:
+      multipart:
+         max-file-size: 10MB
+         max-request-size: 10MB
+   profiles:
+      include:
+      - local
+      
+logging:
+   file: ../logs/crusoe-preprod.log
+   
+tmpFolder: /tmp/crusoe/tmp
+      
+management:
+    port: 8081
+
+mail:
+   hostname: localhost
+   subjectPrefix: '[CERTIFYMYREPO]'
+   contact: certifymyrepo@sedoo.fr
+   from: certifymyrepo@sedoo.fr
+   
+
+orcid:
+   tokenUrl: https://orcid.org/oauth/token
+   publicApiUrl: https://pub.orcid.org/v2.1
+        
+ftp:
+    host: sedur.sedoo.fr
+    username: crusoe
+        
+---
+
+spring.profiles: tunnelssh-preprod
+
+spring:
+   data.mongodb:
+      host: localhost
+      port: 27018
+      database: crusoe-preprod
+      
+---
+
+spring.profiles: prod
+spring:
+   data.mongodb:
+      host: 193.52.225.51
+      database: crusoe
+        
+tmpFolder: /export1/crusoe/tmp
+        
+---
+
+spring.profiles: preprod
+spring:
+   data.mongodb:
+      host: 193.52.225.51
+      database: crusoe-preprod
+      username: crusoe-preprod
+
+tmpFolder: /export1/crusoe-preprod/tmp
+
+
+        

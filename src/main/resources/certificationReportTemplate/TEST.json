@@ -1,0 +1,26 @@
+{
+	"name": "TEST",
+	"description": {"en": "Test survey template", "fr": "Modèle de questionnaire de test"},
+    "levels":  [
+            {"code": 0, "label": {"en": "Not applicable", "fr": "Sans objet"}},
+            {"code": 1, "label": {"en": "Bad", "fr": "Pas bien"}},
+            {"code": 2, "label": {"en": "Good", "fr": "Good"}}
+	],
+    "requirements" : [ 
+    {
+        "code" : 0,
+        "requirement": {"en": "How old is the captain?", 
+                        "fr": "Quel age à le capitaine?"}
+    }, 
+    {
+        "code" : 1,
+        "requirement": {"en": "Have you seen Monte-Carlo?",
+                        "fr": "Avez-vous vu Monte-Carlo?"}
+    }, 
+    {
+        "code" : 2,
+        "requirement": {"en": "Spotify or Apple Music?",
+                        "fr": "Spotify ou Apple Music?"}
+    }
+]
+}
