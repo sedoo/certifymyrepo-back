@@ -2,13 +2,18 @@ package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.mail.internet.AddressException;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +29,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.sedoo.certifymyrepo.rest.config.MailConfig;
+import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.AccessRequest;
+import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.FullRepository;
@@ -63,6 +70,9 @@ public class RepositoryService {
 	
 	@Autowired
 	EmailSender emailSender;
+	
+	@Autowired
+	AdminDao adminDao;
 	
 	@Autowired
 	CertificationReportTemplateDao templateDao;
@@ -104,13 +114,13 @@ public class RepositoryService {
 	public List<FullRepository> listAllFullRepositories(@RequestHeader("Authorization") String authHeader) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		
+		List<Repository> repos = null;
 		if (loggedUser.isAdmin()) {
-			List<Repository> repos = repositoryDao.findAll();
-			return getHealthInformationList(repos, loggedUser.getUserId(), loggedUser.isSuperAdmin());
+			repos = repositoryDao.findAll();
 		} else {
-			List<Repository> repos = repositoryDao.findAllByUserId(loggedUser.getUserId());
-			return getHealthInformationList(repos, loggedUser.getUserId(), false);
+			repos = repositoryDao.findAllByUserId(loggedUser.getUserId());
 		}
+		return getHealthInformationList(repos, loggedUser.getUserId(), loggedUser.isAdmin());
 	}
 	
 	/**
@@ -269,6 +279,7 @@ public class RepositoryService {
 		if(repository != null) {
 			Repository repo = repositoryDao.findByName(repository.getName());
 			if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
+				checkUsersNotification(repository, messages);
 				result =  repositoryDao.save(repository);	
 			} else {
 				throw new BusinessException(String.format(messages.getString("repository.duplicate.error"), repo.getName()));
@@ -280,6 +291,110 @@ public class RepositoryService {
 		return result;
 	}
 	
+	/**
+	 * Before saving the repository check if any users have been added or removed
+	 * Then a notification if needed
+	 * @param repository updated
+	 * @param messages i18n
+	 */
+	private void checkUsersNotification(Repository repository, ResourceBundle messages) {
+		Repository existingRepo = null;
+		if(repository.getId() != null) {
+			existingRepo = repositoryDao.findById(repository.getId());
+		}
+		if(existingRepo != null) {
+			// List user id already in DB
+			Set<String> alreadyInDBUserId = existingRepo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+	
+			// List user id potentially updated
+			Set<String> newUserId = repository.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+	
+			// Identify symmetric differences
+			Set<String> symmetricDiff = new HashSet<String>(alreadyInDBUserId);
+			symmetricDiff.addAll(newUserId);
+			Set<String> tmp = new HashSet<String>(alreadyInDBUserId);
+			tmp.retainAll(newUserId);
+			symmetricDiff.removeAll(tmp);
+	
+			// Identify deleted id
+			Set<String> deletedId = new HashSet<String>(alreadyInDBUserId);
+			deletedId.retainAll(symmetricDiff);
+			sendNotification(deletedId, repository.getName(), "remove", messages, null);
+			
+			// Identify added id
+			Set<String> addedId = new HashSet<String>(newUserId);
+			addedId.retainAll(symmetricDiff);
+			sendNotification(addedId, repository.getName(), "add", messages, repository.getUsers());
+		} else {
+			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+			Set<String> newUserId = repository.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+			newUserId.remove(loggedUser.getUserId());
+			sendNotification(newUserId, repository.getName(), "add", messages, repository.getUsers());
+		}
+	}
+	
+	/**
+	 * Send Notification
+	 * @param usedIdToNotify
+	 * @param repoName
+	 * @param key add or remove
+	 * @param messages
+	 * @param users new users list (must be empty for remove notification)
+	 */
+	private void sendNotification(Set<String> usedIdToNotify, String repoName, String key, ResourceBundle messages, List<RepositoryUser> users) {
+		List<String> superAdminEmails = new ArrayList<String>();
+		List<Admin> superAdmins = adminDao.findAllSuperAdmin();
+		for(Admin superAdmin : superAdmins) {
+			Profile userProfile = profileDao.findById(superAdmin.getUserId());
+			superAdminEmails.add(userProfile.getEmail());
+		}
+		
+		for (String userId : usedIdToNotify) {
+			Profile userProfile = profileDao.findById(userId);
+			if(userProfile.getEmail() != null) {
+				try {
+					SimpleEmail simpleemail = new SimpleEmail();
+					simpleemail.setHostName(mailConfig.getHostname());
+					simpleemail.addTo(userProfile.getEmail());
+					simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+					simpleemail.setFrom(mailConfig.getFrom());
+					simpleemail.setSubject(String.format(messages.getString(key.concat(".user.notification.subject")), 
+							repoName));
+					String content = null;
+					if(users != null && users.size() > 0) {
+						content = String.format(messages.getString(key.concat(".user.notification.content")), 
+								repoName, getUserRole(users, userId));
+					} else {
+						content = String.format(messages.getString(key.concat(".user.notification.content")), 
+								repoName);
+					}
+					emailSender.send(simpleemail, content);
+				} catch (AddressException | EmailException e) {
+					LOG.error("Notification could not be send to ".concat(userProfile.getEmail()), e);
+				}
+			} else {
+				LOG.warn("Notification could not be send to ".concat(userProfile.getName()).concat(" this user does not have an email address"));
+			}
+
+		}
+	}
+	
+	/**
+	 * 
+	 * @param users
+	 * @param userId
+	 * @return Role
+	 */
+	private String getUserRole(List<RepositoryUser> users, String userId) {
+		String role = null;
+		for(RepositoryUser user : users) {
+			if(StringUtils.equals(user.getId(), userId)) {
+				role = user.getRole();
+			}
+		}
+		return role;
+	}
+
 	/**
 	 * Delete a Repository element for a given id
 	 * @param authHeader authorization token form logged user
@@ -349,6 +464,15 @@ public class RepositoryService {
 
 			// send email to repository contact and all manager
 			try {
+				
+				List<String> superAdminEmails = new ArrayList<String>();
+				List<Admin> superAdmins = adminDao.findAllSuperAdmin();
+				for(Admin superAdmin : superAdmins) {
+					Profile userProfile = profileDao.findById(superAdmin.getUserId());
+					superAdminEmails.add(userProfile.getEmail());
+				}
+				simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+				
 				List<String> to = new ArrayList<String>();
 				to.add(repo.getContact());
 				List<String> repoManagerOrcid = getEditorUserId(repo.getUsers());

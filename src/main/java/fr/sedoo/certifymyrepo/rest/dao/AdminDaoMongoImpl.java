@@ -54,4 +54,9 @@ public class AdminDaoMongoImpl implements AdminDao {
 		return adminRepository.findByUserId(userId);
 	}
 
+	@Override
+	public List<Admin> findAllSuperAdmin() {
+		return adminRepository.findAllSuperAdmin();
+	}
+
 }

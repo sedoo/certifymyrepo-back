@@ -11,6 +11,7 @@ public interface AdminDao {
 	public void delete(String userId);
 	public Admin save(Admin admin);
 	public List<Admin> findAll();
+	public List<Admin> findAllSuperAdmin();
 	public Admin findByUserId(String userId);
 
 }

@@ -25,9 +25,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.sedoo.certifymyrepo.rest.config.MailConfig;
+import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
+import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
@@ -46,6 +48,9 @@ public class ProfileService {
 	
 	@Autowired
 	private ProfileDao profileDao;
+	
+	@Autowired
+	AdminDao adminDao;
 	
 	@Autowired
 	private RepositoryDao repositoryDao;
@@ -89,10 +94,18 @@ public class ProfileService {
 		Profile createdProfile = profileDao.save(profile);
 		
 		if(createdProfile.getEmail() != null) {
+			List<String> superAdminEmails = new ArrayList<String>();
+			List<Admin> superAdmins = adminDao.findAllSuperAdmin();
+			for(Admin superAdmin : superAdmins) {
+				Profile userProfile = profileDao.findById(superAdmin.getUserId());
+				superAdminEmails.add(userProfile.getEmail());
+			}
+			
 			try {
 				SimpleEmail simpleemail = new SimpleEmail();
 				simpleemail.setHostName(mailConfig.getHostname());
 				simpleemail.addTo(createdProfile.getEmail());
+				simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 				simpleemail.setFrom(mailConfig.getFrom());
 				simpleemail.setSubject(messages.getString("create.user.notification.subject"));
 				String content = String.format(messages.getString("create.user.notification.orcid.content"), profile.getOrcid());

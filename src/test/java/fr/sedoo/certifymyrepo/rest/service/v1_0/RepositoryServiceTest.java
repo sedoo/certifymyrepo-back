@@ -182,13 +182,18 @@ public class RepositoryServiceTest {
     public void testSave() {
 		try {
 			
-			Repository repo = createRepository("MANAGER");
+			// simulate an updated repository coming from the front-end
+			Repository repoToSave = createRepositoryToSave();
+			when(repositoryDaoMock.save(repoToSave)).thenReturn(repoToSave);
 			
-			when(repositoryDaoMock.save(repo)).thenReturn(repo);
-			
+			Repository existingRepo = createRepositoryAleadyInDB();
+			// simulate an existing repository in DB
+			when(repositoryDaoMock.findById("1")).thenReturn(existingRepo);
+			// used for the duplicate name check
+			when(repositoryDaoMock.findByName("SSS")).thenReturn(existingRepo);
 
-			Repository result = repositoryService.save("myToken", repo, "fr");
-			assertEquals(repo.getName(), result.getName());
+			Repository result = repositoryService.save("myToken", repoToSave, "fr");
+			assertEquals(repoToSave.getName(), result.getName());
 
 		} catch (ForbiddenException e) {
 			assertTrue("ForbiddenException should not o be thrown", false);
@@ -216,13 +221,50 @@ public class RepositoryServiceTest {
 		}
 	}
 	
-	private Repository createRepository(String userRole) {
+	/**
+	 * A repository with 3 users to simulate an updated repository coming from the front-end
+	 * Two user has been deleted
+	 * One has been added
+	 * @return {@link Repository}
+	 */
+	private Repository createRepositoryToSave() {
 		Repository repo = new Repository();
+		repo.setId("1");
 		repo.setName("SSS");
-		RepositoryUser user = new RepositoryUser();
-		user.setId("0000-0000-0000-1234");
-		user.setRole(userRole);
-		repo.setUsers(Arrays.asList(new RepositoryUser[] {user}));
+		RepositoryUser user1 = new RepositoryUser();
+		user1.setId("123");
+		user1.setRole(Roles.EDITOR);
+		RepositoryUser user2 = new RepositoryUser();
+		user2.setId("654");
+		user2.setRole(Roles.EDITOR);
+		RepositoryUser user3 = new RepositoryUser();
+		user3.setId("789");
+		user3.setRole(Roles.READER);
+		repo.setUsers(Arrays.asList(new RepositoryUser[] {user1, user2, user3}));
+		return repo;
+	}
+	
+	/**
+	 * A repository with 4 users to simulate an existing repository in DB
+	 * @return {@link Repository}
+	 */
+	private Repository createRepositoryAleadyInDB() {
+		Repository repo = new Repository();
+		repo.setId("1");
+		repo.setName("SSS");
+		RepositoryUser user1 = new RepositoryUser();
+		user1.setId("123");
+		user1.setRole(Roles.EDITOR);
+		RepositoryUser user2 = new RepositoryUser();
+		user2.setId("456");
+		user2.setRole(Roles.EDITOR);
+		RepositoryUser user3 = new RepositoryUser();
+		user3.setId("789");
+		user3.setRole(Roles.READER);
+		RepositoryUser user4 = new RepositoryUser();
+		user4.setId("910");
+		user4.setRole(Roles.READER);
+		repo.setUsers(Arrays.asList(new RepositoryUser[] {user1, user2, user3, user4}));
 		return repo;
 	}
 
