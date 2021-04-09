@@ -135,9 +135,7 @@ public class ProfileService {
 	}
 	
 	/**
-	 * @deprecated faire le point lors de [E7] Conformité RGPD
 	 */
-	@Deprecated
 	@Secured({ Roles.AUTHORITY_USER })
     @RequestMapping(value = "/deleteProfileSimulation/{language}/{id}", method = RequestMethod.GET)
     public String deleteProfileSimulation(@RequestHeader("Authorization") String authHeader, 
@@ -183,6 +181,9 @@ public class ProfileService {
 		}
 		if(!isSimulation) {
 			profileDao.delete(id);
+			if(adminDao.isAdmin(id) || adminDao.isSuperAdmin(id)) {
+				adminDao.delete(id);
+			}
 		}
 		
         Locale locale = new Locale(language);

@@ -9,10 +9,10 @@ import fr.sedoo.certifymyrepo.rest.domain.Repository;
 
 public interface RepositoryRepository extends MongoRepository<Repository, String> {
 	
-	@Query(value = "{ 'users.id' :  ?0 }")
-    List<Repository> findByUserIdsIn(String orcid);
+	@Query(value = "{ 'users' :  {$elemMatch: {id: ?0}} }")
+    List<Repository> findByUserIdsIn(String userId);
 	
-	@Query(value = "{ 'id' : ?0, 'users.id' :  ?1 }")
+	@Query(value = "{ 'id' : ?0, 'users' :  {$elemMatch: {id: ?1}} }")
 	Repository findByIdAndUsersIdsIn(String id, String orcid);
 	
 	@Query(value = "{$or:[{'name':{$regex : ?0, $options: 'i'}},{'keywords':{$regex : ?0, $options: 'i'}}]}")

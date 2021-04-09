@@ -279,7 +279,9 @@ public class RepositoryService {
 		if(repository != null) {
 			Repository repo = repositoryDao.findByName(repository.getName());
 			if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
-				checkUsersNotification(repository, messages);
+				if(repository.getId() != null) {
+					checkUsersNotification(repository, messages);
+				}
 				result =  repositoryDao.save(repository);	
 			} else {
 				throw new BusinessException(String.format(messages.getString("repository.duplicate.error"), repo.getName()));
