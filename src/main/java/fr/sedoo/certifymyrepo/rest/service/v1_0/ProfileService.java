@@ -27,12 +27,16 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.sedoo.certifymyrepo.rest.config.MailConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
+import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
+import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
+import fr.sedoo.certifymyrepo.rest.domain.Comment;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.dto.UserLigth;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -50,7 +54,10 @@ public class ProfileService {
 	private ProfileDao profileDao;
 	
 	@Autowired
-	AdminDao adminDao;
+	private AdminDao adminDao;
+	
+	@Autowired
+	private CommentsDao commentsDao;
 	
 	@Autowired
 	private RepositoryDao repositoryDao;
@@ -154,19 +161,31 @@ public class ProfileService {
 		return delete(language, id, false);
     } 
 	
-	private String delete(String language, String id, boolean isSimulation) {
+	/**
+	 * 
+	 * @param language of the user making this action
+	 * @param userId user identifier to delete
+	 * @param isSimulation if true data will not be updated or deleted but a message will be return
+	 * @return message to display in the UI
+	 */
+	private String delete(String language, String userId, boolean isSimulation) {
 		List<String> deletedRepo = new ArrayList<String>();
 		List<String> updatedRepo = new ArrayList<String>();
-		List<Repository> repos = repositoryDao.findAllByUserId(id);
+		List<Repository> repos = repositoryDao.findAllByUserId(userId);
 		if(repos != null) {
 			for(Repository repo : repos) {
 				List<RepositoryUser> users = repo.getUsers();
-				removeUser(users, id);
+				removeUser(users, userId);
 				if(isUserOnlyOneEditor(users)) {
 					if(!isSimulation) {
 						// delete repository and related reports
-						repositoryDao.delete(id);
-						certificationReportDao.deleteByRepositoryId(id);
+						repositoryDao.delete(repo.getId());
+						List<CertificationReport> reports = certificationReportDao.deleteByRepositoryId(repo.getId());
+						if(reports != null) {
+							for(CertificationReport report : reports) {
+								commentsDao.deleteByReportId(report.getId());
+							}
+						}
 					}
 					deletedRepo.add(repo.getName());
 				} else {
@@ -174,15 +193,16 @@ public class ProfileService {
 						// save repository user removed from the list
 						repo.setUsers(users);
 						repositoryDao.save(repo);
+						removeUserNameFromComments(userId);
 					}
 					updatedRepo.add(repo.getName());
 				}
 			}
 		}
 		if(!isSimulation) {
-			profileDao.delete(id);
-			if(adminDao.isAdmin(id) || adminDao.isSuperAdmin(id)) {
-				adminDao.delete(id);
+			profileDao.delete(userId);
+			if(adminDao.isAdmin(userId) || adminDao.isSuperAdmin(userId)) {
+				adminDao.deleteByUserId(userId);
 			}
 		}
 		
@@ -190,37 +210,35 @@ public class ProfileService {
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
 		
 		StringBuilder result = new StringBuilder();
-		if(updatedRepo.size() > 0) {
-			if(isSimulation) {
-				result.append(messages.getString("user.information.update.repo.warning")).append(" ");	
-			} else {
-				result.append(messages.getString("user.information.update.repo")).append(" ");
-			}
-			for(int i=0 ; i<updatedRepo.size() ; i++) {
-				result.append(updatedRepo.get(i));
-				if(i < updatedRepo.size()-1) {
-					result.append(", ");
-				} else {
-					result.append("<br/>");
-				}
-			}
+		if(updatedRepo.size() > 0 && isSimulation) {
+			result.append(createInformationContent("update", messages, deletedRepo));
 		}
-		if(deletedRepo.size() > 0) {
-			if(isSimulation) {
-				result.append(messages.getString("user.information.repo.deleted.warning")).append(" ");
-			} else {
-				result.append(messages.getString("user.information.repo.deleted")).append(" ");
-			}
-			for(int i=0 ; i<deletedRepo.size() ; i++) {
-				result.append(deletedRepo.get(i));
-				if(i < deletedRepo.size()-1) {
-					result.append(", ");
-				} else {
-					result.append("<br/>");
-				}
-			}
+		if(deletedRepo.size() > 0 && isSimulation) {
+			result.append(createInformationContent("delete", messages, deletedRepo));
 		}
 		return result.toString();
+	}
+	
+	/**
+	 * @param key 'update' or 'delete'
+	 * @param messages localized messages
+	 * @param repo list if repositories to update or delete
+	 * @return message to display in the UI
+	 */
+	private StringBuilder createInformationContent(String key, ResourceBundle messages, List<String> repo) {
+		StringBuilder message = new StringBuilder();
+		if(repo.size() > 0) {
+			message.append(messages.getString("user.information.".concat(key).concat(".repo.warning"))).append(" ");	
+			for(int i=0 ; i<repo.size() ; i++) {
+				message.append(repo.get(i));
+				if(i < repo.size()-1) {
+					message.append(", ");
+				} else {
+					message.append("<br/>");
+				}
+			}
+		}
+		return message;
 	}
 	
 	/**
@@ -256,6 +274,23 @@ public class ProfileService {
 			    if (StringUtils.equals(id, ru.getId())) {
 			        iter.remove();
 			    }
+			}
+		}
+	}
+	
+	/**
+	 * Set user name to null for all the comments of the given userId
+	 * @param userId id of the user collection
+	 */
+	private void removeUserNameFromComments(String userId) {
+		List<RequirementComments> allRequirementscomments = commentsDao.getCommentsByUserId(userId);
+		if(allRequirementscomments != null && allRequirementscomments.size() > 0) {
+			for(RequirementComments singleRequirementComments : allRequirementscomments) {
+				for(Comment comment : singleRequirementComments.getComments()) {
+					if(StringUtils.equals(comment.getUserId(), userId)) {
+						comment.setUserName(null);
+					}
+				}
 			}
 		}
 	}

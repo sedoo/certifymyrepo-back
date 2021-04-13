@@ -28,4 +28,14 @@ public class CommentsDaoMongoImpl implements CommentsDao {
 		return repository.findByReportIdAndItemCode(reportId, requirementCode);
 	}
 
+	@Override
+	public List<RequirementComments> getCommentsByUserId(String userId) {
+		return repository.findByUserId(userId);
+	}
+
+	@Override
+	public void deleteByReportId(String reportId) {
+		repository.deleteByReportId(reportId);
+	}
+
 }

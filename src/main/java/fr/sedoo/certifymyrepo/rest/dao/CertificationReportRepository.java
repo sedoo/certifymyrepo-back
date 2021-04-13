@@ -11,7 +11,7 @@ public interface CertificationReportRepository extends MongoRepository<Certifica
 	
 	List<CertificationReport> findByRepositoryId(String repositoryId);
 	
-	void deleteByRepositoryId(String repositoryId);
+	List<CertificationReport> deleteByRepositoryId(String repositoryId);
 	
 	CertificationReport findFirstByRepositoryId(String repositoryId, Sort sort);
 	

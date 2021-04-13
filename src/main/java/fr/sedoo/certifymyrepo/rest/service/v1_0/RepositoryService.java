@@ -10,10 +10,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.mail.internet.AddressException;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +46,7 @@ import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
+import fr.sedoo.certifymyrepo.rest.service.notification.NotificationService;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
@@ -78,7 +76,12 @@ public class RepositoryService {
 	CertificationReportTemplateDao templateDao;
 	
 	@Autowired
+	private NotificationService notificationService;
+	
+	//FIXME use NotificationService instead
+	@Autowired
 	private MailConfig mailConfig;
+	
 
 	@RequestMapping(value = "/isalive", method = RequestMethod.GET)
 	public String isalive() {
@@ -321,80 +324,18 @@ public class RepositoryService {
 			// Identify deleted id
 			Set<String> deletedId = new HashSet<String>(alreadyInDBUserId);
 			deletedId.retainAll(symmetricDiff);
-			sendNotification(deletedId, repository.getName(), "remove", messages, null);
+			notificationService.sendNotification(deletedId, repository.getName(), "remove", messages, null);
 			
 			// Identify added id
 			Set<String> addedId = new HashSet<String>(newUserId);
 			addedId.retainAll(symmetricDiff);
-			sendNotification(addedId, repository.getName(), "add", messages, repository.getUsers());
+			notificationService.sendNotification(addedId, repository.getName(), "add", messages, repository.getUsers());
 		} else {
 			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 			Set<String> newUserId = repository.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
 			newUserId.remove(loggedUser.getUserId());
-			sendNotification(newUserId, repository.getName(), "add", messages, repository.getUsers());
+			notificationService.sendNotification(newUserId, repository.getName(), "add", messages, repository.getUsers());
 		}
-	}
-	
-	/**
-	 * Send Notification
-	 * @param usedIdToNotify
-	 * @param repoName
-	 * @param key add or remove
-	 * @param messages
-	 * @param users new users list (must be empty for remove notification)
-	 */
-	private void sendNotification(Set<String> usedIdToNotify, String repoName, String key, ResourceBundle messages, List<RepositoryUser> users) {
-		List<String> superAdminEmails = new ArrayList<String>();
-		List<Admin> superAdmins = adminDao.findAllSuperAdmin();
-		for(Admin superAdmin : superAdmins) {
-			Profile userProfile = profileDao.findById(superAdmin.getUserId());
-			superAdminEmails.add(userProfile.getEmail());
-		}
-		
-		for (String userId : usedIdToNotify) {
-			Profile userProfile = profileDao.findById(userId);
-			if(userProfile.getEmail() != null) {
-				try {
-					SimpleEmail simpleemail = new SimpleEmail();
-					simpleemail.setHostName(mailConfig.getHostname());
-					simpleemail.addTo(userProfile.getEmail());
-					simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
-					simpleemail.setFrom(mailConfig.getFrom());
-					simpleemail.setSubject(String.format(messages.getString(key.concat(".user.notification.subject")), 
-							repoName));
-					String content = null;
-					if(users != null && users.size() > 0) {
-						content = String.format(messages.getString(key.concat(".user.notification.content")), 
-								repoName, getUserRole(users, userId));
-					} else {
-						content = String.format(messages.getString(key.concat(".user.notification.content")), 
-								repoName);
-					}
-					emailSender.send(simpleemail, content);
-				} catch (AddressException | EmailException e) {
-					LOG.error("Notification could not be send to ".concat(userProfile.getEmail()), e);
-				}
-			} else {
-				LOG.warn("Notification could not be send to ".concat(userProfile.getName()).concat(" this user does not have an email address"));
-			}
-
-		}
-	}
-	
-	/**
-	 * 
-	 * @param users
-	 * @param userId
-	 * @return Role
-	 */
-	private String getUserRole(List<RepositoryUser> users, String userId) {
-		String role = null;
-		for(RepositoryUser user : users) {
-			if(StringUtils.equals(user.getId(), userId)) {
-				role = user.getRole();
-			}
-		}
-		return role;
 	}
 
 	/**

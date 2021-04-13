@@ -36,9 +36,9 @@ import fr.sedoo.certifymyrepo.rest.domain.MyReport;
 import fr.sedoo.certifymyrepo.rest.domain.MyReports;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.domain.SimpleFtpClient;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
@@ -193,14 +193,14 @@ public class CertificationReportService {
 			if (null != repo) {
 				if(repo.getUsers().stream().anyMatch(
 						s -> StringUtils.equals(s.getId(),loggedUser.getUserId()) 
-						&& StringUtils.equals(s.getRole(),"READER"))) {
-					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot read delete a report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
+						&& !StringUtils.equals(s.getRole(), Roles.EDITOR))) {
+					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
 					throw new ForbiddenException();
 				} else {
 					result = certificationReportDao.save(certificationReport);
 				}
 			} else {
-				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), certificationReport.getRepositoryId()));
+				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
 				throw new ForbiddenException();
 			}
 		}
@@ -255,6 +255,11 @@ public class CertificationReportService {
 	@RequestMapping(value = "/getComments/{reportId}", method = RequestMethod.GET)
 	public List<RequirementComments> getComments(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "reportId") String id) {
 		return commentsDao.getCommentsByReportId(id);
+	}
+	
+	@RequestMapping(value = "/getCommentsByUserid/{userId}", method = RequestMethod.GET)
+	public List<RequirementComments> getCommentsByUserid(@PathVariable(name = "userId") String id) {
+		return commentsDao.getCommentsByUserId(id);
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
@@ -384,7 +389,7 @@ public class CertificationReportService {
 		
 		Map<String, List<String>> attachments = null;
 		if(ftpClient.checkDirectoryExistance(report.getId())) {
-			ftpClient.listFiles(report.getId());
+			attachments = ftpClient.listFiles(report.getId());
 		}
 		
 		for (CertificationItem r : report.getItems()) {

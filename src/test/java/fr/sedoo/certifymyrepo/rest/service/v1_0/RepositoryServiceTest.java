@@ -2,6 +2,9 @@ package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -11,18 +14,19 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
@@ -35,6 +39,7 @@ import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
+import fr.sedoo.certifymyrepo.rest.service.notification.NotificationService;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
@@ -48,14 +53,19 @@ public class RepositoryServiceTest {
 	CertificationReportDao certificationReportDaoMock;
 	
 	@Mock
-	ApplicationUser applicationUser;
+	private ApplicationUser applicationUser;
+	
 	@Mock
-	Authentication authentication;
+	private Authentication authentication;
+	
 	@Mock
-	SecurityContext securityContext;
+	private SecurityContext securityContext;
+	
 	@Mock
-	@Autowired
-	CertificationReportTemplateDao templateDao;
+	private CertificationReportTemplateDao templateDao;
+	
+	@Mock
+	private NotificationService notificationService;
 	
 	@InjectMocks
 	private RepositoryService repositoryService;
@@ -179,24 +189,33 @@ public class RepositoryServiceTest {
 	}
 	
 	@Test
-    public void testSave() {
+    public void testSaveWithNotification() {
 		try {
 			
 			// simulate an updated repository coming from the front-end
 			Repository repoToSave = createRepositoryToSave();
-			when(repositoryDaoMock.save(repoToSave)).thenReturn(repoToSave);
 			
 			Repository existingRepo = createRepositoryAleadyInDB();
 			// simulate an existing repository in DB
 			when(repositoryDaoMock.findById("1")).thenReturn(existingRepo);
 			// used for the duplicate name check
 			when(repositoryDaoMock.findByName("SSS")).thenReturn(existingRepo);
+			
+			// Allow us to check if the code reach the notification point
+			// As when an user is remove or added an email must be sent
+			when(notificationService.sendNotification(anySet(), anyString(), anyString(), any(), anyList()))
+				.thenThrow(new RuntimeException("It passed by here"));
 
 			Repository result = repositoryService.save("myToken", repoToSave, "fr");
-			assertEquals(repoToSave.getName(), result.getName());
+			assertTrue("The notification have not been reached", result != null);
 
-		} catch (ForbiddenException e) {
-			assertTrue("ForbiddenException should not o be thrown", false);
+		} catch (Exception e) {
+			if(StringUtils.equals(e.getMessage(), "It passed by here")) {
+				assertTrue("The notification have been reached", true);
+			} else {
+				assertTrue("Exception should not o be thrown", false);
+			}
+
 		}
 	}
 	

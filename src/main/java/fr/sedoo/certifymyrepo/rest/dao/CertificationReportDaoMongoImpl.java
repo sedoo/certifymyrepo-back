@@ -32,8 +32,8 @@ public class CertificationReportDaoMongoImpl implements CertificationReportDao {
 	}
 	
 	@Override
-	public void deleteByRepositoryId(String repositoryId) {
-		certificationReportRepository.deleteByRepositoryId(repositoryId);
+	public List<CertificationReport> deleteByRepositoryId(String repositoryId) {
+		return certificationReportRepository.deleteByRepositoryId(repositoryId);
 	}
 
 	@Override

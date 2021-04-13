@@ -13,5 +13,7 @@ public interface AdminRepository extends MongoRepository<Admin, String> {
 	
 	@Query(value = "{ 'isSuperAdmin' : true }")
 	List<Admin> findAllSuperAdmin();
+	
+	Admin deleteByUserId(String userId);
 
 }

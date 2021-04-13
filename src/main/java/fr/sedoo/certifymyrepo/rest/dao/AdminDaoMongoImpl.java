@@ -34,12 +34,6 @@ public class AdminDaoMongoImpl implements AdminDao {
 	}
 
 	@Override
-	public void delete(String userId) {
-		adminRepository.deleteById(userId);
-		
-	}
-
-	@Override
 	public Admin save(Admin entity) {
 		return adminRepository.save(entity);
 	}
@@ -57,6 +51,16 @@ public class AdminDaoMongoImpl implements AdminDao {
 	@Override
 	public List<Admin> findAllSuperAdmin() {
 		return adminRepository.findAllSuperAdmin();
+	}
+	
+	@Override
+	public void delete(String userId) {
+		adminRepository.deleteById(userId);
+	}
+
+	@Override
+	public void deleteByUserId(String userId) {
+		adminRepository.deleteByUserId(userId);
 	}
 
 }

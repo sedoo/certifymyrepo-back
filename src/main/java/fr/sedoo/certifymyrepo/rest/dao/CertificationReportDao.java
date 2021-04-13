@@ -10,7 +10,7 @@ public interface CertificationReportDao {
 	
 	void delete(String id);
 	
-	void deleteByRepositoryId(String repositoryId);
+	List<CertificationReport> deleteByRepositoryId(String repositoryId);
 
 	List<CertificationReport> findByRepositoryId(String repositoryId);
 	
