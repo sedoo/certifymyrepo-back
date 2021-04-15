@@ -1,13 +1,13 @@
-package fr.sedoo.certifymyrepo.rest.domain;
+package fr.sedoo.certifymyrepo.rest.dto;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class FullRepository {
+public class FullRepositoryDto {
 	
-	private Repository repository;
+	private RepositoryDto repository;
 	private RepositoryHealth healthLatestValidReport;
 	private RepositoryHealth healthLatestInProgressReport;
 	private boolean isReadonly;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.mail.internet.AddressException;
@@ -35,8 +36,8 @@ import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Comment;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.dto.UserLigth;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -74,7 +75,12 @@ public class ProfileService {
 	@Secured({ Roles.AUTHORITY_USER })
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     public Profile profile(@RequestHeader("Authorization") String authHeader) {	
-		return profileDao.findById(LoginUtils.getLoggedUser().getUserId());
+		Optional<Profile> profile = profileDao.findById(LoginUtils.getLoggedUser().getUserId());
+		if(profile.isPresent()) {
+			return profile.get();
+		} else {
+			return null;
+		}
     }
 	
 	@Secured({ Roles.AUTHORITY_USER })
@@ -104,8 +110,11 @@ public class ProfileService {
 			List<String> superAdminEmails = new ArrayList<String>();
 			List<Admin> superAdmins = adminDao.findAllSuperAdmin();
 			for(Admin superAdmin : superAdmins) {
-				Profile userProfile = profileDao.findById(superAdmin.getUserId());
-				superAdminEmails.add(userProfile.getEmail());
+				Optional<Profile> userProfile = profileDao.findById(superAdmin.getUserId());
+				if(userProfile.isPresent()) {
+					superAdminEmails.add(userProfile.get().getEmail());
+				}
+				
 			}
 			
 			try {

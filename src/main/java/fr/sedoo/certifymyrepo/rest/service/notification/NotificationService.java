@@ -2,6 +2,7 @@ package fr.sedoo.certifymyrepo.rest.service.notification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -22,7 +23,7 @@ import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 
 @Component
 public class NotificationService {
@@ -59,17 +60,20 @@ public class NotificationService {
 		List<String> superAdminEmails = new ArrayList<String>();
 		List<Admin> superAdmins = adminDao.findAllSuperAdmin();
 		for(Admin superAdmin : superAdmins) {
-			Profile userProfile = profileDao.findById(superAdmin.getUserId());
-			superAdminEmails.add(userProfile.getEmail());
+			Optional<Profile> userProfile = profileDao.findById(superAdmin.getUserId());
+			if(userProfile.isPresent()) {
+				superAdminEmails.add(userProfile.get().getEmail());
+			}
+
 		}
 		
 		for (String userId : usedIdToNotify) {
-			Profile userProfile = profileDao.findById(userId);
-			if(userProfile.getEmail() != null) {
+			Optional<Profile> userProfile = profileDao.findById(userId);
+			if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
 				try {
 					SimpleEmail simpleemail = new SimpleEmail();
 					simpleemail.setHostName(mailConfig.getHostname());
-					simpleemail.addTo(userProfile.getEmail());
+					simpleemail.addTo(userProfile.get().getEmail());
 					simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 					simpleemail.setFrom(mailConfig.getFrom());
 					simpleemail.setSubject(String.format(messages.getString(key.concat(".user.notification.subject")), 
@@ -84,11 +88,11 @@ public class NotificationService {
 					}
 					emailSender.send(simpleemail, content);
 				} catch (AddressException | EmailException e) {
-					LOG.error("Notification could not be send to ".concat(userProfile.getEmail()), e);
+					LOG.error("Notification could not be send to ".concat(userProfile.get().getEmail()), e);
 					return false;
 				}
 			} else {
-				LOG.warn("Notification could not be send to ".concat(userProfile.getName()).concat(" this user does not have an email address"));
+				LOG.warn("Notification could not be send to ".concat(userId).concat(" this user does not have an email address"));
 			}
 
 		}

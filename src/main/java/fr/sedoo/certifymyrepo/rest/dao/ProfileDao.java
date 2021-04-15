@@ -1,12 +1,13 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 
 public interface ProfileDao {
 
-	Profile findById(String id);
+	Optional<Profile> findById(String id);
 	Profile findByOrcid(String orcid);
 	Profile findByEmail(String email);
 	List<Profile> findByOrcidIn(List<String> orcidList);

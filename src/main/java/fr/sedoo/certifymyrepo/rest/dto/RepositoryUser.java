@@ -1,4 +1,4 @@
-package fr.sedoo.certifymyrepo.rest.domain;
+package fr.sedoo.certifymyrepo.rest.dto;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,7 @@ public class Repository {
 	@Id
 	private String id;
 	private String name;
+	private String affiliationId;
 	private List<String> keywords;
 	private String contact;
 	private List<RepositoryUser> users;

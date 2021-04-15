@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -43,10 +44,10 @@ public class AdminService {
 	@RequestMapping(value = "/save/{userId}", method = RequestMethod.POST)
 	public String save(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "userId") String  userId) {
 		String adminId = null;
-		Profile user = profileDao.findById(userId);
-		if(user != null) {
+		Optional<Profile> user = profileDao.findById(userId);
+		if(user.isPresent()) {
 			Admin admin = new Admin();
-			admin.setName(user.getName());
+			admin.setName(user.get().getName());
 			admin.setUserId(userId);
 			Admin result = adminDao.save(admin);
 			if(result !=null) {

@@ -15,9 +15,9 @@ public class ProfileDaoMongoImpl implements ProfileDao {
 	ProfileRepository profileRepository;
 
 	@Override
-	public Profile findById(String id) {
+	public Optional<Profile> findById(String id) {
 		Optional<Profile> profile = profileRepository.findById(id);
-		return profile.get();
+		return profile;
 	}
 
 	@Override

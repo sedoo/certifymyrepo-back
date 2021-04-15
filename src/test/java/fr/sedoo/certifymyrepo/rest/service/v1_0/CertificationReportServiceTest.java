@@ -32,7 +32,7 @@ import fr.sedoo.certifymyrepo.rest.domain.MyReports;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.SimpleFtpClient;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;

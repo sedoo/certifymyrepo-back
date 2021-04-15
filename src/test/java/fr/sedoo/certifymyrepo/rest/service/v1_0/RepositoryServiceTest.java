@@ -28,15 +28,16 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 
+import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
-import fr.sedoo.certifymyrepo.rest.domain.FullRepository;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.NotificationService;
@@ -66,6 +67,9 @@ public class RepositoryServiceTest {
 	
 	@Mock
 	private NotificationService notificationService;
+	
+	@Mock
+	private AffiliationDao affiliationDao;
 	
 	@InjectMocks
 	private RepositoryService repositoryService;
@@ -133,7 +137,7 @@ public class RepositoryServiceTest {
 		
         when(certificationReportDaoMock.findReportInProgressByRepositoryIdAndMaxUpdateDate(anyString())).thenReturn(createCertificationReport("4"));
         
-        List<FullRepository> result = repositoryService.listAllFullRepositories("myToken");
+        List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
         
         assertTrue(result.size() == 2);
         assertEquals(result.get(0).getRepository().getName(), "AERIS");
@@ -145,7 +149,7 @@ public class RepositoryServiceTest {
 		
         when(certificationReportDaoMock.findReportInProgressByRepositoryIdAndMaxUpdateDate(anyString())).thenReturn(createCertificationReport("1"));
         
-        List<FullRepository> result = repositoryService.listAllFullRepositories("myToken");
+        List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
         
         assertTrue(result.size() == 2);
         assertEquals(result.get(0).getRepository().getName(), "AERIS");

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,20 +28,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.sedoo.certifymyrepo.rest.config.MailConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
+import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.AccessRequest;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
+import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
-import fr.sedoo.certifymyrepo.rest.domain.FullRepository;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryHealth;
-import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
+import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
+import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryDto;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -78,6 +83,9 @@ public class RepositoryService {
 	@Autowired
 	private NotificationService notificationService;
 	
+	@Autowired
+	private AffiliationDao affiliationDao;
+	
 	//FIXME use NotificationService instead
 	@Autowired
 	private MailConfig mailConfig;
@@ -92,17 +100,27 @@ public class RepositoryService {
 	 * Return a repository element
 	 * @param authHeader
 	 * @param id repository identifier
-	 * @return {@link FullRepository}
+	 * @return {@link Repository}
 	 */
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/getRepository/{id}", method = RequestMethod.GET)
-	public Repository getRepository(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String id) {
+	public RepositoryDto getRepository(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String id) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		Repository repo = null;
 		if (loggedUser.isAdmin()) {
-			return repositoryDao.findById(id);
+			repo = repositoryDao.findById(id);
 		} else {
-			return repositoryDao.findByIdAndUserId(id, loggedUser.getUserId());
+			repo = repositoryDao.findByIdAndUserId(id, loggedUser.getUserId());
 		}
+		Affiliation affiliation = null;
+		if(repo != null) {
+			if(repo.getAffiliationId() != null)
+				affiliation = affiliationDao.findById(repo.getAffiliationId());
+			return new RepositoryDto(repo, new AffiliationDto(affiliation));
+		} else {
+			return null;
+		}
+		
 	}
 	
 	/**
@@ -110,11 +128,11 @@ public class RepositoryService {
 	 * <li>health check from the latest report</li>
 	 * <li>boolean isReadOnly if the logged user has the role READER on the repository</li>
 	 * @param authHeader
-	 * @return {@link FullRepository}
+	 * @return {@link FullRepositoryDto}
 	 */
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listAllFullRepositories", method = RequestMethod.GET)
-	public List<FullRepository> listAllFullRepositories(@RequestHeader("Authorization") String authHeader) {
+	public List<FullRepositoryDto> listAllFullRepositories(@RequestHeader("Authorization") String authHeader) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		
 		List<Repository> repos = null;
@@ -133,9 +151,18 @@ public class RepositoryService {
 	 */
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listMyRepositories", method = RequestMethod.GET)
-	public List<Repository> listMyRepositories(@RequestHeader("Authorization") String authHeader) {
+	public List<RepositoryDto> listMyRepositories(@RequestHeader("Authorization") String authHeader) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-		return repositoryDao.findAllByUserId(loggedUser.getUserId());
+		List<Repository> repos =  repositoryDao.findAllByUserId(loggedUser.getUserId());
+		List<RepositoryDto> result = new ArrayList<>();
+		for(Repository repo : repos) {
+			Affiliation affiliation = null;
+			if(repo.getAffiliationId() != null)
+				affiliation = affiliationDao.findById(repo.getAffiliationId());
+			result.add(new RepositoryDto(repo, new AffiliationDto(affiliation)));
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -144,12 +171,15 @@ public class RepositoryService {
 	 * @param loggedUserId 
 	 * @return List<FullRepository>
 	 */
-	private List<FullRepository> getHealthInformationList(List<Repository> repos, String loggedUserId, boolean isSuperAdmin) {
+	private List<FullRepositoryDto> getHealthInformationList(List<Repository> repos, String loggedUserId, boolean isSuperAdmin) {
 		if(repos != null && repos.size() > 0) {
-			List<FullRepository> result = new ArrayList<FullRepository>();
+			List<FullRepositoryDto> result = new ArrayList<FullRepositoryDto>();
 			for (Repository repo : repos) {
-				FullRepository full = new FullRepository();
-				full.setRepository(repo);
+				FullRepositoryDto full = new FullRepositoryDto();
+				Affiliation affiliation = null;
+				if(repo.getAffiliationId() != null)
+					affiliation = affiliationDao.findById(repo.getAffiliationId());
+				full.setRepository(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 				CertificationReport lastRepoNotValidated = certificationReportDao.findReportInProgressByRepositoryIdAndMaxUpdateDate(repo.getId());
 				int numberOfLevel = getNumberOfLevel(lastRepoNotValidated);
 				full.setHealthLatestInProgressReport(repositoryHealthCheck(lastRepoNotValidated, numberOfLevel));
@@ -411,8 +441,10 @@ public class RepositoryService {
 				List<String> superAdminEmails = new ArrayList<String>();
 				List<Admin> superAdmins = adminDao.findAllSuperAdmin();
 				for(Admin superAdmin : superAdmins) {
-					Profile userProfile = profileDao.findById(superAdmin.getUserId());
-					superAdminEmails.add(userProfile.getEmail());
+					Optional<Profile> userProfile = profileDao.findById(superAdmin.getUserId());
+					if(userProfile.isPresent()) {
+						superAdminEmails.add(userProfile.get().getEmail());
+					}
 				}
 				simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 				
