@@ -82,7 +82,6 @@ public class AdminService {
 				Admin admin = mapAdmin.get(userProfile.getId());
 				if(admin != null && !admin.isSuperAdmin()){
 					user.setAdminId(admin.getId());
-					user.setAdmin(true);
 				}
 				// only users and admin (COSO) are visible
 				// SuperAdmin are hidden

@@ -3,7 +3,9 @@ package fr.sedoo.certifymyrepo.rest.service.v1_0;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -24,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
@@ -37,11 +42,11 @@ import fr.sedoo.certifymyrepo.rest.domain.MyReports;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
-import fr.sedoo.certifymyrepo.rest.domain.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -327,6 +332,27 @@ public class CertificationReportService {
 		return getFullReportInformation(loggedUser, reportId, language, service);
 
 	}
+	
+	@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(value = "/getXML", method = RequestMethod.GET)
+	public String getXML(
+				HttpServletResponse response,
+				@RequestHeader("Authorization") String authHeader, 
+				@RequestParam String reportId,
+				@RequestParam String language,
+				@RequestParam String service) throws JsonProcessingException {
+
+		try {
+			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+			PrintableReport report = getFullReportInformation(loggedUser, reportId, language, service);
+			XmlMapper xmlMapper = new XmlMapper();
+			return xmlMapper.writeValueAsString(report);
+		} catch (JsonProcessingException e) {
+			LOG.error("Error XML report", e);
+			throw e;
+			
+		}
+	}
 
 	/**
 	 * Create a PrintableReport from report and template mongoDB collection and scan FTP server for attachments
@@ -338,6 +364,9 @@ public class CertificationReportService {
 	 */
 	private PrintableReport getFullReportInformation(ApplicationUser loggedUser, String reportId, String language, String service) {
 		
+        Locale locale = new Locale(language);
+        ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
+        
 		PrintableReport printableReport = new PrintableReport();
 		
 		CertificationReport report = certificationReportDao.findById(reportId);
@@ -345,7 +374,7 @@ public class CertificationReportService {
 		if(report != null) {
 			
 			// main report information 
-			printableReport.setStatus(report.getStatus());
+			printableReport.setStatus(messages.getString(report.getStatus().toString()));
 			printableReport.setUpdateDate(report.getUpdateDate());
 			printableReport.setVersion(report.getVersion());
 			

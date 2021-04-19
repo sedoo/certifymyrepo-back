@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.sedoo.certifymyrepo.rest.dao.OrcidDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
-import fr.sedoo.certifymyrepo.rest.dto.UserLigth;
+import fr.sedoo.certifymyrepo.rest.dto.User;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 
 @RestController
@@ -31,7 +31,7 @@ public class OrcidService {
 	public Profile getUserByOrcId(@RequestHeader("Authorization") String authHeader, @PathVariable String orcid) {
 		Profile userProfile = null; //profileDao.findByOrcid(orcid);
 		if(userProfile == null) {
-			UserLigth user = orcidDao.getUserInfoByOrcid(orcid);
+			User user = orcidDao.getUserInfoByOrcid(orcid);
 			if(user != null) {
 				userProfile = new Profile();
 				userProfile.setOrcid(orcid);

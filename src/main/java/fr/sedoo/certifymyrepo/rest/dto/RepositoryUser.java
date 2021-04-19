@@ -7,8 +7,17 @@ import lombok.Setter;
 @Setter
 public class RepositoryUser {
 	
+	public RepositoryUser() {
+		
+	}
+	
+	public RepositoryUser(String id, String orcid, String name, String role) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.role = role;
+	}
 	private String id;
-	private String orcid;
 	private String name;
 	private String role;
 

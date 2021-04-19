@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.sedoo.certifymyrepo.rest.domain.SimpleFtpClient;
+import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 
 @RestController

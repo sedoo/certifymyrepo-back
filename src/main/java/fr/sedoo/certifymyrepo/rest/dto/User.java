@@ -11,6 +11,5 @@ public class User {
 	private String adminId;
 	private String name;
 	private String email;
-	private boolean isAdmin;
 
 }

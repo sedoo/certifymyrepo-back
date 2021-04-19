@@ -25,7 +25,7 @@ public class TestPdf {
 		
 		PrintableReport report = new PrintableReport();
 		report.setTitle("SSS Report");
-		report.setStatus(ReportStatus.IN_PROGRESS);
+		report.setStatus(ReportStatus.IN_PROGRESS.name());
 		report.setUpdateDate(new Date());
 		report.setVersion("1.0");
 		List<PrintableRequirement> requirements = new ArrayList<>();

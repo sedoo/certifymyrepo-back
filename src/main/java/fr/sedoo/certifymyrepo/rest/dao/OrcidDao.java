@@ -1,9 +1,9 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
-import fr.sedoo.certifymyrepo.rest.dto.UserLigth;
+import fr.sedoo.certifymyrepo.rest.dto.User;
 
 public interface OrcidDao {
 	
-	UserLigth getUserInfoByOrcid(String orcid);
+	User getUserInfoByOrcid(String orcid);
 
 }

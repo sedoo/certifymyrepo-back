@@ -17,7 +17,7 @@ import fr.sedoo.certifymyrepo.rest.dao.OrcidDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
-import fr.sedoo.certifymyrepo.rest.dto.UserLigth;
+import fr.sedoo.certifymyrepo.rest.dto.User;
 
 @Component
 public class DefaultAdminUtils {
@@ -57,72 +57,44 @@ public class DefaultAdminUtils {
 	 * @param isSuperAdmin
 	 */
 	private void saveAdmin(String orcid, boolean isSuperAdmin) {
-		Profile user = profileDao.findByOrcid(orcid);
-		if(user != null) {
-			Admin admin = adminDao.findByUserId(user.getId());
+		Profile userProfile = profileDao.findByOrcid(orcid);
+		if(userProfile != null) {
+			Admin admin = adminDao.findByUserId(userProfile.getId());
 			if(admin != null) {
 				admin.setSuperAdmin(isSuperAdmin);
 				adminDao.save(admin);
 			} else {
 				Admin entity = new Admin();
-				entity.setName(user.getName());
-				entity.setUserId(user.getId());
+				entity.setName(userProfile.getName());
+				entity.setUserId(userProfile.getId());
 				entity.setSuperAdmin(isSuperAdmin);
 				adminDao.save(entity);
 			}
 			if(isSuperAdmin) {
-				LOG.info("{} has been updated as Super Admin", user.getName());
+				LOG.info("{} has been updated as Super Admin", userProfile.getName());
 			} else {
-				LOG.info("{} has been updated as Admin", user.getName());
+				LOG.info("{} has been updated as Admin", userProfile.getName());
 			}
 		} else {
-			UserLigth userLigth = orcidDao.getUserInfoByOrcid(orcid);
-			if(userLigth != null){	
-				user = new Profile();
-				user.setOrcid(orcid);
-				user.setName(userLigth.getName());
-				user.setEmail(userLigth.getEmail());
-				user = profileDao.save(user);
+			User user = orcidDao.getUserInfoByOrcid(orcid);
+			if(user != null){	
+				userProfile = new Profile();
+				userProfile.setOrcid(orcid);
+				userProfile.setName(user.getName());
+				userProfile.setEmail(user.getEmail());
+				userProfile = profileDao.save(userProfile);
 				Admin entity = new Admin();
-				entity.setName(user.getName());
-				entity.setUserId(user.getId());
+				entity.setName(userProfile.getName());
+				entity.setUserId(userProfile.getId());
 				entity.setSuperAdmin(isSuperAdmin);
 				adminDao.save(entity);
 				if(isSuperAdmin) {
-					LOG.info("{} has been added as Super Admin", userLigth.getName());
+					LOG.info("{} has been added as Super Admin", user.getName());
 				} else {
-					LOG.info("{} has been added as Admin", userLigth.getName());
+					LOG.info("{} has been added as Admin", user.getName());
 				}
 			}
 		}
-	}
-	
-	/**
-	 * Load profile user from json resources file
-	 * @param name file name
-	 * @return Array of user profile
-	 */
-	private Profile[] loadProfiles(String name) {
-		Profile[] result = null;
-		InputStream inJson = null;
-		ClassLoader classLoader = getClass().getClassLoader();
-		try {
-			inJson = classLoader.getResourceAsStream(name);
-			if(inJson != null ) {
-				result = new ObjectMapper().readValue(inJson, Profile[].class);
-			}
-		} catch (IOException e) {
-			LOG.error("Load file", e);;
-		} finally {
-			if(inJson != null) {
-				try {
-					inJson.close();
-				} catch (IOException e) {
-					LOG.error("Error while close stream", e);
-				}
-			}
-		}
-		return result;
 	}
 
 }

@@ -1,4 +1,4 @@
-package fr.sedoo.certifymyrepo.rest.domain;
+package fr.sedoo.certifymyrepo.rest.ftp;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -89,6 +89,29 @@ public class SimpleFtpClient {
 				}
 			}
 			resultDelete = client.deleteFile(fileName);
+			client.disconnect();
+		} catch (SocketException e) {
+			logger.error("Error checking folder", e);
+		} catch (IOException e) {
+			logger.error("Errorchecking folder", e);
+		}
+		return resultDelete;
+	}
+	
+	/**
+	 * @param folderName id of the repository
+	 * @return true is the given folder name exist on root location
+	 */
+	public boolean deleteFolder(String folderName) {
+		boolean resultDelete = false;
+		FTPClient client = new FTPClient();
+		try {
+			client.connect(ftpConfiguration.getHost());
+			client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
+			client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
+			client.enterLocalPassiveMode();
+			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
+			resultDelete = client.removeDirectory(folderName);
 			client.disconnect();
 		} catch (SocketException e) {
 			logger.error("Error checking folder", e);

@@ -38,7 +38,7 @@ import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
-import fr.sedoo.certifymyrepo.rest.dto.UserLigth;
+import fr.sedoo.certifymyrepo.rest.dto.User;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
@@ -99,10 +99,10 @@ public class ProfileService {
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
         
 		if(profile.getEmail() != null && profileDao.findByEmail(profile.getEmail()) != null) {
-			throw new BusinessException(messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+			throw new BusinessException(messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
 		}
 		if(profile.getOrcid() != null && profileDao.findByOrcid(profile.getOrcid()) != null) {
-			throw new BusinessException(messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+			throw new BusinessException(messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
 		}
 		Profile createdProfile = profileDao.save(profile);
 		
@@ -135,12 +135,12 @@ public class ProfileService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listAllUsers", method = RequestMethod.GET)
-	public List<UserLigth> listAll(@RequestHeader("Authorization") String authHeader) {
-		List<UserLigth> result = new ArrayList<>();
+	public List<User> listAll(@RequestHeader("Authorization") String authHeader) {
+		List<User> result = new ArrayList<>();
 		List<Profile> usersProfile = profileDao.findAll();
 		if(usersProfile != null) {
 			for( Profile userProfile : usersProfile) {
-				UserLigth user = new UserLigth();
+				User user = new User();
 				user.setUserId(userProfile.getId());
 				user.setEmail(userProfile.getEmail());
 				user.setName(userProfile.getName());
@@ -237,7 +237,7 @@ public class ProfileService {
 	private StringBuilder createInformationContent(String key, ResourceBundle messages, List<String> repo) {
 		StringBuilder message = new StringBuilder();
 		if(repo.size() > 0) {
-			message.append(messages.getString("user.information.".concat(key).concat(".repo.warning"))).append(" ");	
+			message.append(messages.getString("user.information.repo.".concat(key).concat(".warning"))).append(" ");	
 			for(int i=0 ; i<repo.size() ; i++) {
 				message.append(repo.get(i));
 				if(i < repo.size()-1) {

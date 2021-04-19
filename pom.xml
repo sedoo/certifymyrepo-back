@@ -156,7 +156,11 @@
 		    <groupId>joda-time</groupId>
 		    <artifactId>joda-time</artifactId>
 		</dependency>
-
+		
+		<dependency>
+		    <groupId>com.fasterxml.jackson.dataformat</groupId>
+		    <artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
 
 	</dependencies>
 
@@ -171,7 +175,9 @@
 	          <includes>
 	            <include>**/*.class</include>
 	          </includes>
+	          <!--  Execute integration test by default. Exlude them if needed.
 			  <excludedGroups>fr.sedoo.IntegrationTest</excludedGroups>
+			  -->
 	        </configuration>
 	      </plugin>
 		

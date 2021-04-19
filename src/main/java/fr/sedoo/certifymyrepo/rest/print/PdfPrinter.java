@@ -96,7 +96,7 @@ public class PdfPrinter {
 			table.setWidthPercentage(100f);
 			document.add(table);
 			
-			writePairValue(messages.getString("report.status"), messages.getString(report.getStatus().name()), document);
+			writePairValue(messages.getString("report.status"), report.getStatus(), document);
 			SimpleDateFormat df = null;
 			if(StringUtils.equals("fr", language)) {
 				df = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss", Locale.FRENCH);
