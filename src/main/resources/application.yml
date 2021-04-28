@@ -38,6 +38,9 @@ mail:
 orcid:
    tokenUrl: https://orcid.org/oauth/token
    publicApiUrl: https://pub.orcid.org/v2.1
+
+shibboleth:
+   url: https://services-coso-preprod.sedoo.fr
         
 ftp:
     host: sedur.sedoo.fr
