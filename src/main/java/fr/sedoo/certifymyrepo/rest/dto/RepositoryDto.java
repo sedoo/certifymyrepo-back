@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.dto;
 
+import java.util.Date;
 import java.util.List;
 
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
@@ -14,6 +15,7 @@ public class RepositoryDto {
 		this.setId(repository.getId());
 		this.setName(repository.getName());
 		this.setAffiliation(affiliation);
+		this.setCreationDate(repository.getCreationDate());
 		this.setKeywords(repository.getKeywords());
 		this.setContact(repository.getContact());
 		this.setUsers(repository.getUsers());
@@ -22,6 +24,7 @@ public class RepositoryDto {
 	}
 	private String id;
 	private String name;
+	private Date creationDate;
 	private AffiliationDto affiliation;
 	private List<String> keywords;
 	private String contact;

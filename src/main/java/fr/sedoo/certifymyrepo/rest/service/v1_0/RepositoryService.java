@@ -1,6 +1,7 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -314,6 +315,9 @@ public class RepositoryService {
 			if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
 				if(repository.getId() != null) {
 					checkUsersNotification(repository, messages);
+				}
+				if(repository.getId() == null) {
+					repository.setCreationDate(new Date());
 				}
 				result =  repositoryDao.save(repository);	
 			} else {

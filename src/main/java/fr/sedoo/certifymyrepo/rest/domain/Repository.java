@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.domain;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -19,6 +20,7 @@ public class Repository {
 	@Id
 	private String id;
 	private String name;
+	private Date creationDate;
 	private String affiliationId;
 	private List<String> keywords;
 	private String contact;
