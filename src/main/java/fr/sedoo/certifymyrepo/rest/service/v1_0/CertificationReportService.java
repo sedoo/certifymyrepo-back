@@ -45,14 +45,16 @@ import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
+import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
+import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.export.PdfPrinter;
+import fr.sedoo.certifymyrepo.rest.export.Report;
+import fr.sedoo.certifymyrepo.rest.export.Requirement;
 import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
-import fr.sedoo.certifymyrepo.rest.print.PdfPrinter;
-import fr.sedoo.certifymyrepo.rest.print.PrintableReport;
-import fr.sedoo.certifymyrepo.rest.print.PrintableRequirement;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
@@ -89,12 +91,43 @@ public class CertificationReportService {
 		return "yes";
 	}
 	
+	/**
+	 * 
+	 * @param authHeader
+	 * @param repositoryId
+	 * @return list of all reports for a given repository and rights of the user on this repository
+	 */
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listByRepositoryId/{repositoryId}", method = RequestMethod.GET)
 	public MyReports listByRepositoryId(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "repositoryId") String repositoryId) {
 		MyReports result = new MyReports();
+		
+		// Get All the reports from the given repository id
 		List<CertificationReport> reports = certificationReportDao.findByRepositoryId(repositoryId);
-		result.setReports(reports);
+		
+		// Transform report collection into DTO object. 
+		// Add information from template (number of levels, level active for a given requirement etc)
+		List<ReportDto> reportsDto = new ArrayList<ReportDto>();
+		for(CertificationReport report : reports) {
+			ReportDto reportDto = new ReportDto(report);
+			// For a given repository, reports can be made from different template
+			CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateName());
+			// Set the maximum value of radar chart yaxis
+			reportDto.setLevelMaxValue(template.getLevels().size()-1);
+			List<CertificationItemDto> itemList = new ArrayList<CertificationItemDto>();
+			for(CertificationItem item : report.getItems()) {
+				CertificationItemDto itemDto = new CertificationItemDto(item);
+				for(RequirementTemplate requirementTemplate : template.getRequirements()) {
+					if(StringUtils.equals(item.getCode(), requirementTemplate.getCode())) {
+						itemDto.setLevelActive(requirementTemplate.isLevelActive());
+					}
+				}
+				itemList.add(itemDto);
+			}
+			reportDto.setItems(itemList);
+			reportsDto.add(reportDto);
+		}
+		result.setReports(reportsDto);
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		// super admin has all rights
 		if (loggedUser.isSuperAdmin()) {
@@ -304,7 +337,7 @@ public class CertificationReportService {
 		try {
 			
 			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-			PrintableReport printableReport = getFullReportInformation(loggedUser, reportId, language, service);
+			Report printableReport = getFullReportInformation(loggedUser, reportId, language, service);
 			if(printableReport != null) {
 				byte[] radarImage = null;
 				if (uploadedFile != null) {
@@ -321,7 +354,7 @@ public class CertificationReportService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/getJSON", method = RequestMethod.GET)
-	public PrintableReport getJSON(
+	public Report getJSON(
 				HttpServletResponse response,
 				@RequestHeader("Authorization") String authHeader, 
 				@RequestParam String reportId,
@@ -344,7 +377,7 @@ public class CertificationReportService {
 
 		try {
 			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-			PrintableReport report = getFullReportInformation(loggedUser, reportId, language, service);
+			Report report = getFullReportInformation(loggedUser, reportId, language, service);
 			XmlMapper xmlMapper = new XmlMapper();
 			return xmlMapper.writeValueAsString(report);
 		} catch (JsonProcessingException e) {
@@ -362,12 +395,12 @@ public class CertificationReportService {
 	 * @param service
 	 * @return PrintableReport
 	 */
-	private PrintableReport getFullReportInformation(ApplicationUser loggedUser, String reportId, String language, String service) {
+	private Report getFullReportInformation(ApplicationUser loggedUser, String reportId, String language, String service) {
 		
         Locale locale = new Locale(language);
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
         
-		PrintableReport printableReport = new PrintableReport();
+		Report printableReport = new Report();
 		
 		CertificationReport report = certificationReportDao.findById(reportId);
 
@@ -407,14 +440,14 @@ public class CertificationReportService {
 	 * @param service input parameter
 	 * @return List<PrintableRequirement>
 	 */
-	private List<PrintableRequirement> getRequirementInformation(
+	private List<Requirement> getRequirementInformation(
 			CertificationReport report, 
 			String language,
 			String service) {
 		CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateName());
 		Map<String, LevelTemplate> levels = getLevelMap(template.getLevels());
 		Map<String, RequirementTemplate> requirements = getRequirementMap(template.getRequirements());
-		List<PrintableRequirement> printableRequiments = new ArrayList<>();
+		List<Requirement> printableRequiments = new ArrayList<>();
 		
 		Map<String, List<String>> attachments = null;
 		if(ftpClient.checkDirectoryExistance(report.getId())) {
@@ -422,7 +455,7 @@ public class CertificationReportService {
 		}
 		
 		for (CertificationItem r : report.getItems()) {
-			PrintableRequirement printableRequirement = new PrintableRequirement();
+			Requirement printableRequirement = new Requirement();
 			if(StringUtils.equals("fr", language)) {
 				printableRequirement.setRequirement(requirements.get(r.getCode()).getRequirement().getFr());
 				if(r.getLevel() != null) {

@@ -4,31 +4,34 @@
 					"fr": "Exigences CoreTrustSeal 2023-2025 relatives aux référentiels de données"},
     "levels":  [
             {"code": 0, "label": {"en": "0 - Not applicable", "fr": "0 ‐ Sans objet"}},
-            {"code": 1, "label": {"en": "1 - The repository has not considered this yet", "fr": "1 ‐ L’entrepôt n'en a pas encore tenu compte"}},
-            {"code": 2, "label": {"en": "2 - The repository has a theoretical concept", "fr": "2 - L’entrepôt maîtrise le concept de façon théorique"}},
-            {"code": 3, "label": {"en": "3 - The repository is in the implementation phase ", "fr": "3 - L’entrepôt est en phase d’implémentation"}},
-            {"code": 4, "label": {"en": "4 - The guideline has been fully implemented in the repository", "fr": "4 - La spécification a été entièrement implémentée"}}
+            {"code": 1, "label": {"en": "1 - Level 1", "fr": "1 ‐ Niveau 1"}},
+            {"code": 2, "label": {"en": "2 - Level 2", "fr": "2 - Niveau 2"}},
+            {"code": 3, "label": {"en": "3 - Level 3", "fr": "3 - Niveau 3"}}
         ],
     "requirements" : [ 
     {
         "code" : 0,
         "requirement": {"en": "R0. This is a new requirement.", 
-                        "fr": "R0. Ceci est un nouveau critère."}
+                        "fr": "R0. Ceci est un nouveau critère."},
+        "levelActive" : false
     }, 
     {
         "code" : 1,
         "requirement": {"en": "R1. Here another one",
-                        "fr": "R1. En voilà un autre"}
+                        "fr": "R1. En voilà un autre"},
+        "levelActive" : true
     }, 
     {
         "code" : 2,
         "requirement": {"en": "R2. And another one again.",
-                        "fr": "R2. Et encore un autre."}
+                        "fr": "R2. Et encore un autre."},
+        "levelActive" : true
     },
     {
         "code" : 3,
         "requirement": {"en": "R3. One more for the road.",
-                        "fr": "R3. Un dernier pour la route."}
+                        "fr": "R3. Un dernier pour la route."},
+         "levelActive" : true
     }
 ]
 }

@@ -175,9 +175,9 @@
 	          <includes>
 	            <include>**/*.class</include>
 	          </includes>
-	          <!--  Execute integration test by default. Exlude them if needed.
+	          <!--  Execute integration test by default. Exlude them if needed.			  -->
 			  <excludedGroups>fr.sedoo.IntegrationTest</excludedGroups>
-			  -->
+
 	        </configuration>
 	      </plugin>
 		

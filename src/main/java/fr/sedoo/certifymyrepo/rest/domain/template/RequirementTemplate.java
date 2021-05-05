@@ -9,5 +9,7 @@ public class RequirementTemplate {
 	
 	private String code;
 	private RequirementLabel requirement;
+	private ResponseTemplate response;
+	private boolean levelActive;
 
 }

@@ -13,9 +13,9 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
-import fr.sedoo.certifymyrepo.rest.print.PdfPrinter;
-import fr.sedoo.certifymyrepo.rest.print.PrintableReport;
-import fr.sedoo.certifymyrepo.rest.print.PrintableRequirement;
+import fr.sedoo.certifymyrepo.rest.export.PdfPrinter;
+import fr.sedoo.certifymyrepo.rest.export.Report;
+import fr.sedoo.certifymyrepo.rest.export.Requirement;
 
 @RunWith(SpringRunner.class)
 public class TestPdf {
@@ -23,18 +23,18 @@ public class TestPdf {
 	@Ignore
 	public void basicTest() throws Exception {
 		
-		PrintableReport report = new PrintableReport();
+		Report report = new Report();
 		report.setTitle("SSS Report");
 		report.setStatus(ReportStatus.IN_PROGRESS.name());
 		report.setUpdateDate(new Date());
 		report.setVersion("1.0");
-		List<PrintableRequirement> requirements = new ArrayList<>();
-		PrintableRequirement r0 = new PrintableRequirement();
+		List<Requirement> requirements = new ArrayList<>();
+		Requirement r0 = new Requirement();
 		r0.setRequirement("R0. Veuillez fournir les éléments de contexte de votre entrepôt.");
 		r0.setResponse("ceci est un test.");
 		r0.setLevelLabel("3 - L’entrepôt est en phase d’implémentation");
 		requirements.add(r0);
-		PrintableRequirement r1 = new PrintableRequirement();
+		Requirement r1 = new Requirement();
 		r1.setRequirement("R1. L’entrepôt de données a pour mission explicite de donner accès à des données dans son domaine et de les préserver");
 		r1.setResponse("ceci est un autre test.");
 		r1.setLevelLabel("0 - Sans objet");

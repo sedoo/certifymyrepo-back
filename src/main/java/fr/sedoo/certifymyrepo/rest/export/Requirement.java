@@ -1,4 +1,4 @@
-package fr.sedoo.certifymyrepo.rest.print;
+package fr.sedoo.certifymyrepo.rest.export;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PrintableRequirement {
+public class Requirement {
 	
 	private String requirement;
 	private String response;

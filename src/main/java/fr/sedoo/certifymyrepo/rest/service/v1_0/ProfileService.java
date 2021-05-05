@@ -38,7 +38,6 @@ import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
-import fr.sedoo.certifymyrepo.rest.dto.User;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
@@ -85,7 +84,25 @@ public class ProfileService {
 	
 	@Secured({ Roles.AUTHORITY_USER })
     @RequestMapping(value = "/saveProfile", method = RequestMethod.POST)
-    public Profile saveProfile(@RequestHeader("Authorization") String authHeader, @RequestBody Profile profile) {
+    public Profile saveProfile(@RequestHeader("Authorization") String authHeader, 
+    		@RequestBody Profile profile,
+    		@RequestParam String language) {
+		
+        Locale locale = new Locale(language);
+        ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
+        
+		if(profile.getEmail() != null) {
+			Profile existingProfile = profileDao.findByEmail(profile.getEmail());
+			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
+				throw new BusinessException(messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+			}
+		}
+		if(profile.getOrcid() != null) {
+			Profile existingProfile = profileDao.findByOrcid(profile.getOrcid());
+			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
+				throw new BusinessException(messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+			}
+		}
 		return profileDao.save(profile);
     }
 	
@@ -135,19 +152,20 @@ public class ProfileService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listAllUsers", method = RequestMethod.GET)
-	public List<User> listAll(@RequestHeader("Authorization") String authHeader) {
-		List<User> result = new ArrayList<>();
+	public List<Profile> listAll(@RequestHeader("Authorization") String authHeader) {
+		//List<User> result = new ArrayList<>();
 		List<Profile> usersProfile = profileDao.findAll();
+		/**
 		if(usersProfile != null) {
 			for( Profile userProfile : usersProfile) {
-				User user = new User();
+				User user = (User) userProfile;
 				user.setUserId(userProfile.getId());
 				user.setEmail(userProfile.getEmail());
 				user.setName(userProfile.getName());
 				result.add(user);
 			}
-		}
-		return result;
+		}*/
+		return usersProfile;
 	}
 	
 	/**

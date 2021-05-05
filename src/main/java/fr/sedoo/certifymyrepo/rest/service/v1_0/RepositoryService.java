@@ -42,8 +42,11 @@ import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
+import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
+import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
+import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
@@ -182,12 +185,10 @@ public class RepositoryService {
 					affiliation = affiliationDao.findById(repo.getAffiliationId());
 				full.setRepository(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 				CertificationReport lastRepoNotValidated = certificationReportDao.findReportInProgressByRepositoryIdAndMaxUpdateDate(repo.getId());
-				int numberOfLevel = getNumberOfLevel(lastRepoNotValidated);
-				full.setHealthLatestInProgressReport(repositoryHealthCheck(lastRepoNotValidated, numberOfLevel));
+				full.setHealthLatestInProgressReport(repositoryHealthCheck(lastRepoNotValidated));
 				
 				CertificationReport lastRepoValidated = certificationReportDao.findReportValidatedByRepositoryIdAndMaxUpdateDate(repo.getId());
-				numberOfLevel = getNumberOfLevel(lastRepoValidated);
-				full.setHealthLatestValidReport(repositoryHealthCheck(lastRepoValidated, numberOfLevel));
+				full.setHealthLatestValidReport(repositoryHealthCheck(lastRepoValidated));
 				// Repositories are read only by default
 				// only SuperAdmin or user(Editor) associated with a repository have write access
 				full.setReadonly(true);
@@ -229,28 +230,32 @@ public class RepositoryService {
 	 * @param numberOfLevel 
 	 * @return health check indicator, label and data list for radar chart
 	 */
-	private RepositoryHealth repositoryHealthCheck(CertificationReport report, int numberOfLevel) {
+	private RepositoryHealth repositoryHealthCheck(CertificationReport report) {
 		if(report != null ) {
 			
 			RepositoryHealth result = new RepositoryHealth();
-			result.setLastUpdateDate(report.getUpdateDate());
-			List<String> listRequirementCode = new ArrayList<String>();
-			List<String> listRequirementLevel = new ArrayList<String>();
 			// init counters
 			Map<String, Integer> avg = new HashMap<String, Integer>();
 			
-			// apexchart works with tow separate lists for label and data
-			// Loop on the requirement items to build label(requirement code) and data (compliance level) lists
+			ReportDto latestReport = new ReportDto(report);
+			result.setLatestReport(latestReport);
+			
+			CertificationTemplate template = templateDao.getCertificationReportTemplate(report.getTemplateName());
+			latestReport.setLevelMaxValue(template.getLevels().size() - 1);
+			List<CertificationItemDto> itemList = new ArrayList<CertificationItemDto>();
 			for(CertificationItem item : report.getItems()) {
-				listRequirementCode.add(String.format("R%s", item.getCode()));
+				CertificationItemDto itemDto = new CertificationItemDto(item);
+				for(RequirementTemplate requirementTemplate : template.getRequirements()) {
+					if(StringUtils.equals(item.getCode(), requirementTemplate.getCode())) {
+						itemDto.setLevelActive(requirementTemplate.isLevelActive());
+					}
+				}
+				itemList.add(itemDto);
 				String level = (item.getLevel() != null && item.getLevel() != null)
 						? item.getLevel() : null;
-				listRequirementLevel.add(level);
 				incrementCounter(avg, level);
 			}
-			result.setRequirementCodeList(listRequirementCode);
-			result.setRequirementLevelList(listRequirementLevel);
-			result.setNumberOfLevel(numberOfLevel);
+			latestReport.setItems(itemList);
 			
 			// Green: all the requirements are at the level 4, 3 or 0 for not applicable.
 			// Orange: at list half of the requirements has been considered (level > 1 or 0 for not applicable).
@@ -452,13 +457,13 @@ public class RepositoryService {
 				}
 				simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 				
-				List<String> to = new ArrayList<String>();
+				Set<String> to = new HashSet<String>();
 				to.add(repo.getContact());
 				List<String> repoManagerOrcid = getEditorUserId(repo.getUsers());
 				if (repoManagerOrcid != null && repoManagerOrcid.size() > 0) {
 					List<Profile> profiles = profileDao.findByOrcidIn(repoManagerOrcid);
 					if(profiles != null && profiles.size() > 0) {
-						to.addAll(profiles.stream().map(profile -> profile.getEmail()).collect(Collectors.toList()));
+						to.addAll(profiles.stream().map(profile -> profile.getEmail()).collect(Collectors.toSet()));
 					}
 				}
 				simpleemail.addTo(to.toArray(new String[0]));
@@ -473,7 +478,7 @@ public class RepositoryService {
 						messages.getString(accessRequest.getRole()), 
 						repo.getName(), accessRequest.getText()));
 			} catch (Exception e) {
-				LOG.error("An error has occured while sending request access message for reviewers");
+				LOG.error("An error has occured while sending request access message for reviewers", e);
 			}
 		} else {
 			LOG.error("No repository found. No access can be granted.");
@@ -490,7 +495,8 @@ public class RepositoryService {
 		List<String> userIdList = new ArrayList<String>();
 		if(users!= null && users.size() > 0) {
 			for(RepositoryUser user : users) {
-				if(StringUtils.equals(user.getRole(), Roles.EDITOR)) {
+				if(StringUtils.equals(user.getRole(), Roles.EDITOR)
+					&& !userIdList.contains(user.getId())) {
 					userIdList.add(user.getId());
 				}
 			}

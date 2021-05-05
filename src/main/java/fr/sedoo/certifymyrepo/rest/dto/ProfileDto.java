@@ -5,11 +5,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class User {
+public class ProfileDto {
 	
-	private String userId;
+	private String id;
 	private String adminId;
+	private String orcid;
 	private String name;
 	private String email;
-
 }

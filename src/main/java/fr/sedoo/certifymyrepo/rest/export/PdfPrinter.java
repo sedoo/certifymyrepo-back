@@ -1,4 +1,4 @@
-package fr.sedoo.certifymyrepo.rest.print;
+package fr.sedoo.certifymyrepo.rest.export;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -43,7 +43,7 @@ public class PdfPrinter {
 	private Font h4FontLink;
 	private Font h3FontBold;
 	
-	public byte[] print(String language, PrintableReport report, byte[] image) {
+	public byte[] print(String language, Report report, byte[] image) {
 		
 		try {
 	        Locale locale = new Locale(language);
@@ -117,7 +117,7 @@ public class PdfPrinter {
 				document.add(aux);
 			}
 			
-			for(PrintableRequirement r : report.getRequirements()) {
+			for(Requirement r : report.getRequirements()) {
 				addBookmark(r.getRequirement(), root, writer);
 				h3(r.getRequirement(), document);
 				writePairValue(messages.getString("requirement.response"), r.getResponse(), document);

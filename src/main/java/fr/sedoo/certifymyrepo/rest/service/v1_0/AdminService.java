@@ -19,7 +19,7 @@ import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
-import fr.sedoo.certifymyrepo.rest.dto.User;
+import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import io.swagger.annotations.ApiOperation;
@@ -69,16 +69,17 @@ public class AdminService {
 	
 	@Secured({Roles.AUTHORITY_ADMIN})
 	@RequestMapping(value = "/listAllUsers", method = RequestMethod.GET)
-	public List<User> listAll(@RequestHeader("Authorization") String authHeader) {
-		List<User> result = new ArrayList<>();
+	public List<ProfileDto> listAll(@RequestHeader("Authorization") String authHeader) {
+		List<ProfileDto> result = new ArrayList<>();
 		List<Profile> usersProfile = profileDao.findAll();
 		Map<String, Admin> mapAdmin = getAllAdmin();
 		if(usersProfile != null) {
 			for( Profile userProfile : usersProfile) {
-				User user = new User();
-				user.setUserId(userProfile.getId());
+				ProfileDto user = new ProfileDto();
+				user.setId(userProfile.getId());
 				user.setEmail(userProfile.getEmail());
 				user.setName(userProfile.getName());
+				user.setOrcid(userProfile.getOrcid());
 				Admin admin = mapAdmin.get(userProfile.getId());
 				if(admin != null && !admin.isSuperAdmin()){
 					user.setAdminId(admin.getId());

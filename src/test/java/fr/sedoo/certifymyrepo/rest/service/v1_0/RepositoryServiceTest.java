@@ -35,6 +35,9 @@ import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
+import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
+import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
@@ -135,7 +138,13 @@ public class RepositoryServiceTest {
     public void testListAllFullRepositoryGreenHealthCheck() {
 		
         when(certificationReportDaoMock.findReportInProgressByRepositoryIdAndMaxUpdateDate(anyString())).thenReturn(createCertificationReport("4"));
-        
+		CertificationTemplate value = new CertificationTemplate();
+		List<LevelTemplate> list = new ArrayList<LevelTemplate>();
+		value.setLevels(list);
+		List<RequirementTemplate> requirements = new ArrayList<RequirementTemplate>();
+		value.setRequirements(requirements);
+		when(templateDao.getCertificationReportTemplate(any())).thenReturn(value);
+		
         List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
         
         assertTrue(result.size() == 2);
@@ -147,7 +156,13 @@ public class RepositoryServiceTest {
     public void testListAllFullRepositoryRedHealthCheck() {
 		
         when(certificationReportDaoMock.findReportInProgressByRepositoryIdAndMaxUpdateDate(anyString())).thenReturn(createCertificationReport("1"));
-        
+		CertificationTemplate value = new CertificationTemplate();
+		List<LevelTemplate> list = new ArrayList<LevelTemplate>();
+		value.setLevels(list);
+		List<RequirementTemplate> requirements = new ArrayList<RequirementTemplate>();
+		value.setRequirements(requirements);
+		when(templateDao.getCertificationReportTemplate(any())).thenReturn(value);
+		
         List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
         
         assertTrue(result.size() == 2);

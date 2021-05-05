@@ -1,4 +1,4 @@
-package fr.sedoo.certifymyrepo.rest.print;
+package fr.sedoo.certifymyrepo.rest.export;
 
 import java.io.IOException;
 

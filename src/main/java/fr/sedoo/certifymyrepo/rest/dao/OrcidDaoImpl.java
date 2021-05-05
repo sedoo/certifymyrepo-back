@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import fr.sedoo.certifymyrepo.rest.dto.User;
+import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.OrcidService;
 import fr.sedoo.certifymyrepo.rest.utils.JerseyClient;
 
@@ -26,7 +26,7 @@ public class OrcidDaoImpl implements OrcidDao {
 	}
 
 	@Override
-	public User getUserInfoByOrcid(String orcid) {
+	public ProfileDto getUserInfoByOrcid(String orcid) {
 		String response = client.getJsonResponse(String.format("https://pub.orcid.org/v3.0/%s", orcid));
 		if(response != null) {
 			return parseResponse(response, orcid);
@@ -35,8 +35,8 @@ public class OrcidDaoImpl implements OrcidDao {
 		}
 	}
 	
-	private User parseResponse(String content, String orcid) {
-		User user = null;
+	private ProfileDto parseResponse(String content, String orcid) {
+		ProfileDto user = null;
 		JSONParser parser = new JSONParser();
 		try {
 			JSONObject aux = (JSONObject) parser.parse(content);
@@ -46,7 +46,7 @@ public class OrcidDaoImpl implements OrcidDao {
 			String givenNameValue = givenNames.get("value").toString();
 			JSONObject familyName = (JSONObject) name.get("family-name");
 			String familyNameValue = familyName.get("value").toString();
-			user = new User();
+			user = new ProfileDto();
 			user.setName(givenNameValue.concat(" ").concat(familyNameValue));
 			JSONObject emails = (JSONObject) person.get("emails");
 			JSONArray emailList = (JSONArray) emails.get("email");

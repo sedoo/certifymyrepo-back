@@ -17,7 +17,7 @@ import fr.sedoo.certifymyrepo.rest.dao.OrcidDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
-import fr.sedoo.certifymyrepo.rest.dto.User;
+import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 
 @Component
 public class DefaultAdminUtils {
@@ -76,7 +76,7 @@ public class DefaultAdminUtils {
 				LOG.info("{} has been updated as Admin", userProfile.getName());
 			}
 		} else {
-			User user = orcidDao.getUserInfoByOrcid(orcid);
+			ProfileDto user = orcidDao.getUserInfoByOrcid(orcid);
 			if(user != null){	
 				userProfile = new Profile();
 				userProfile.setOrcid(orcid);

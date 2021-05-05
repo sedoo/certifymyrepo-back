@@ -14,7 +14,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import fr.sedoo.certifymyrepo.rest.dto.User;
+import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.utils.JerseyClient;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -32,7 +32,7 @@ public class OrcidDaoImplTest {
 		when(client.getJsonResponse(any())).thenReturn(content);
 		
 		OrcidDao orcidDao = new OrcidDaoImpl(client);
-		User user = orcidDao.getUserInfoByOrcid("0000-0000-0000-0000");
+		ProfileDto user = orcidDao.getUserInfoByOrcid("0000-0000-0000-0000");
 		assertEquals(user.getName(), "Toto Titi");
 		assertEquals(user.getEmail(), "titi@gmail.com");
 	}
@@ -46,7 +46,7 @@ public class OrcidDaoImplTest {
 		when(client.getJsonResponse(any())).thenReturn(content);
 		
 		OrcidDao orcidDao = new OrcidDaoImpl(client);
-		User user = orcidDao.getUserInfoByOrcid("0000-0000-0000-0000");
+		ProfileDto user = orcidDao.getUserInfoByOrcid("0000-0000-0000-0000");
 		assertEquals(user.getName(), "Toto Titi");
 		assertEquals(user.getEmail(), null);
 	}
