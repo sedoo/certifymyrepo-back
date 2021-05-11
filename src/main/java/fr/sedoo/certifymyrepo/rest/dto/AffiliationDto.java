@@ -10,17 +10,22 @@ public class AffiliationDto implements Comparable<AffiliationDto> {
 
 	private String id;
 	private String institute;
-	private String departement;
+	private String acronym;
+	private String department;
 	private String country;
+	private String website;
+	private String address;
 
 	public AffiliationDto(Affiliation source) {
 		if(source != null) {
 			setInstitute(source.getInstitute());
+			setAcronym(source.getAcronym());
 			setCountry(source.getCountry());
 			setId(source.getId());
-			setDepartement(source.getDepartment());
+			setDepartment(source.getDepartment());
+			setWebsite(source.getWebsite());
+			setAddress(source.getAddress());
 		}
-
 	}
 
 	@Override

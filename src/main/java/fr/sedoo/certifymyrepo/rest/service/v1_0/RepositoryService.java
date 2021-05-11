@@ -183,6 +183,7 @@ public class RepositoryService {
 				Affiliation affiliation = null;
 				if(repo.getAffiliationId() != null)
 					affiliation = affiliationDao.findById(repo.getAffiliationId());
+				full.setName(repo.getName());
 				full.setRepository(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 				CertificationReport lastRepoNotValidated = certificationReportDao.findReportInProgressByRepositoryIdAndMaxUpdateDate(repo.getId());
 				full.setHealthLatestInProgressReport(repositoryHealthCheck(lastRepoNotValidated));

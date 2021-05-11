@@ -18,6 +18,7 @@ public class ReportDto {
 		this.setRepositoryId(report.getRepositoryId());
 		this.setStatus(report.getStatus());
 		this.setVersion(report.getVersion());
+		this.setUpdateDate(report.getUpdateDate());
 	}
 	
 	private String id;

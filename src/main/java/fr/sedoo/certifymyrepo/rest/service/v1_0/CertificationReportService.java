@@ -304,7 +304,7 @@ public class CertificationReportService {
 	@RequestMapping(value = "/saveComments", method = RequestMethod.POST)
 	public RequirementComments saveComments(@RequestHeader("Authorization") String authHeader, 
 			@RequestParam String reportId,
-			@RequestParam Integer requirementCode,
+			@RequestParam String requirementCode,
 			@RequestBody List<Comment> comments) {
 		RequirementComments result = commentsDao.getCommentsByReportIdAndRequirementCode(reportId, requirementCode);
 		if(result == null) {

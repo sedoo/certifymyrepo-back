@@ -15,17 +15,12 @@ public class Affiliation {
 
 	@Id
 	private String id;
-
 	private String institute;
+	private String acronym;
 	private String department;
 	private String address;
-	private String city;
-	private String zipcode;
-	private String state;
 	private String country;
 	private String website;
-	private String position;
-	private String remarks;
 
 	@Override
 	public int hashCode() {

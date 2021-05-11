@@ -11,5 +11,7 @@ public interface AffiliationDao {
 	List<Affiliation> findAll();
 
 	Affiliation findById(String id);
+	
+	void deleteById(String id);
 
 }

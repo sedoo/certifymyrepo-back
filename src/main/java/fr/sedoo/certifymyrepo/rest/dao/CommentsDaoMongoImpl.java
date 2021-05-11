@@ -24,7 +24,7 @@ public class CommentsDaoMongoImpl implements CommentsDao {
 	}
 
 	@Override
-	public RequirementComments getCommentsByReportIdAndRequirementCode(String reportId, Integer requirementCode) {
+	public RequirementComments getCommentsByReportIdAndRequirementCode(String reportId, String requirementCode) {
 		return repository.findByReportIdAndItemCode(reportId, requirementCode);
 	}
 

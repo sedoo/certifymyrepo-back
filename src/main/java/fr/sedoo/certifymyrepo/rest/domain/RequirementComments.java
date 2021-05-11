@@ -18,7 +18,7 @@ public class RequirementComments {
 	@Id
 	private String id;
 	private String reportId;
-	private Integer itemCode;
+	private String itemCode;
 	private List<Comment> comments;
 
 }

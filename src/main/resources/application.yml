@@ -55,6 +55,7 @@ spring:
       host: localhost
       port: 27018
       database: crusoe-preprod
+      username: crusoe-preprod
       
 ---
 

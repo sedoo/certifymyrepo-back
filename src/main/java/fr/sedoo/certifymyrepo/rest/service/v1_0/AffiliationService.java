@@ -7,7 +7,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,6 +56,17 @@ public class AffiliationService {
 			throw new RuntimeException("Not logged");
 		} else {
 			return affiliationDao.save(affiliation);
+		}
+	}
+	
+	@Secured({ Roles.AUTHORITY_ADMIN })
+	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
+	public void delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String id) {
+		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		if (loggedUser == null) {
+			throw new RuntimeException("Not logged");
+		} else {
+			affiliationDao.deleteById(id);
 		}
 	}
 

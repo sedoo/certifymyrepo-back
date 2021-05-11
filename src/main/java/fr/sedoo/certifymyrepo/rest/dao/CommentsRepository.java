@@ -14,7 +14,7 @@ public interface CommentsRepository extends MongoRepository<RequirementComments,
 	@Query(value = "{ 'comments' :  {$elemMatch: { 'userId': ?0 }} }")
 	List<RequirementComments> findByUserId(String userId);
 	
-	RequirementComments findByReportIdAndItemCode(String reportId, Integer requirementCode);
+	RequirementComments findByReportIdAndItemCode(String reportId, String requirementCode);
 	
 	List<RequirementComments> deleteByReportId (String reportId);
 

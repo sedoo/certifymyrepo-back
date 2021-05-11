@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class FullRepositoryDto {
 	
+	private String name;
 	private RepositoryDto repository;
 	private RepositoryHealth healthLatestValidReport;
 	private RepositoryHealth healthLatestInProgressReport;

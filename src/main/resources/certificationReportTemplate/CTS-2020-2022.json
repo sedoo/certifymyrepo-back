@@ -11,7 +11,7 @@
         ],
     "requirements" : [ 
     {
-        "code" : 0,
+        "code" : "R0",
         "requirement": {"en": "R0. Please provide context for your repository.", 
                         "fr": "R0. Veuillez fournir les éléments de contexte de votre entrepôt."},
         "levelActive" : false,
@@ -19,97 +19,97 @@
                      "fr": "– Type d’entrepôt. Sélectionnez tous les types pertinents :\n● Entrepôt disciplinaire ou thématique\n● Entrepôt institutionnel\n● Système national d'archivage, y compris les archives gouvernementales\n● Dépôt de publicationons\n● Bibliothèque\n● Musée\n● Archives\n● Entrepôt de projet de recherche\n● Autre (précisez)\n\n– Brève description de l’entrepôt de données\n\n– Brève description de la communauté cible concernée\n\n– Niveau de curation. Sélectionnez tous les types pertinents :\nA. Contenu mis en accès tel que déposé\nB. Curation de base – p. ex. vérification rapide, ajout de métadonnées de base ou de documentation\nC. Curation avancée – p. ex. conversion vers de nouveaux formats, mélioration de la qualité de la documentation\nD. Curation au niveau des données ? comme dans C ci?dessus, mais avec une édition supplémentaire des données déposées pour améliorer l’exactitude\n\nCommentaires\n\n– Partenaires internes et sous-traitants. S'il y a lieu, veuillez les énumérer.\n\n– Résumé des changements significatifs depuis la dernière soumission (s'il y a lieu)\n\n– Autres renseignements pertinents\n\n"}
     }, 
     {
-        "code" : 1,
+        "code" : "R1",
         "requirement": {"en": "R1. The repository has an explicit mission to provide access to and preserve data in its domain.",
                         "fr": "R1. L’entrepôt de données a pour mission explicite de donner accès à des données dans son domaine et de les préserver"},
         "levelActive" : true
     }, 
     {
-        "code" : 2,
+        "code" : "R2",
         "requirement": {"en": "R2. The repository maintains all applicable licenses covering data access and use and monitors compliance.",
                         "fr": "R2. L’entrepôt maintient toutes les licences applicables à l'accès et à l'utilisation des donnéeset en surveille la conformité."},
         "levelActive" : true
     },
     {
-        "code" : 3,
+        "code" : "R3",
         "requirement": {"en": "R3. The repository has a continuity plan to ensure ongoing access to and preservation of its holdings.",
                         "fr": "R3. L’entrepôt dispose d'un plan de continuité pour assurer un accès continu à ses collectionset leur préservation."},
         "levelActive" : true
     },        
     {
-        "code" : 4,
+        "code" : "R4",
         "requirement": {"en": "R4. The repository ensures, to the extent possible, that data are created, curated, accessed, and used in compliance with disciplinary and ethical norms",
                         "fr": "R4. L’entrepôt garantit, dans la mesure du possible, que les données sont créées, conservées,qu’on y accède et qu’elles sont utilisées dans le respect des normes disciplinaires etéthiques."},
             "levelActive" : true
     },
     {
-        "code" : 5,
+        "code" : "R5",
         "requirement": {"en": "R5. The repository has adequate funding and sufficient numbers of qualified staff managed through a clear system of governance to effectively carry out the mission.",
                         "fr": "R5. L’entrepôt dispose d'un financement adéquat et d'un nombre suffisant d'employésqualifiés gérés par un système de gouvernance clair pour mener à bien sa mission."},
         "levelActive" : true
     },
     {
-        "code" : 6,
+        "code" : "R6",
         "requirement": {"en": "R6. The repository adopts mechanism(s) to secure ongoing expert guidance and feedback (either in-house, or external, including scientific guidance, if relevant).",
                         "fr": "R6. L’entrepôt adopte un ou plusieurs mécanismes pour s’entourer de façon continue d’avis etcommentaires d’experts (en interne ou en externe, incluant une expertise scientifique si lebesoin en est pertinent)."},
             "levelActive" : true
     },
     {
-        "code" : 7,
+        "code" : "R7",
         "requirement": {"en": "R7. The repository guarantees the integrity and authenticity of the data.",
                         "fr": "R7. L’entrepôt garantit l'intégrité et l'authenticité des données."},
         "levelActive" : true
     },
     {
-        "code" : 8,
+        "code" : "R8",
         "requirement": {"en": "R8. The repository accepts data and metadata based on defined criteria to ensure relevance and understandability for data users.",
                         "fr": "R8. L’entrepôt accepte des données et des métadonnées sur la base de critères définisgarantissant pertinence et intelligibilité pour les utilisateurs."},
         "levelActive" : true
     },
     {
-        "code" : 9,
+        "code" : "R9",
         "requirement": {"en": "R9. The repository applies documented processes and procedures in managing archival storage of the data.",
                         "fr": "R9. L’entrepôt applique des processus et des procédures documentés pour l'archivage desdonnées."},
         "levelActive" : true
     },
     {
-        "code" : 10,
+        "code" : "R10",
         "requirement": {"en": "R10. The repository assumes responsibility for long-term preservation and manages this function in a planned and documented way.",
                         "fr": "R10. L’entrepôt de données assume la responsabilité de la préservation à long terme et gèrecette fonction de façon planifiée et documentée."},
         "levelActive" : true
     },
     {
-        "code" : 11,
+        "code" : "R11",
         "requirement": {"en": "R11. The repository has appropriate expertise to address technical data and metadata quality and ensures that sufficient information is available for end users to make quality-related evaluations.",
                         "fr": "R11. L’entrepôt dispose de l’expertise appropriée pour traiter la question de la qualité techniquedes données et métadonnées et pour assurer qu’une information suffisante est accessibleaux utilisateurs pour leur permettre d’évaluer la qualité des données."},
         "levelActive" : true
 	},
     {
-        "code" : 12,
+        "code" : "R12",
         "requirement": {"en": "R12. Archiving takes place according to defined workflows from ingest to dissemination.",
                         "fr": "R12. L'archivage s'effectue selon des processus de traitement (workflows) précisément définis,de l’ingestion des données à leur diffusion."},
         "levelActive" : true
     },
     {
-        "code" : 13,
+        "code" : "R13",
         "requirement": {"en": "R13. The repository enables users to discover the data and refer to them in a persistent way through proper citation.",
                         "fr": "R13. L’entrepôt permet aux utilisateurs de découvrir les données et d’y faire référence de façonpérenne par un mécanisme de citation approprié."},
         "levelActive" : true
     },
     {
-        "code" : 14,
+        "code" : "R14",
         "requirement": {"en": "R14. The repository enables reuse of the data over time, ensuring that appropriate metadata are available to support the understanding and use of the data.",
                         "fr": "R14. L’entrepôt permet de réutiliser les données sur la durée, en veillant à ce que desmétadonnées appropriées soient disponibles pour permettre la compréhension etl’utilisation des données."},
         "levelActive" : true
     },
     {
-        "code" : 15,
+        "code" : "R15",
         "requirement": {"en": "R15. The repository functions on well-supported operating systems and other core infrastructural software and is using hardware and software technologies appropriate to the services it provides to its Designated Community.",
                         "fr": "R15. L’entrepôt fonctionne avec des systèmes d'exploitation et d'autres systèmes de base bienmaintenus et utilise des technologies matérielles et logicielles adaptées aux services qu'ilfournit à sa communauté cible."},
        	"levelActive" : true
     },
     {
-        "code" : 16,
+        "code" : "R16",
         "requirement": {"en": "R16. The technical infrastructure of the repository provides for protection of the facility and its data, products, services, and users.",
                         "fr": "R16. L'infrastructure technique de l’entrepôt assure la protection de l'installation et de sesdonnées, de ses produits, de ses services et de ses utilisateurs."},
         "levelActive" : true

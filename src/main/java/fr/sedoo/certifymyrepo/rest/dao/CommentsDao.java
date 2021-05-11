@@ -8,7 +8,7 @@ public interface CommentsDao {
 	
 	public List<RequirementComments> getCommentsByReportId(String reportId);
 	public List<RequirementComments> getCommentsByUserId(String userId);
-	public RequirementComments getCommentsByReportIdAndRequirementCode(String reportId, Integer requirementCode);
+	public RequirementComments getCommentsByReportIdAndRequirementCode(String reportId, String requirementCode);
 	public RequirementComments save(RequirementComments comments);
 	public void deleteByReportId(String repository);
 
