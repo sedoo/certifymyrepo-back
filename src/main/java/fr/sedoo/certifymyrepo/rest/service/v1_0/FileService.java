@@ -1,11 +1,18 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,8 +29,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
+import fr.sedoo.certifymyrepo.rest.utils.MimeTypeUtils;
 
 @RestController
 @CrossOrigin
@@ -33,6 +43,37 @@ public class FileService {
 	
 	@Autowired
 	SimpleFtpClient ftpClient;
+	
+	@Autowired
+	private ApplicationConfig config;
+	
+	@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(path = "/{reportId}/{codeRequirement}/{fileName}", method = RequestMethod.GET)
+	public void download(
+			@RequestHeader("Authorization") String authHeader,
+			HttpServletResponse response,
+			@PathVariable ("reportId") String reportId,         
+			@PathVariable ("codeRequirement") String codeRequirement,
+			@PathVariable ("fileName") String fileName) { 
+		
+		String temporaryFolderName = config.getTemporaryDownloadFolderName();
+		File workDirectory = new File(temporaryFolderName);
+		if (workDirectory.exists() == false) {
+			workDirectory.mkdirs();
+		}
+		File requestFolder = new File(workDirectory, UUID.randomUUID().toString());
+		requestFolder.mkdirs();
+		
+		String localFileAbsoluteName = requestFolder.getAbsolutePath().concat("/").concat(fileName);
+		ftpClient.downloadFile(fileName, localFileAbsoluteName, reportId.concat("/").concat(codeRequirement));
+        response.setContentType(MimeTypeUtils.getMimeType(fileName));
+        
+		try (InputStream inputStream = Files.newInputStream(Paths.get(localFileAbsoluteName))) {
+	        IOUtils.copyLarge(inputStream, response.getOutputStream());
+		} catch (IOException e) {
+			LOG.error("Error while downloading file",e);
+		}
+	}
 
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(path = "/upload", method = RequestMethod.POST)

@@ -1,4 +1,5 @@
 temporary:
+   folder: /tmp/crusoe/temporary
    cronExpression: 0 30 20 * * *
    storageDuration: 2
 

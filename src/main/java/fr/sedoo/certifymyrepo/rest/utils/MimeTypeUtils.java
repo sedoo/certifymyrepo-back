@@ -76,8 +76,6 @@ public class MimeTypeUtils {
 	    if (contentType == null) {
 	        String extension = fileName.substring(fileName.lastIndexOf('.') + 1, fileName.length());;
 	        contentType = fileExtensionMap.get(extension);
-	    } else {
-	    	contentType = contentType.concat(";charset=UTF-8");
 	    }
 	    return contentType;
 	}

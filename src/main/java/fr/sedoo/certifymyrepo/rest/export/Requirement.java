@@ -1,6 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.export;
 
-import java.util.Map;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +12,7 @@ public class Requirement {
 	private String requirement;
 	private String response;
 	private String levelLabel;
-	private Map<String, String> attachments;
+	private List<String> attachments;
+	private List<CommentDto> comments;
 
 }

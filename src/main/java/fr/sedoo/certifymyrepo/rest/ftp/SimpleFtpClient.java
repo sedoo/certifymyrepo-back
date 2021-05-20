@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.ftp;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import fr.sedoo.certifymyrepo.rest.config.FtpConfiguration;
-import fr.sedoo.certifymyrepo.rest.service.exception.DownloadException;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
+import fr.sedoo.certifymyrepo.rest.service.exception.DownloadException;
 
 @Component
 public class SimpleFtpClient {
@@ -312,6 +313,83 @@ public class SimpleFtpClient {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * @param localFolder folder on local machine where files will be downloaded
+	 * @param folderName root folder name on FTP server
+	 * @param domainFilter optional filter (not implemented yet)
+	 * @throws Exception
+	 */
+	public void downloadContent(File localFolder, String folderName, DomainFilter domainFilter) {
+		FTPClient client = new FTPClient();
+
+		try {
+			client.connect(ftpConfiguration.getHost());
+			client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
+			client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
+			client.enterLocalPassiveMode();
+			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
+			if (folderName != null) {
+				boolean result = client.changeWorkingDirectory(folderName);
+				if (result == false) {
+					throw new DownloadException("The corresponding folder doesn't exist");
+				}
+			}
+			FTPFile[] listFiles = client.listFiles();
+
+			for (int i = 0; i < listFiles.length; i++) {
+				downloadFile(localFolder, listFiles[i], client, domainFilter);
+			}
+
+			client.disconnect();
+		} catch (IOException e) {
+			logger.error("Error while download content {}", folderName, e);
+		} catch (DownloadException e) {
+			logger.error("Error while download content folder {} does not exist", folderName, e);;
+		}
+	}
+
+	private void downloadFile(File localFolder, FTPFile ftpFile, FTPClient client, DomainFilter domainFilter) throws IOException {
+
+		if (ftpFile.isFile()) {
+			if (!isDownloadableFile(ftpFile)) {
+				return;
+			}
+			if (domainFilter.isFiltered(ftpFile.getName())) {
+
+				File localFile = new File(localFolder, ftpFile.getName());
+				try (FileOutputStream fos = new FileOutputStream(localFile)) {
+					client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
+					client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
+					logger.info("Downloading file: " + ftpFile.getName());
+					client.retrieveFile(ftpFile.getName(), fos);
+					logger.info("Download completed");
+
+				} catch (IOException e) {
+					throw e;
+				}
+
+			} else {
+				logger.info(ftpFile.getName() + " won't be downloaded because of the filter");
+			}
+
+		} else {
+			File localSubFolder = new File(localFolder, ftpFile.getName());
+			localSubFolder.mkdirs();
+			client.changeWorkingDirectory(ftpFile.getName());
+			FTPFile[] listFiles = client.listFiles();
+			for (int i = 0; i < listFiles.length; i++) {
+				downloadFile(localSubFolder, listFiles[i], client, domainFilter);
+			}
+			client.changeToParentDirectory();
+
+		}
+
+	}
+
+	private boolean isDownloadableFile(FTPFile ftpFile) {
+		return true;
 	}
 
 }

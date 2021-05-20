@@ -1,23 +1,30 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternUtils;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,9 +35,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.zeroturnaround.zip.ZipUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -52,15 +59,18 @@ import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
+import fr.sedoo.certifymyrepo.rest.export.CommentDto;
 import fr.sedoo.certifymyrepo.rest.export.PdfPrinter;
 import fr.sedoo.certifymyrepo.rest.export.Report;
 import fr.sedoo.certifymyrepo.rest.export.Requirement;
+import fr.sedoo.certifymyrepo.rest.ftp.DomainFilter;
 import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
+import fr.sedoo.certifymyrepo.rest.utils.MimeTypeUtils;
 
 @RestController
 @CrossOrigin
@@ -87,8 +97,8 @@ public class CertificationReportService {
 	@Autowired
 	private PdfPrinter pdfPrinter;
 	
-	@Autowired
-	private ResourceLoader resourceLoader;
+	@Value("${temporary.folder}")
+	String temporaryFolderName;
 
 	@RequestMapping(value = "/isalive", method = RequestMethod.GET)
 	public String isalive() {
@@ -173,23 +183,7 @@ public class CertificationReportService {
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/getTemplatesList", method = RequestMethod.GET)
 	public List<TemplateName> getTemplateList(@RequestHeader("Authorization") String authHeader) {
-		List<TemplateName> fileList = new ArrayList<TemplateName>();
-		String contactResourcePath = "classpath:certificationReportTemplate/*.json";
-		Resource[] resources;
-		try {
-			resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader).getResources(contactResourcePath);
-			for(Resource resource : resources) {
-				String templateId = resource.getFilename();
-				if(templateId.contains(".json")) {
-					templateId = templateId.replace(".json", "");
-				}
-				CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(templateId);
-				fileList.add(new TemplateName(templateId, template.getName()));
-			}
-		} catch (IOException e) {
-			LOG.error(e.getMessage(), e);
-		}
-		return fileList;
+		return certificationReportTemplateDao.getTemplateNameList();
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
@@ -354,66 +348,86 @@ public class CertificationReportService {
 		return certificationReportTemplateDao.getCertificationReportTemplate(name);
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
-	@RequestMapping(value = "/getPDF", method = RequestMethod.POST, consumes = "multipart/form-data")
-	public byte[] getPDF(
-				HttpServletResponse response,
-				@RequestHeader("Authorization") String authHeader, 
-				@RequestParam String reportId,
-				@RequestParam String language,
-				@RequestParam String service,
-				@RequestParam("radar") MultipartFile uploadedFile) {
-		byte[] content = null;
+	/**
+	 * 
+	 * @param response
+	 * @param authHeader
+	 * @param reportId
+	 * @param language
+	 * @param format pdf, jspn and xml
+	 * @param attachments true if attachments must be export then the result will be a zip file
+	 * @param comments true if comments must be exported
+	 * @param uploadedFile used to receive radar chart image from UI
+	 * @return file in byte array
+	 */
+	@RequestMapping(value = "/download", method = RequestMethod.POST, consumes = "multipart/form-data")
+	public void download(
+			HttpServletResponse response,
+			@RequestHeader("Authorization") String authHeader, 
+			@RequestParam String reportId,
+			@RequestParam String language,
+			@RequestParam String format,
+			@RequestParam String attachments,
+			@RequestParam String comments,
+			@RequestParam("radar") MultipartFile uploadedFile) {
+		
 		try {
+			File workDirectory = new File(temporaryFolderName);
+			if (workDirectory.exists() == false) {
+				workDirectory.mkdirs();
+			}
+			File localFolder = new File(workDirectory, UUID.randomUUID().toString());
+			localFolder.mkdirs();
 			
 			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-			Report printableReport = getFullReportInformation(loggedUser, reportId, language, service);
-			if(printableReport != null) {
+			Report printableReport = getFullReportInformation(loggedUser, reportId, language, Boolean.parseBoolean(comments));
+			String fileName = printableReport.getTitle();
+			Path filePath = null;
+			
+			// report and attachments have to be copied into the localFolder
+			if(StringUtils.equalsIgnoreCase("PDF", format)) {
+				fileName = fileName.concat(".pdf");
 				byte[] radarImage = null;
 				if (uploadedFile != null) {
 					radarImage = uploadedFile.getBytes();
 				}
-				content = pdfPrinter.print(language, printableReport, radarImage);
+				byte[] content = pdfPrinter.print(language, printableReport, radarImage);
+				filePath = Paths.get(localFolder.getAbsolutePath().concat("/").concat(fileName));
+				Files.write(filePath, content);
+			} else {
+				
+				ObjectMapper mapper = null;
+				if(StringUtils.equalsIgnoreCase("JSON", format)) {
+					mapper = new ObjectMapper();
+					fileName = fileName.concat(".json");
+				} else {
+					mapper = new XmlMapper();
+					fileName = fileName.concat(".xml");
+				}
+				String content = mapper.writeValueAsString(printableReport);
+				filePath = Paths.get(localFolder.getAbsolutePath().concat("/").concat(fileName));
+				Files.write(filePath, content.getBytes(StandardCharsets.UTF_8));
 			}
-		} catch (Exception e) {
-			LOG.error("Error with radar image", e);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-		}
-		return content;
-	}
-	
-	@Secured({Roles.AUTHORITY_USER})
-	@RequestMapping(value = "/getJSON", method = RequestMethod.GET)
-	public Report getJSON(
-				HttpServletResponse response,
-				@RequestHeader("Authorization") String authHeader, 
-				@RequestParam String reportId,
-				@RequestParam String language,
-				@RequestParam String service) {
-
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-		return getFullReportInformation(loggedUser, reportId, language, service);
-
-	}
-	
-	@Secured({Roles.AUTHORITY_USER})
-	@RequestMapping(value = "/getXML", method = RequestMethod.GET)
-	public String getXML(
-				HttpServletResponse response,
-				@RequestHeader("Authorization") String authHeader, 
-				@RequestParam String reportId,
-				@RequestParam String language,
-				@RequestParam String service) throws JsonProcessingException {
-
-		try {
-			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-			Report report = getFullReportInformation(loggedUser, reportId, language, service);
-			XmlMapper xmlMapper = new XmlMapper();
-			return xmlMapper.writeValueAsString(report);
-		} catch (JsonProcessingException e) {
-			LOG.error("Error XML report", e);
-			throw e;
 			
+			if(Boolean.parseBoolean(attachments)) {
+				
+				ftpClient.downloadContent(localFolder, reportId, new DomainFilter());
+				
+				String zipFileName = printableReport.getTitle().concat(".zip");
+				File zipFile = new File(workDirectory, zipFileName);
+				ZipUtil.pack(localFolder, zipFile);
+				Path p = zipFile.toPath();
+				InputStream is = Files.newInputStream(p);
+				Files.delete(p);
+				IOUtils.copyLarge(is, response.getOutputStream());
+				response.setContentType(MimeTypeUtils.getMimeType(zipFileName));
+			} else {
+				InputStream is = Files.newInputStream(filePath);
+				IOUtils.copyLarge(is, response.getOutputStream());
+				response.setContentType(MimeTypeUtils.getMimeType(fileName));
+			}
+		} catch (IOException e) {
+			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -422,10 +436,11 @@ public class CertificationReportService {
 	 * @param loggedUser
 	 * @param reportId
 	 * @param language
+	 * @param bisCommentsRequested 
 	 * @param service
 	 * @return PrintableReport
 	 */
-	private Report getFullReportInformation(ApplicationUser loggedUser, String reportId, String language, String service) {
+	private Report getFullReportInformation(ApplicationUser loggedUser, String reportId, String language, boolean isCommentsRequested) {
 		
         Locale locale = new Locale(language);
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
@@ -436,26 +451,36 @@ public class CertificationReportService {
 
 		if(report != null) {
 			
-			// main report information 
+			List<TemplateName> templatesName = certificationReportTemplateDao.getTemplateNameList();
+			
+			// main report information
 			printableReport.setStatus(messages.getString(report.getStatus().toString()));
 			printableReport.setUpdateDate(report.getUpdateDate());
 			printableReport.setVersion(report.getVersion());
 			
 			// Get repository name and check access in mean time
-			if (!loggedUser.isAdmin()) {
-				if(report != null ) {
-					Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
-					if (null != repo) {
-						printableReport.setTitle(repo.getName().concat(" ").concat(report.getTemplateId()));
-					} else {
-						LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
-						throw new ForbiddenException();
+			if(report != null ) {
+				Repository repo = null;
+				if (!loggedUser.isAdmin()) {
+					repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
+				} else {
+					repo = repositoryDao.findById(report.getRepositoryId());
+				}
+				if (null != repo) {
+					for(TemplateName templateName :templatesName) {
+						if(StringUtils.equals(report.getTemplateId(), templateName.getId())) {
+							printableReport.setTitle(repo.getName().concat(" ").concat(templateName.getName()));
+							break;
+						}
 					}
+				} else {
+					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
+					throw new ForbiddenException();
 				}
 			}
 			
 			// Get template information and loop on requirements
-			printableReport.setRequirements(getRequirementInformation(report, language, service));
+			printableReport.setRequirements(getRequirementInformation(report, language, isCommentsRequested));
 			return printableReport;
 		} else {
 			return null;
@@ -467,13 +492,13 @@ public class CertificationReportService {
 	 * Get template information and loop on requirements
 	 * @param report object found in mongoDB
 	 * @param language input parameter
+	 * @param isCommentsRequested 
 	 * @param service input parameter
 	 * @return List<PrintableRequirement>
 	 */
 	private List<Requirement> getRequirementInformation(
 			CertificationReport report, 
-			String language,
-			String service) {
+			String language, boolean isCommentsRequested) {
 		CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
 		Map<String, LevelTemplate> levels = getLevelMap(template.getLevels());
 		Map<String, RequirementTemplate> requirements = getRequirementMap(template.getRequirements());
@@ -482,6 +507,18 @@ public class CertificationReportService {
 		Map<String, List<String>> attachments = null;
 		if(ftpClient.checkDirectoryExistance(report.getId())) {
 			attachments = ftpClient.listFiles(report.getId());
+		}
+		
+		List<RequirementComments> comments = commentsDao.getCommentsByReportId(report.getId());
+		Map<String, List<CommentDto>> map = new HashMap<String, List<CommentDto>>();
+		if(comments != null) {
+			 for(RequirementComments commentsByRequirement : comments) {
+				 List<CommentDto> commentsDto = new ArrayList<CommentDto>();
+				 for (Comment commentItem : commentsByRequirement.getComments()) {
+					 commentsDto.add(new CommentDto(commentItem));
+				 }
+				 map.put(commentsByRequirement.getItemCode(), commentsDto);
+			 }
 		}
 		
 		for (CertificationItem r : report.getItems()) {
@@ -498,17 +535,16 @@ public class CertificationReportService {
 				}
 			}
 			printableRequirement.setResponse(r.getResponse());
+			
+			if(map != null && map.containsKey(r.getCode())) {
+				printableRequirement.setComments(map.get(r.getCode()));
+			}
+			
+			
 			printableRequiments.add(printableRequirement);
 			
 			if(attachments != null) {
-				List<String> list = attachments.get(r.getCode());
-				if(list != null && list.size() > 0) {
-					Map<String, String> mapValueUrl = new HashMap<String, String>();
-					for(String file : list) {
-						mapValueUrl.put(file, String.format("%s/link/%s/%s/%s", service, report.getId(), r.getCode(), file));
-					}
-					printableRequirement.setAttachments(mapValueUrl);
-				}
+				printableRequirement.setAttachments(attachments.get(r.getCode()));
 			}
 
 		}

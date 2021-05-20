@@ -3,8 +3,8 @@ package fr.sedoo.certifymyrepo.rest.export;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.itextpdf.text.Anchor;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -122,7 +121,7 @@ public class PdfPrinter {
 				h3(r.getRequirement(), document);
 				writePairValue(messages.getString("requirement.response"), r.getResponse(), document);
 				writePairValue(messages.getString("requirement.compliance.level"), r.getLevelLabel(), document);
-				writeAttachements(messages.getString("requirement.attachments"), r.getAttachments(), document);
+				writePairValues(messages.getString("requirement.attachments"), r.getAttachments(), document);
 			}
 	
 			
@@ -178,15 +177,19 @@ public class PdfPrinter {
 		}
 	}
 	
-	private void writeAttachements(String key, Map<String, String> mapLabelUrl, Document document) throws DocumentException {
-		if (mapLabelUrl != null && !mapLabelUrl.isEmpty()) {
+	private void writePairValues(String key, List<String> values, Document document) throws DocumentException {
+		if (values != null && !values.isEmpty()) {
 			Paragraph ph = new Paragraph();
 			ph.add(new Phrase(key + ": ", h3FontBold));
-			for(String label : mapLabelUrl.keySet()) {
-				Anchor anchor = new Anchor(label, h4FontLink);
-				anchor.setReference(mapLabelUrl.get(label));
-				ph.add(anchor);
-				ph.add(" ");
+			for(int i=0 ; i<values.size() ; i++) {
+				if(StringUtils.isNotEmpty(StringUtils.trimToEmpty(values.get(i)))) {
+					if(i < (values.size()-1) ) {
+						ph.add(new Phrase(values.get(i).concat(", "), h4Font));
+					} else {
+						ph.add(new Phrase(values.get(i), h4Font));
+					}
+				}
+				
 			}
 			document.add(ph);
 		}

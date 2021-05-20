@@ -24,7 +24,6 @@ import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
-import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
 
 @Component
 public class NotificationService {
