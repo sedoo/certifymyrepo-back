@@ -180,12 +180,17 @@ public class LoginService {
 		} else {
 			profile = profileDao.findByOrcid(orcid);
 		}
+		// First login, a profile has to be created in Mongo DB
 		if(profile == null) {
 			profile = new Profile();
 			profile.setName(name);
 			profile.setEmail(email);
 			profile.setOrcid(orcid);
 			profile = profileDao.save(profile);
+		// Check if the user name has been update on ORCID or Renater
+		} else if(!StringUtils.equals(profile.getName(), name)) {
+			profile.setName(name);
+			profile = profileDao.save(profile);	
 		}
 		user.setProfile(profile);
 		user.setToken(generateToken(profile.getName(), profile.getId()));

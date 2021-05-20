@@ -2,7 +2,11 @@ package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -56,19 +60,29 @@ public class LinkService {
 
         response.setContentType(MimeTypeUtils.getMimeType(fileName));
         
-        File file = new File(localFileAbsoluteName);
-        byte[] content;
-        ByteArrayInputStream bais = null;
+        InputStream inputStream = null;
+        InputStreamReader inputStreamReader = null;
 		try {
-			content = FileUtils.readFileToByteArray(file);
-			bais = new ByteArrayInputStream(content);
-	        IOUtils.copy(bais, response.getOutputStream());
+			
+			inputStream = new FileInputStream(localFileAbsoluteName);
+
+			inputStreamReader =
+			    new InputStreamReader(inputStream);
+			
+	        IOUtils.copy(inputStreamReader, response.getOutputStream(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			LOG.error("Error while downloading file",e);
 		} finally {
-			if(bais != null) {
+			if(inputStream != null) {
 				try {
-					bais.close();
+					inputStream.close();
+				} catch (IOException e) {
+					LOG.error("Error while closing stream",e);
+				}
+			}
+			if(inputStreamReader != null) {
+				try {
+					inputStreamReader.close();
 				} catch (IOException e) {
 					LOG.error("Error while closing stream",e);
 				}

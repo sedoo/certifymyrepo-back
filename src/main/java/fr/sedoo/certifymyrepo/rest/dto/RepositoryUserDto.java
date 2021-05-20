@@ -5,13 +5,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepositoryUser {
+public class RepositoryUserDto {
 	
-	public RepositoryUser() {
+	public RepositoryUserDto() {
 		
 	}
 	
-	public RepositoryUser(String id, String orcid, String name, String role) {
+	public RepositoryUserDto(String id, String name, String role) {
 		super();
 		this.id = id;
 		this.name = name;

@@ -18,7 +18,6 @@ public class RepositoryDto {
 		this.setCreationDate(repository.getCreationDate());
 		this.setKeywords(repository.getKeywords());
 		this.setContact(repository.getContact());
-		this.setUsers(repository.getUsers());
 		this.setUrl(repository.getUrl());
 		this.setDescription(repository.getDescription());
 	}
@@ -28,7 +27,7 @@ public class RepositoryDto {
 	private AffiliationDto affiliation;
 	private List<String> keywords;
 	private String contact;
-	private List<RepositoryUser> users;
+	private List<RepositoryUserDto> users;
 	private String url;
 	private String description;
 

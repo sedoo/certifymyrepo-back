@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,10 +33,11 @@ import fr.sedoo.certifymyrepo.rest.domain.MyReport;
 import fr.sedoo.certifymyrepo.rest.domain.MyReports;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
-import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
 import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -260,7 +261,7 @@ public class CertificationReportServiceTest {
 	private void initiliaziseRepositoryWithReader() {
 		// Orcid 0000-0000-0000-1234 is READER of the repo
 		Repository repo = new Repository();
-		RepositoryUser user = new RepositoryUser("1234", null, "tintin", Roles.READER);
+		RepositoryUser user = new RepositoryUser("1234", Roles.READER);
 		repo.setUsers(Arrays.asList(new RepositoryUser[] {user}));
 		when(repositoryDaoMock.findByIdAndUserId("repository_id", "1234")).thenReturn(repo);
 	}
@@ -268,7 +269,7 @@ public class CertificationReportServiceTest {
 	private void initiliaziseRepositoryWithEditor() {
 		// Orcid 0000-0000-0000-1234 is READER of the repo
 		Repository repo = new Repository();
-		RepositoryUser user = new RepositoryUser("1234", null, "tintin", Roles.EDITOR);
+		RepositoryUser user = new RepositoryUser("1234", Roles.EDITOR);
 		repo.setUsers(Arrays.asList(new RepositoryUser[] {user}));
 		when(repositoryDaoMock.findByIdAndUserId("repository_id", "1234")).thenReturn(repo);
 	}

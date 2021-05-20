@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,7 +33,6 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
@@ -41,13 +44,14 @@ import fr.sedoo.certifymyrepo.rest.domain.MyReport;
 import fr.sedoo.certifymyrepo.rest.domain.MyReports;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
+import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
-import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.export.PdfPrinter;
 import fr.sedoo.certifymyrepo.rest.export.Report;
 import fr.sedoo.certifymyrepo.rest.export.Requirement;
@@ -66,25 +70,25 @@ public class CertificationReportService {
 	private static final Logger LOG = LoggerFactory.getLogger(CertificationReportService.class);
 
 	@Autowired
-	CertificationReportDao certificationReportDao;
+	private CertificationReportDao certificationReportDao;
 	
 	@Autowired
-	RepositoryDao repositoryDao;
+	private RepositoryDao repositoryDao;
 	
 	@Autowired
-	CommentsDao commentsDao;
+	private CommentsDao commentsDao;
 	
 	@Autowired
-	SimpleFtpClient ftpClient;
+	private SimpleFtpClient ftpClient;
 	
 	@Autowired
-	CertificationReportTemplateDao certificationReportTemplateDao;
+	private CertificationReportTemplateDao certificationReportTemplateDao;
 	
 	@Autowired
-	PdfPrinter pdfPrinter;
+	private PdfPrinter pdfPrinter;
 	
 	@Autowired
-	ApplicationConfig config;
+	private ResourceLoader resourceLoader;
 
 	@RequestMapping(value = "/isalive", method = RequestMethod.GET)
 	public String isalive() {
@@ -111,7 +115,7 @@ public class CertificationReportService {
 		for(CertificationReport report : reports) {
 			ReportDto reportDto = new ReportDto(report);
 			// For a given repository, reports can be made from different template
-			CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateName());
+			CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
 			// Set the maximum value of radar chart yaxis
 			reportDto.setLevelMaxValue(template.getLevels().size()-1);
 			List<CertificationItemDto> itemList = new ArrayList<CertificationItemDto>();
@@ -162,6 +166,32 @@ public class CertificationReportService {
 		return result;
 	}	
 	
+	/**
+	 * @param authHeader
+	 * @return list of all templates
+	 */
+	@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(value = "/getTemplatesList", method = RequestMethod.GET)
+	public List<TemplateName> getTemplateList(@RequestHeader("Authorization") String authHeader) {
+		List<TemplateName> fileList = new ArrayList<TemplateName>();
+		String contactResourcePath = "classpath:certificationReportTemplate/*.json";
+		Resource[] resources;
+		try {
+			resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader).getResources(contactResourcePath);
+			for(Resource resource : resources) {
+				String templateId = resource.getFilename();
+				if(templateId.contains(".json")) {
+					templateId = templateId.replace(".json", "");
+				}
+				CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(templateId);
+				fileList.add(new TemplateName(templateId, template.getName()));
+			}
+		} catch (IOException e) {
+			LOG.error(e.getMessage(), e);
+		}
+		return fileList;
+	}
+	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/getReport/{reportId}", method = RequestMethod.GET)
 	public MyReport getReport(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "reportId") String id) {
@@ -209,7 +239,7 @@ public class CertificationReportService {
 		}
 
 		result.setRequirementComments(commentsDao.getCommentsByReportId(id));
-		result.setTemplate(certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateName()));
+		result.setTemplate(certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId()));
 		if(ftpClient.checkDirectoryExistance(id)) {
 			result.setAttachments(ftpClient.listFiles(id));
 		}
@@ -416,7 +446,7 @@ public class CertificationReportService {
 				if(report != null ) {
 					Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
 					if (null != repo) {
-						printableReport.setTitle(repo.getName().concat(" ").concat(report.getTemplateName()));
+						printableReport.setTitle(repo.getName().concat(" ").concat(report.getTemplateId()));
 					} else {
 						LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
 						throw new ForbiddenException();
@@ -444,7 +474,7 @@ public class CertificationReportService {
 			CertificationReport report, 
 			String language,
 			String service) {
-		CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateName());
+		CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
 		Map<String, LevelTemplate> levels = getLevelMap(template.getLevels());
 		Map<String, RequirementTemplate> requirements = getRequirementMap(template.getRequirements());
 		List<Requirement> printableRequiments = new ArrayList<>();

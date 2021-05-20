@@ -41,6 +41,7 @@ import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
@@ -49,7 +50,7 @@ import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
-import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -120,7 +121,16 @@ public class RepositoryService {
 		if(repo != null) {
 			if(repo.getAffiliationId() != null)
 				affiliation = affiliationDao.findById(repo.getAffiliationId());
-			return new RepositoryDto(repo, new AffiliationDto(affiliation));
+			RepositoryDto repositoryDto = new RepositoryDto(repo, new AffiliationDto(affiliation));
+			List<RepositoryUserDto> repoUserDto = new ArrayList<RepositoryUserDto>();
+			for(RepositoryUser user : repo.getUsers()) {
+				Optional<Profile> userProfile = profileDao.findById(user.getId());
+				if(userProfile.isPresent()) {
+					repoUserDto.add(new RepositoryUserDto(user.getId(), userProfile.get().getName(), user.getRole()));
+				}
+			}
+			repositoryDto.setUsers(repoUserDto);
+			return repositoryDto;
 		} else {
 			return null;
 		}
@@ -206,24 +216,6 @@ public class RepositoryService {
 			return null;
 		}
 	}
-	
-	/**
-	 * How many levels in a given template ?
-	 * Use for radar char
-	 * @param lastRepoNotValidated
-	 * @param lastRepoValidated
-	 * @return number Of Level
-	 */
-	private int getNumberOfLevel(CertificationReport report) {
-		int numberOfLevel = 0;
-		if(report != null) {
-			CertificationTemplate template = templateDao.getCertificationReportTemplate(report.getTemplateName());
-			if(template != null && template.getLevels() != null) {
-				numberOfLevel = template.getLevels().size() - 1;
-			}
-		}
-		return numberOfLevel;
-	}
 
 	/**
 	 * 
@@ -241,7 +233,7 @@ public class RepositoryService {
 			ReportDto latestReport = new ReportDto(report);
 			result.setLatestReport(latestReport);
 			
-			CertificationTemplate template = templateDao.getCertificationReportTemplate(report.getTemplateName());
+			CertificationTemplate template = templateDao.getCertificationReportTemplate(report.getTemplateId());
 			latestReport.setLevelMaxValue(template.getLevels().size() - 1);
 			List<CertificationItemDto> itemList = new ArrayList<CertificationItemDto>();
 			for(CertificationItem item : report.getItems()) {

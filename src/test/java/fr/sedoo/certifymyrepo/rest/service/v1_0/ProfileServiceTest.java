@@ -16,7 +16,7 @@ import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
-import fr.sedoo.certifymyrepo.rest.dto.RepositoryUser;
+import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 
@@ -71,15 +71,15 @@ public class ProfileServiceTest {
 		Repository repo1 = new Repository();
 		repo1.setName("My first repo");
 		List<RepositoryUser> users = new ArrayList<RepositoryUser>();
-		users.add(new RepositoryUser("123-123-123", null, "toto", Roles.EDITOR));
-		users.add(new RepositoryUser("789-789-789", null, "tintin", Roles.READER));
+		users.add(new RepositoryUser("123-123-123", Roles.EDITOR));
+		users.add(new RepositoryUser("789-789-789", Roles.READER));
 		repo1.setUsers(users);
 		
 		Repository repo2 = new Repository();
 		repo2.setName("My second repo");
 		users = new ArrayList<RepositoryUser>();
-		users.add(new RepositoryUser("123-123-123", null, "toto", Roles.READER));
-		users.add(new RepositoryUser("789-789-789", null, "tintin", Roles.EDITOR));
+		users.add(new RepositoryUser("123-123-123", Roles.READER));
+		users.add(new RepositoryUser("789-789-789", Roles.EDITOR));
 		repo2.setUsers(users);
 		
 		repos.add(repo1);

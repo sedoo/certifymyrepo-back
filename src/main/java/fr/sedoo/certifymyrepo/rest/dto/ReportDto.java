@@ -14,7 +14,7 @@ public class ReportDto {
 	
 	public ReportDto(CertificationReport report) {
 		this.setId(report.getId());
-		this.setTemplateName(report.getTemplateName());
+		this.setTemplateId(report.getTemplateId());
 		this.setRepositoryId(report.getRepositoryId());
 		this.setStatus(report.getStatus());
 		this.setVersion(report.getVersion());
@@ -22,7 +22,7 @@ public class ReportDto {
 	}
 	
 	private String id;
-	private String templateName;
+	private String templateId;
 	private int levelMaxValue;
 	private String repositoryId;
 	private List<CertificationItemDto> items;

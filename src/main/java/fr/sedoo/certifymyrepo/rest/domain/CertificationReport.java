@@ -22,7 +22,7 @@ public class CertificationReport {
 	
 	@Id
 	private String id;
-	private String templateName;
+	private String templateId;
 	private String repositoryId;
 	private List<CertificationItem> items;
 	private String version;
