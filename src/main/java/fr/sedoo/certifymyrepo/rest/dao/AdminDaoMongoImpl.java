@@ -63,4 +63,9 @@ public class AdminDaoMongoImpl implements AdminDao {
 		adminRepository.deleteByUserId(userId);
 	}
 
+	@Override
+	public List<Admin> findAllFunctaionalAdmin() {
+		return adminRepository.findAllFunctionalAdmin();
+	}
+
 }

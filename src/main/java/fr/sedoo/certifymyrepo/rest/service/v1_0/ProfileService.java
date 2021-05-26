@@ -1,17 +1,15 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
-
-import javax.mail.internet.AddressException;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,13 +29,13 @@ import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
-import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Comment;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
+import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
@@ -124,28 +122,13 @@ public class ProfileService {
 		Profile createdProfile = profileDao.save(profile);
 		
 		if(createdProfile.getEmail() != null) {
-			List<String> superAdminEmails = new ArrayList<String>();
-			List<Admin> superAdmins = adminDao.findAllSuperAdmin();
-			for(Admin superAdmin : superAdmins) {
-				Optional<Profile> userProfile = profileDao.findById(superAdmin.getUserId());
-				if(userProfile.isPresent()) {
-					superAdminEmails.add(userProfile.get().getEmail());
-				}
-				
-			}
-			
-			try {
-				SimpleEmail simpleemail = new SimpleEmail();
-				simpleemail.setHostName(mailConfig.getHostname());
-				simpleemail.addTo(createdProfile.getEmail());
-				simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
-				simpleemail.setFrom(mailConfig.getFrom());
-				simpleemail.setSubject(messages.getString("create.user.notification.subject"));
-				String content = String.format(messages.getString("create.user.notification.orcid.content"), profile.getOrcid());
-				emailSender.send(simpleemail, content);
-			} catch (AddressException | EmailException e) {
-				LOG.error("Notification could not be send to ".concat(createdProfile.getEmail()), e);;
-			}
+			ContactDto contact = new ContactDto();
+			Set<String> to = new HashSet<String>();
+			to.add(createdProfile.getEmail());
+			contact.setTo(to);
+			contact.setSubject(messages.getString("create.user.notification.subject"));
+			contact.setMessage(String.format(messages.getString("create.user.notification.orcid.content"), profile.getOrcid()));
+			emailSender.sendNotification(contact);
 		}
 		return createdProfile;
     }
@@ -153,18 +136,7 @@ public class ProfileService {
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listAllUsers", method = RequestMethod.GET)
 	public List<Profile> listAll(@RequestHeader("Authorization") String authHeader) {
-		//List<User> result = new ArrayList<>();
 		List<Profile> usersProfile = profileDao.findAll();
-		/**
-		if(usersProfile != null) {
-			for( Profile userProfile : usersProfile) {
-				User user = (User) userProfile;
-				user.setUserId(userProfile.getId());
-				user.setEmail(userProfile.getEmail());
-				user.setName(userProfile.getName());
-				result.add(user);
-			}
-		}*/
 		return usersProfile;
 	}
 	

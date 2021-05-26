@@ -13,6 +13,7 @@ public interface AdminDao {
 	public Admin save(Admin admin);
 	public List<Admin> findAll();
 	public List<Admin> findAllSuperAdmin();
+	public List<Admin> findAllFunctaionalAdmin();
 	public Admin findByUserId(String userId);
 
 }

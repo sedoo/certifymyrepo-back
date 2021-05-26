@@ -39,7 +39,6 @@ public class PdfPrinter {
 	
 	private Font h3Font;
 	private Font h4Font;
-	private Font h4FontLink;
 	private Font h3FontBold;
 	
 	public byte[] print(String language, Report report, byte[] image) {
@@ -65,7 +64,6 @@ public class PdfPrinter {
 	
 			h3Font = new Font(Font.FontFamily.HELVETICA, 14, Font.NORMAL);
 			h4Font = new Font(calibriRegularBaseFont, 12, Font.NORMAL);
-			h4FontLink = new Font(calibriRegularBaseFont, 12, Font.UNDERLINE, BaseColor.BLUE);
 			h3FontBold = new Font(calibriLightBaseFont, 12, Font.BOLD);
 	
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -122,6 +120,10 @@ public class PdfPrinter {
 				writePairValue(messages.getString("requirement.response"), r.getResponse(), document);
 				writePairValue(messages.getString("requirement.compliance.level"), r.getLevelLabel(), document);
 				writePairValues(messages.getString("requirement.attachments"), r.getAttachments(), document);
+				if(r.getComments() != null) {
+					writeKey(messages.getString("requirement.comments") , document);
+					writeCommentsValue(r.getComments(), document);
+				}
 			}
 	
 			
@@ -173,6 +175,21 @@ public class PdfPrinter {
 			Paragraph ph = new Paragraph();
 			ph.add(new Phrase(key + ": ", h3FontBold));
 			ph.add(new Phrase(value, h4Font));
+			document.add(ph);
+		}
+	}
+	
+	private void writeKey(String key, Document document) throws DocumentException {
+		Paragraph ph = new Paragraph();
+		ph.add(new Phrase(key + ": ", h3FontBold));
+		document.add(ph);
+	}
+	
+	private void writeCommentsValue(List<CommentDto> comments, Document document) throws DocumentException {
+		for(CommentDto comment : comments) {
+			Paragraph ph = new Paragraph();
+			String commentValue = comment.getUserName().concat(" ").concat(comment.getCreationDate().concat(": ")).concat(comment.getValue());
+			ph.add(new Phrase(commentValue, h4Font));
 			document.add(ph);
 		}
 	}

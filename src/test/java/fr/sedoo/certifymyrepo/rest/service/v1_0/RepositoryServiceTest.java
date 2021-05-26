@@ -3,8 +3,6 @@ package fr.sedoo.certifymyrepo.rest.service.v1_0;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -30,19 +29,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
+import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
+import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
+import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
-import fr.sedoo.certifymyrepo.rest.service.notification.NotificationService;
+import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
@@ -68,10 +70,13 @@ public class RepositoryServiceTest {
 	private CertificationReportTemplateDao templateDao;
 	
 	@Mock
-	private NotificationService notificationService;
+	private AffiliationDao affiliationDao;
 	
 	@Mock
-	private AffiliationDao affiliationDao;
+	private ProfileDao profileDao;
+	
+	@Mock
+	private EmailSender emailSender;
 	
 	@InjectMocks
 	private RepositoryService repositoryService;
@@ -211,17 +216,25 @@ public class RepositoryServiceTest {
 		try {
 			
 			// simulate an updated repository coming from the front-end
+			// userId 123, 654 and 789
 			Repository repoToSave = createRepositoryToSave();
 			
+			// simulate a repository in DB
+			// userId 123, 456, 789, 910
 			Repository existingRepo = createRepositoryAleadyInDB();
 			// simulate an existing repository in DB
 			when(repositoryDaoMock.findById("1")).thenReturn(existingRepo);
 			// used for the duplicate name check
 			when(repositoryDaoMock.findByName("SSS")).thenReturn(existingRepo);
 			
+			// userId 456 and 910 have been removed 
+			Profile profile = new Profile();
+			profile.setEmail("toto@gmail.com");
+			when(profileDao.findById("456")).thenReturn(Optional.of(profile));
+			
 			// Allow us to check if the code reach the notification point
 			// As when an user is remove or added an email must be sent
-			when(notificationService.sendNotification(anySet(), anyString(), anyString(), any(), anyList()))
+			when(emailSender.sendNotification(any()))
 				.thenThrow(new RuntimeException("It passed by here"));
 
 			Repository result = repositoryService.save("myToken", repoToSave, "fr");
@@ -231,7 +244,7 @@ public class RepositoryServiceTest {
 			if(StringUtils.equals(e.getMessage(), "It passed by here")) {
 				assertTrue("The notification have been reached", true);
 			} else {
-				assertTrue("Exception should not o be thrown", false);
+				assertTrue("Exception should not be thrown", false);
 			}
 
 		}

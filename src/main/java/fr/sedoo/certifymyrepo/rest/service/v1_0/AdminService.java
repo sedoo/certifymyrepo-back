@@ -2,14 +2,17 @@ package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,9 +22,11 @@ import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
+import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
+import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
@@ -30,10 +35,13 @@ import io.swagger.annotations.ApiOperation;
 public class AdminService {
 
 	@Autowired
-	AdminDao adminDao;
+	private AdminDao adminDao;
 	
 	@Autowired
-	ProfileDao profileDao;
+	private ProfileDao profileDao;
+	
+	@Autowired
+	private EmailSender emailSender;
 
 	@RequestMapping(value = "/isalive", method = RequestMethod.GET)
 	public String isalive() {
@@ -103,6 +111,20 @@ public class AdminService {
 			}
 		}
 		return map;
+	}
+	
+	@RequestMapping(value = "/contact", method = RequestMethod.POST)
+	public boolean contact(@RequestBody ContactDto contact) {
+		Set<String> functionalAdminEmails = new HashSet<String>();
+		List<Admin> functionalAdmins = adminDao.findAllFunctaionalAdmin();
+		for(Admin functionalAdmin : functionalAdmins) {
+			Optional<fr.sedoo.certifymyrepo.rest.domain.Profile> userProfile = profileDao.findById(functionalAdmin.getUserId());
+			if(userProfile.isPresent()) {
+				functionalAdminEmails.add(userProfile.get().getEmail());
+			}
+		}
+		contact.setTo(functionalAdminEmails);
+		return emailSender.sendNotification(contact);
 	}
 
 }
