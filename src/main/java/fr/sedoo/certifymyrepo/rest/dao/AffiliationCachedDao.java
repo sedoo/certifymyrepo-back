@@ -28,7 +28,7 @@ public class AffiliationCachedDao implements AffiliationDao {
 
 	@Override
 	public Affiliation save(Affiliation affiliation) {
-		cache.invalidate(affiliation);
+		cache.invalidate(affiliation.getId());
 		return proxyDao.save(affiliation);
 
 	}
@@ -49,11 +49,7 @@ public class AffiliationCachedDao implements AffiliationDao {
 
 	@Override
 	public void deleteById(String id) {
-		try {
-			cache.invalidate(cache.get(id));
-		} catch (ExecutionException e) {
-
-		}
+		cache.invalidate(id);
 		proxyDao.deleteById(id);
 	}
 
