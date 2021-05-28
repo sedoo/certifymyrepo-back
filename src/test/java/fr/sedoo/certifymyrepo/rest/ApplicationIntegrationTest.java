@@ -114,13 +114,10 @@ public class ApplicationIntegrationTest {
 	@Test
 	public void ftpTest() throws IOException {	
 		ftpClient.uploadFile(testFile.getInputStream(), "junit/0", testFile.getFilename());
-		assertTrue(ftpClient.checkDirectoryExistance("junit"));
 		assertEquals("Test.txt", ftpClient.listFiles("junit").get("0").get(0));
 		assertTrue(ftpClient.deleteFile("junit/0", "Test.txt"));
 		assertEquals(0, ftpClient.listFiles("junit").get("0").size());
-		assertTrue(ftpClient.deleteFolder("junit/0"));
-		assertTrue(ftpClient.deleteFolder("junit"));
-		assertFalse(ftpClient.checkDirectoryExistance("junit"));
+		assertTrue(ftpClient.deleteAllFilesInFolder("junit"));
 	}
 
 }

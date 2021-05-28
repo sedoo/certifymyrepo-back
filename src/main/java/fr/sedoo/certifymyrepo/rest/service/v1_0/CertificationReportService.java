@@ -234,9 +234,7 @@ public class CertificationReportService {
 
 		result.setRequirementComments(commentsDao.getCommentsByReportId(id));
 		result.setTemplate(certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId()));
-		if(ftpClient.checkDirectoryExistance(id)) {
-			result.setAttachments(ftpClient.listFiles(id));
-		}
+		result.setAttachments(ftpClient.listFiles(id));
 		return result;
 	}
 	
@@ -292,6 +290,7 @@ public class CertificationReportService {
 		
 		if (loggedUser.isAdmin()) {
 			certificationReportDao.delete(id);
+			ftpClient.deleteAllFilesInFolder(id);
 		} else {
 			CertificationReport report = certificationReportDao.findById(id);
 			if(report != null ) {
@@ -304,6 +303,7 @@ public class CertificationReportService {
 						throw new ForbiddenException();
 					} else {
 						certificationReportDao.delete(id);
+						ftpClient.deleteAllFilesInFolder(id);
 					}
 				} else {
 					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
@@ -504,10 +504,7 @@ public class CertificationReportService {
 		Map<String, RequirementTemplate> requirements = getRequirementMap(template.getRequirements());
 		List<Requirement> printableRequiments = new ArrayList<>();
 		
-		Map<String, List<String>> attachments = null;
-		if(ftpClient.checkDirectoryExistance(report.getId())) {
-			attachments = ftpClient.listFiles(report.getId());
-		}
+		Map<String, List<String>> attachments = ftpClient.listFiles(report.getId());
 		
 		List<RequirementComments> comments = commentsDao.getCommentsByReportId(report.getId());
 		Map<String, List<CommentDto>> map = new HashMap<String, List<CommentDto>>();

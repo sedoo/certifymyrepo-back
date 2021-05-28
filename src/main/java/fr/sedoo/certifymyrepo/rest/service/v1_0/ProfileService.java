@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.sedoo.certifymyrepo.rest.config.MailConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
@@ -36,6 +35,7 @@ import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
+import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
@@ -64,10 +64,10 @@ public class ProfileService {
 	private CertificationReportDao certificationReportDao;
 	
 	@Autowired
-	private EmailSender emailSender;
+	private SimpleFtpClient ftpClient;
 	
 	@Autowired
-	private MailConfig mailConfig;
+	private EmailSender emailSender;
 	
 	@Secured({ Roles.AUTHORITY_USER })
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
@@ -180,6 +180,7 @@ public class ProfileService {
 						// delete repository and related reports
 						repositoryDao.delete(repo.getId());
 						List<CertificationReport> reports = certificationReportDao.deleteByRepositoryId(repo.getId());
+						ftpClient.deleteAllFilesInFolder(repo.getId());
 						if(reports != null) {
 							for(CertificationReport report : reports) {
 								commentsDao.deleteByReportId(report.getId());
@@ -210,7 +211,7 @@ public class ProfileService {
 		
 		StringBuilder result = new StringBuilder();
 		if(updatedRepo.size() > 0 && isSimulation) {
-			result.append(createInformationContent("update", messages, deletedRepo));
+			result.append(createInformationContent("update", messages, updatedRepo));
 		}
 		if(deletedRepo.size() > 0 && isSimulation) {
 			result.append(createInformationContent("delete", messages, deletedRepo));
@@ -289,6 +290,7 @@ public class ProfileService {
 					if(StringUtils.equals(comment.getUserId(), userId)) {
 						comment.setUserName(null);
 					}
+					commentsDao.save(singleRequirementComments);
 				}
 			}
 		}

@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import fr.sedoo.certifymyrepo.rest.config.FtpConfiguration;
-import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.exception.DownloadException;
 
 @Component
@@ -35,39 +34,6 @@ public class SimpleFtpClient {
 	@Autowired
 	public SimpleFtpClient(FtpConfiguration ftpConfiguration) {
 		this.ftpConfiguration = ftpConfiguration;
-	}
-	
-	/**
-	 * @param folderName id of the report
-	 * @return true is the given folder name exist on root location
-	 */
-	public boolean checkDirectoryExistance(String folderName) {
-		boolean result = false;
-		FTPClient client = new FTPClient();
-		try {
-			client.connect(ftpConfiguration.getHost());
-			client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
-			client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
-			client.enterLocalPassiveMode();
-			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
-			if (folderName != null) {
-				FTPFile[] dirs = client.listDirectories();
-				if(dirs != null && dirs.length > 0) {
-					for(FTPFile dir : dirs) {
-						if(StringUtils.equals(folderName, dir.getName())) {
-							result = true;
-							break;
-						}
-					}
-				}
-			}
-			client.disconnect();
-		} catch (SocketException e) {
-			logger.error("Error checking folder", e);
-		} catch (IOException e) {
-			logger.error("Errorchecking folder", e);
-		}
-		return result;
 	}
 	
 	/**
@@ -103,21 +69,47 @@ public class SimpleFtpClient {
 	 * @param folderName id of the repository
 	 * @return true is the given folder name exist on root location
 	 */
-	public boolean deleteFolder(String folderName) {
+	public boolean deleteAllFilesInFolder(String folderName) {
 		boolean resultDelete = false;
 		FTPClient client = new FTPClient();
+
 		try {
 			client.connect(ftpConfiguration.getHost());
 			client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
 			client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
 			client.enterLocalPassiveMode();
 			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
-			resultDelete = client.removeDirectory(folderName);
-			client.disconnect();
-		} catch (SocketException e) {
-			logger.error("Error checking folder", e);
+			if (folderName != null) {
+				boolean result = client.changeWorkingDirectory(folderName);
+				if (result == true) {
+					FTPFile[] listFiles = client.listFiles();
+					for (int i = 0; i < listFiles.length; i++) {
+						if(listFiles[i].isDirectory()) {
+							String codeRequirement = listFiles[i].getName();
+							client.changeWorkingDirectory(codeRequirement);
+							FTPFile[] listFilesByRequirement = client.listFiles();
+							if(listFilesByRequirement != null) {
+								for(FTPFile file : listFilesByRequirement) {
+									client.deleteFile(file.getName());
+								}
+							}
+							client.removeDirectory(codeRequirement);
+							client.changeToParentDirectory();
+						}
+					}
+					client.removeDirectory(folderName);
+					client.changeToParentDirectory();
+					
+				}
+			}
 		} catch (IOException e) {
-			logger.error("Errorchecking folder", e);
+			logger.error("Error while listing files", e);
+		} finally {
+			try {
+				client.disconnect();
+			} catch (IOException e) {
+				logger.error("Error while disconnecting from FTP", e);
+			}
 		}
 		return resultDelete;
 	}
@@ -137,7 +129,7 @@ public class SimpleFtpClient {
 	 */
 	public Map<String, List<String>> listFiles(String folderName) {
 		
-		Map<String, List<String>> map = new HashMap<>();
+		Map<String, List<String>> map = null;
 		FTPClient client = new FTPClient();
 
 		try {
@@ -148,29 +140,28 @@ public class SimpleFtpClient {
 			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
 			if (folderName != null) {
 				boolean result = client.changeWorkingDirectory(folderName);
-				if (result == false) {
-					throw new BusinessException("The corresponding folder doesn't exist");
-				}
-			}
-			FTPFile[] listFiles = client.listFiles();
-			for (int i = 0; i < listFiles.length; i++) {
-				if(listFiles[i].isDirectory()) {
-					String codeRequirement = listFiles[i].getName();
-					client.changeWorkingDirectory(codeRequirement);
-					FTPFile[] listFilesByRequirement = client.listFiles();
-					if(listFilesByRequirement != null) {
-						List<String> filesName = new ArrayList<>();
-						for(FTPFile file : listFilesByRequirement) {
-							filesName.add(file.getName());
+				if (result == true) {
+					map = new HashMap<>();
+					FTPFile[] listFiles = client.listFiles();
+					for (int i = 0; i < listFiles.length; i++) {
+						if(listFiles[i].isDirectory()) {
+							String codeRequirement = listFiles[i].getName();
+							client.changeWorkingDirectory(codeRequirement);
+							FTPFile[] listFilesByRequirement = client.listFiles();
+							if(listFilesByRequirement != null) {
+								List<String> filesName = new ArrayList<>();
+								for(FTPFile file : listFilesByRequirement) {
+									filesName.add(file.getName());
+								}
+								Comparator<String> compareByName = (String o1, String o2) -> o1.compareToIgnoreCase(o2);
+								filesName.sort(compareByName);
+								map.put(codeRequirement, filesName);
+							}
+							client.changeToParentDirectory();
 						}
-						Comparator<String> compareByName = (String o1, String o2) -> o1.compareToIgnoreCase(o2);
-						filesName.sort(compareByName);
-						map.put(codeRequirement, filesName);
 					}
-					client.changeToParentDirectory();
 				}
 			}
-
 		} catch (IOException e) {
 			logger.error("Error while listing files", e);
 		} finally {
@@ -184,14 +175,14 @@ public class SimpleFtpClient {
 	}
 
 	/**
-	 * @param source
+	 * @param fileName
 	 *            fileName
-	 * @param destination
+	 * @param localFolder
 	 *            full file path of on local machine
 	 * @throws IOException
 	 *             {@link IOException}
 	 */
-	public void downloadFile(String source, String destination, String folderName) {
+	public void downloadFile(String fileName, File localFolder, String ftpPath) {
 		FTPClient client = new FTPClient();
 		FileOutputStream out = null;
 		try {
@@ -200,14 +191,15 @@ public class SimpleFtpClient {
 			client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
 			client.enterLocalPassiveMode();
 			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
-			if (folderName != null) {
-				client.changeWorkingDirectory(folderName);
+			if (ftpPath != null) {
+				client.changeWorkingDirectory(ftpPath);
 			}
-			if (isFileExist(client, source)) {
+			if (isFileExist(client, fileName)) {
 				client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
 				client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
-				out = new FileOutputStream(destination);
-				client.retrieveFile(source, out);
+				File localFile = new File(localFolder, fileName);
+				out = new FileOutputStream(localFile);
+				client.retrieveFile(fileName, out);
 				out.close();
 			}
 			client.disconnect();
