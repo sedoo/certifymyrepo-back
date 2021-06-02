@@ -13,10 +13,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.mail.SimpleEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
-import fr.sedoo.certifymyrepo.rest.config.MailConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -35,7 +35,6 @@ import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.AccessRequest;
-import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
@@ -55,9 +54,7 @@ import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
-import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
-import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
 @RestController
@@ -87,11 +84,6 @@ public class RepositoryService {
 	
 	@Autowired
 	private AffiliationDao affiliationDao;
-	
-	//FIXME use NotificationService instead
-	@Autowired
-	private MailConfig mailConfig;
-	
 
 	@RequestMapping(value = "/isalive", method = RequestMethod.GET)
 	public String isalive() {
@@ -300,27 +292,22 @@ public class RepositoryService {
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
 	public Repository save(@RequestHeader("Authorization") String authHeader,
-			@RequestBody Repository repository,
+			@RequestBody(required = true) Repository repository,
 			@RequestParam String language) {
 		Repository result = null;
-        Locale locale = new Locale(language);
-        ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
-		if(repository != null) {
-			Repository repo = repositoryDao.findByName(repository.getName());
-			if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
-				if(repository.getId() != null) {
-					checkUsersNotification(repository, messages);
-				}
-				if(repository.getId() == null) {
-					repository.setCreationDate(new Date());
-				}
-				result =  repositoryDao.save(repository);	
-			} else {
-				throw new BusinessException(String.format(messages.getString("repository.duplicate.error"), repo.getName()));
+        ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
+		Repository repo = repositoryDao.findByName(repository.getName());
+		if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
+			if(repository.getId() != null) {
+				checkUsersNotification(repository, messages);
 			}
+			if(repository.getId() == null) {
+				repository.setCreationDate(new Date());
+			}
+			result =  repositoryDao.save(repository);	
 		} else {
-			LOG.error("Repository parameter cannot be null");
-			throw new BadRequestException();
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+					String.format(messages.getString("repository.duplicate.error"), repo.getName()));
 		}
 		return result;
 	}

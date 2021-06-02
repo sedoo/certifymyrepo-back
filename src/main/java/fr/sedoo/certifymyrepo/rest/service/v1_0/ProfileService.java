@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,20 +23,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
+import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
-import fr.sedoo.certifymyrepo.rest.domain.Comment;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
-import fr.sedoo.certifymyrepo.rest.domain.RequirementComments;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
-import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
@@ -64,7 +64,7 @@ public class ProfileService {
 	private CertificationReportDao certificationReportDao;
 	
 	@Autowired
-	private SimpleFtpClient ftpClient;
+	private AttachmentDao ftpClient;
 	
 	@Autowired
 	private EmailSender emailSender;
@@ -92,13 +92,15 @@ public class ProfileService {
 		if(profile.getEmail() != null) {
 			Profile existingProfile = profileDao.findByEmail(profile.getEmail());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
-				throw new BusinessException(messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+						messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
 			}
 		}
 		if(profile.getOrcid() != null) {
 			Profile existingProfile = profileDao.findByOrcid(profile.getOrcid());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
-				throw new BusinessException(messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+						messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
 			}
 		}
 		return profileDao.save(profile);
@@ -114,10 +116,12 @@ public class ProfileService {
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
         
 		if(profile.getEmail() != null && profileDao.findByEmail(profile.getEmail()) != null) {
-			throw new BusinessException(messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+					messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
 		}
 		if(profile.getOrcid() != null && profileDao.findByOrcid(profile.getOrcid()) != null) {
-			throw new BusinessException(messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+					messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
 		}
 		Profile createdProfile = profileDao.save(profile);
 		
@@ -193,7 +197,7 @@ public class ProfileService {
 						// save repository user removed from the list
 						repo.setUsers(users);
 						repositoryDao.save(repo);
-						removeUserNameFromComments(userId);
+						//removeUserNameFromComments(userId);
 					}
 					updatedRepo.add(repo.getName());
 				}
@@ -278,21 +282,21 @@ public class ProfileService {
 		}
 	}
 	
-	/**
-	 * Set user name to null for all the comments of the given userId
-	 * @param userId id of the user collection
-	 */
-	private void removeUserNameFromComments(String userId) {
-		List<RequirementComments> allRequirementscomments = commentsDao.getCommentsByUserId(userId);
-		if(allRequirementscomments != null && allRequirementscomments.size() > 0) {
-			for(RequirementComments singleRequirementComments : allRequirementscomments) {
-				for(Comment comment : singleRequirementComments.getComments()) {
-					if(StringUtils.equals(comment.getUserId(), userId)) {
-						comment.setUserName(null);
-					}
-					commentsDao.save(singleRequirementComments);
-				}
-			}
-		}
-	}
+//	/**
+//	 * Set user name to null for all the comments of the given userId
+//	 * @param userId id of the user collection
+//	 */
+//	private void removeUserNameFromComments(String userId) {
+//		List<RequirementCommentsDto> allRequirementscomments = commentsDao.getCommentsByUserId(userId);
+//		if(allRequirementscomments != null && allRequirementscomments.size() > 0) {
+//			for(RequirementCommentsDto singleRequirementComments : allRequirementscomments) {
+//				for(CommentDto comment : singleRequirementComments.getComments()) {
+//					if(StringUtils.equals(comment.getUserId(), userId)) {
+//						comment.setUserName(null);
+//					}
+//					commentsDao.save(singleRequirementComments);
+//				}
+//			}
+//		}
+//	}
 }

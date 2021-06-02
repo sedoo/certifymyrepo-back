@@ -13,6 +13,6 @@ public class Requirement {
 	private String response;
 	private String levelLabel;
 	private List<String> attachments;
-	private List<CommentDto> comments;
+	private List<CommentExport> comments;
 
 }

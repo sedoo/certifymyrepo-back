@@ -27,9 +27,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
-import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
+import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.utils.MimeTypeUtils;
 
@@ -41,7 +42,7 @@ public class FileService {
 	private static final Logger LOG = LoggerFactory.getLogger(FileService.class);
 	
 	@Autowired
-	SimpleFtpClient ftpClient;
+	AttachmentDao ftpClient;
 	
 	@Autowired
 	private ApplicationConfig config;
@@ -93,7 +94,7 @@ public class FileService {
 			}
 		} catch (IOException e) {
 			LOG.error("Error while uploading file for report id {} and requirement {}", e, reportId, codeRequirement);
-			throw new RuntimeException("Error while uploading files");
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 		} finally {
 			if(is != null) {
 				try {

@@ -1,7 +1,6 @@
 package fr.sedoo.certifymyrepo.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -22,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.sedoo.IntegrationTest;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
+import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
@@ -31,7 +31,6 @@ import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
-import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 
 @RunWith(SpringRunner.class)
@@ -53,7 +52,7 @@ public class ApplicationIntegrationTest {
 	private CertificationReportDao reportDao;
 	
 	@Autowired
-	private SimpleFtpClient ftpClient;
+	private AttachmentDao ftpClient;
 	
 	@Value("classpath:Test.txt")
 	Resource testFile;

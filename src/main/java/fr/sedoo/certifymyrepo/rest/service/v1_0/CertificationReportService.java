@@ -16,8 +16,6 @@ import java.util.ResourceBundle;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,11 +34,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.zeroturnaround.zip.ZipUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
+import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
@@ -58,18 +59,18 @@ import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
+import fr.sedoo.certifymyrepo.rest.dto.CommentDto;
 import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
-import fr.sedoo.certifymyrepo.rest.export.CommentDto;
+import fr.sedoo.certifymyrepo.rest.dto.RequirementCommentsDto;
+import fr.sedoo.certifymyrepo.rest.export.CommentExport;
 import fr.sedoo.certifymyrepo.rest.export.PdfPrinter;
 import fr.sedoo.certifymyrepo.rest.export.Report;
 import fr.sedoo.certifymyrepo.rest.export.Requirement;
 import fr.sedoo.certifymyrepo.rest.ftp.DomainFilter;
-import fr.sedoo.certifymyrepo.rest.ftp.SimpleFtpClient;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
-import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 import fr.sedoo.certifymyrepo.rest.utils.MimeTypeUtils;
 
 @RestController
@@ -89,7 +90,7 @@ public class CertificationReportService {
 	private CommentsDao commentsDao;
 	
 	@Autowired
-	private SimpleFtpClient ftpClient;
+	private AttachmentDao ftpClient;
 	
 	@Autowired
 	private CertificationReportTemplateDao certificationReportTemplateDao;
@@ -170,7 +171,7 @@ public class CertificationReportService {
 				}
 			} else if(!loggedUser.isAdmin()) {
 				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), repositoryId));
-				throw new ForbiddenException();
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access thoses reports");
 			}
 		}
 		return result;
@@ -227,7 +228,7 @@ public class CertificationReportService {
 					}
 				} else if(!loggedUser.isAdmin()) {
 					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
-					throw new ForbiddenException();
+					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 				}
 			}
 		}
@@ -255,13 +256,13 @@ public class CertificationReportService {
 						s -> StringUtils.equals(s.getId(),loggedUser.getUserId()) 
 						&& !StringUtils.equals(s.getRole(), Roles.EDITOR))) {
 					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
-					throw new ForbiddenException();
+					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 				} else {
 					result = certificationReportDao.save(certificationReport);
 				}
 			} else {
 				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
-				throw new ForbiddenException();
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 			}
 		}
 		return result;
@@ -276,7 +277,8 @@ public class CertificationReportService {
 		if(id!= null) {
 			CertificationReport report = certificationReportDao.findById(id);
 			if(report != null && StringUtils.equals(ReportStatus.RELEASED.name(), report.getStatus().name())) {
-				throw new BusinessException(String.format("The report with id %s has been released it cannot be modified or deleted", id));
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+						String.format("The report with id %s has been released it cannot be modified or deleted", id));
 			}
 		}
 	}
@@ -300,14 +302,14 @@ public class CertificationReportService {
 							s -> StringUtils.equals(s.getId(),loggedUser.getUserId()) 
 							&& StringUtils.equals(s.getRole(),"READER"))) {
 						LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot read delete a report", loggedUser.getUserId(), report.getRepositoryId()));
-						throw new ForbiddenException();
+						throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to delete this report");
 					} else {
 						certificationReportDao.delete(id);
 						ftpClient.deleteAllFilesInFolder(id);
 					}
 				} else {
 					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
-					throw new ForbiddenException();
+					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to delete this report");
 				}
 			}
 		}
@@ -315,12 +317,12 @@ public class CertificationReportService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/getComments/{reportId}", method = RequestMethod.GET)
-	public List<RequirementComments> getComments(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "reportId") String id) {
+	public List<RequirementCommentsDto> getComments(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "reportId") String id) {
 		return commentsDao.getCommentsByReportId(id);
 	}
 	
 	@RequestMapping(value = "/getCommentsByUserid/{userId}", method = RequestMethod.GET)
-	public List<RequirementComments> getCommentsByUserid(@PathVariable(name = "userId") String id) {
+	public List<RequirementCommentsDto> getCommentsByUserid(@PathVariable(name = "userId") String id) {
 		return commentsDao.getCommentsByUserId(id);
 	}
 	
@@ -411,7 +413,7 @@ public class CertificationReportService {
 			
 			if(Boolean.parseBoolean(attachments)) {
 				
-				ftpClient.downloadContent(localFolder, reportId, new DomainFilter());
+				ftpClient.downloadFiles(localFolder, reportId, new DomainFilter());
 				
 				String zipFileName = printableReport.getTitle().concat(".zip");
 				File zipFile = new File(workDirectory, zipFileName);
@@ -427,7 +429,7 @@ public class CertificationReportService {
 				response.setContentType(MimeTypeUtils.getMimeType(fileName));
 			}
 		} catch (IOException e) {
-			throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
 
@@ -475,7 +477,7 @@ public class CertificationReportService {
 					}
 				} else {
 					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
-					throw new ForbiddenException();
+					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 				}
 			}
 			
@@ -506,16 +508,19 @@ public class CertificationReportService {
 		
 		Map<String, List<String>> attachments = ftpClient.listFiles(report.getId());
 		
-		List<RequirementComments> comments = commentsDao.getCommentsByReportId(report.getId());
-		Map<String, List<CommentDto>> map = new HashMap<String, List<CommentDto>>();
-		if(comments != null) {
-			 for(RequirementComments commentsByRequirement : comments) {
-				 List<CommentDto> commentsDto = new ArrayList<CommentDto>();
-				 for (Comment commentItem : commentsByRequirement.getComments()) {
-					 commentsDto.add(new CommentDto(commentItem));
+
+		Map<String, List<CommentExport>> map = new HashMap<String, List<CommentExport>>();
+		if(isCommentsRequested) {
+			List<RequirementCommentsDto> comments = commentsDao.getCommentsByReportId(report.getId());
+			if(comments != null) {
+				 for(RequirementCommentsDto commentsByRequirement : comments) {
+					 List<CommentExport> commentsExportList = new ArrayList<CommentExport>();
+					 for (CommentDto commentItem : commentsByRequirement.getComments()) {
+						 commentsExportList.add(new CommentExport(commentItem, language));
+					 }
+					 map.put(commentsByRequirement.getItemCode(), commentsExportList);
 				 }
-				 map.put(commentsByRequirement.getItemCode(), commentsDto);
-			 }
+			}
 		}
 		
 		for (CertificationItem r : report.getItems()) {

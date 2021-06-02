@@ -19,7 +19,7 @@ public interface AttachmentDao {
 	 * @param folderName id of the repository
 	 * @return true is the given folder name exist on root location
 	 */
-	boolean deleteFolder(String folderName);
+	boolean deleteAllFilesInFolder(String folderName);
 	
 	/**
 	 * List all files on crusöe FTP
@@ -40,9 +40,9 @@ public interface AttachmentDao {
 	 * Download the 
 	 * @param fileName  fileName
 	 * @param localFolder destination file on local machine
-	 * @param folderName path of the file on the FTP server
+	 * @param ftpPath path of the file on the FTP server
 	 */
-	void downloadFile(String fileName, File localFolder, String folderName);
+	void downloadFile(String fileName, File localFolder, String ftpPath);
 	
 	/**
 	 * Download files from a folder and its sub folder

@@ -1,7 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.CacheBuilder;
@@ -28,7 +27,9 @@ public class AffiliationCachedDao implements AffiliationDao {
 
 	@Override
 	public Affiliation save(Affiliation affiliation) {
-		cache.invalidate(affiliation.getId());
+		if(affiliation.getId() != null) {
+			cache.invalidate(affiliation.getId());
+		}
 		return proxyDao.save(affiliation);
 
 	}
@@ -41,7 +42,12 @@ public class AffiliationCachedDao implements AffiliationDao {
 	@Override
 	public Affiliation findById(String id) {
 		try {
-			return cache.get(id);
+			if(id != null) {
+				return cache.get(id);
+			} else {
+				return null;
+			}
+			
 		} catch (Exception e) {
 			return null;
 		}
@@ -49,7 +55,9 @@ public class AffiliationCachedDao implements AffiliationDao {
 
 	@Override
 	public void deleteById(String id) {
-		cache.invalidate(id);
+		if(id != null) {
+			cache.invalidate(id);
+		}
 		proxyDao.deleteById(id);
 	}
 

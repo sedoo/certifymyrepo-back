@@ -185,8 +185,8 @@ public class PdfPrinter {
 		document.add(ph);
 	}
 	
-	private void writeCommentsValue(List<CommentDto> comments, Document document) throws DocumentException {
-		for(CommentDto comment : comments) {
+	private void writeCommentsValue(List<CommentExport> comments, Document document) throws DocumentException {
+		for(CommentExport comment : comments) {
 			Paragraph ph = new Paragraph();
 			String commentValue = comment.getUserName().concat(" ").concat(comment.getCreationDate().concat(": ")).concat(comment.getValue());
 			ph.add(new Phrase(commentValue, h4Font));
