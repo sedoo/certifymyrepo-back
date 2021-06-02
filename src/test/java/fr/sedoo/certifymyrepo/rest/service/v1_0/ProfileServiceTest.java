@@ -1,6 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
@@ -41,8 +42,9 @@ public class ProfileServiceTest {
 			
 			when(profileDao.findByEmail("toto@gmail.com")).thenReturn(new Profile());
 			profileService.createNewProfile("myToken", profile, "fr");
-		} catch(BusinessException e) {
-				assertEquals("Ce courriel est déjà dans la base de données pour l'utilisateur TEST", e.getMessage());
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
+			assertEquals("Ce courriel est déjà dans la base de données pour l'utilisateur TEST", e.getReason());
 		}
 	}
 	
@@ -56,8 +58,9 @@ public class ProfileServiceTest {
 			
 			when(profileDao.findByOrcid("111-222-333")).thenReturn(new Profile());
 			profileService.createNewProfile("myToken", profile, "fr");
-		} catch(BusinessException e) {
-				assertEquals("Cet ORCID est déjà dans la base de données pour l'utilisateur TEST", e.getMessage());
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
+			assertEquals("Cet ORCID est déjà dans la base de données pour l'utilisateur TEST", e.getReason());
 		}
 	}
 	

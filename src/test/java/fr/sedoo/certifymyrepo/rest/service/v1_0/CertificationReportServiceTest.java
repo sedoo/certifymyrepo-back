@@ -22,6 +22,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -114,8 +115,8 @@ public class CertificationReportServiceTest {
 		try {
 			reportService.listByRepositoryId("myToken", "123");
 			assertTrue("An exception had to be thrown", false);
-		} catch(ForbiddenException e) {
-			assertTrue("An exception had to be thrown", true);
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 		}
 	}
 	
@@ -168,8 +169,8 @@ public class CertificationReportServiceTest {
 		try {
 			reportService.getReport("myToken", "report_id");
 			assertTrue("An exception had to be thrown", false);
-		} catch(ForbiddenException e) {
-			assertTrue("An exception had to be thrown", true);
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 		}
 	}
 	
@@ -183,8 +184,8 @@ public class CertificationReportServiceTest {
 		try {
 			reportService.saveJson("myToken", report);
 			assertTrue("An exception had to be thrown", false);
-		} catch(ForbiddenException e) {
-			assertTrue("An exception had to be thrown", true);
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 		}
 	}
 	
@@ -199,8 +200,8 @@ public class CertificationReportServiceTest {
 		try {
 			reportService.saveJson("myToken", report);
 			assertTrue("An exception had to be thrown", false);
-		} catch(ForbiddenException e) {
-			assertTrue("An exception had to be thrown", true);
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 		}
 	}	
 	
@@ -234,8 +235,8 @@ public class CertificationReportServiceTest {
 		try {
 			reportService.delete("myToken", "report_id");
 			assertTrue("An exception had to be thrown", false);
-		} catch(ForbiddenException e) {
-			assertTrue("An exception had to be thrown", true);
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 		}
 	}	
 	
@@ -252,8 +253,8 @@ public class CertificationReportServiceTest {
 		try {
 			reportService.delete("myToken", "report_id");
 			assertTrue("An exception had to be thrown", false);
-		} catch(ForbiddenException e) {
-			assertTrue("An exception had to be thrown", true);
+		} catch(ResponseStatusException e) {
+			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 		}
 	}
 	

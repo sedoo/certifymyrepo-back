@@ -202,16 +202,6 @@ public class RepositoryServiceTest {
 	}
 	
 	@Test
-    public void testSaveEmptyParameter() {
-		try {
-			repositoryService.save("myToken", null, "fr");
-			assertTrue("An exception had to be thrown", false);
-		} catch (BadRequestException e) {
-			assertTrue(true);
-		}
-	}
-	
-	@Test
     public void testSaveWithNotification() {
 		try {
 			
