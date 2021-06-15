@@ -3,6 +3,8 @@ package fr.sedoo.certifymyrepo.rest.dao;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
@@ -11,6 +13,8 @@ import fr.sedoo.certifymyrepo.rest.domain.Repository;
 
 @Component
 public class RepositoryDaoMongoImpl implements RepositoryDao{
+	
+	Logger logger = LoggerFactory.getLogger(RepositoryDaoMongoImpl.class);
 
 	@Autowired
 	RepositoryRepository repositoryRepository;
@@ -50,7 +54,7 @@ public class RepositoryDaoMongoImpl implements RepositoryDao{
 
 	@Override
 	public List<Repository> findByNameOrKeywords(String  regex) {
-		return repositoryRepository.findByNameOrKeywordsRegex(regex);
+		return repositoryRepository.findByNameOrKeywordsRegex(formatSearchText(regex));
 	}
 
 	@Override
@@ -60,7 +64,20 @@ public class RepositoryDaoMongoImpl implements RepositoryDao{
 
 	@Override
 	public Repository findByName(String name) {
-		return repositoryRepository.findByNameCaseInsensitive(name);
+		return repositoryRepository.findByNameCaseInsensitive(formatSearchText(name));
+	}
+	
+	/**
+	 * Escape special characters
+	 * @param input income text
+	 * @return text with special characters escaped
+	 */
+	private String formatSearchText(String input) {
+		String safeInput = input.replace("$", "\\$");
+		safeInput = safeInput.replace("*", "\\*");
+		safeInput = safeInput.replace(".", "\\.");
+		safeInput = safeInput.replace("?", "\\?");
+		return safeInput;
 	}
 	
 }
