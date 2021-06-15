@@ -11,14 +11,16 @@ public class RepositoryUserDto {
 		
 	}
 	
-	public RepositoryUserDto(String id, String name, String role) {
+	public RepositoryUserDto(String id, String name, String role, String status) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.role = role;
+		this.status = status;
 	}
 	private String id;
 	private String name;
 	private String role;
+	private String status;
 
 }

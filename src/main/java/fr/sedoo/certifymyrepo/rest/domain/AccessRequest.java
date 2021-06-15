@@ -8,6 +8,7 @@ import lombok.Setter;
 public class AccessRequest {
 	
 	private String repositoryId;
+	private String userId;
 	private String userName;
 	private String orcid;
 	private String email;

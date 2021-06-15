@@ -115,7 +115,7 @@ public class RepositoryService {
 			for(RepositoryUser user : repo.getUsers()) {
 				Optional<Profile> userProfile = profileDao.findById(user.getId());
 				if(userProfile.isPresent()) {
-					repoUserDto.add(new RepositoryUserDto(user.getId(), userProfile.get().getName(), user.getRole()));
+					repoUserDto.add(new RepositoryUserDto(user.getId(), userProfile.get().getName(), user.getRole(), user.getStatus()));
 				}
 			}
 			repositoryDto.setUsers(repoUserDto);
@@ -467,6 +467,11 @@ public class RepositoryService {
 		Repository repo = repositoryDao.findById(accessRequest.getRepositoryId());
 		if (repo != null) {
 			
+			// Add the user on the repository with the pending status
+			repo.getUsers().add(new RepositoryUser(accessRequest.getUserId(), accessRequest.getRole(), RepositoryUser.PENDING));
+			repositoryDao.save(repo);
+			
+			// Notify the repo editors
 			ContactDto contact = new ContactDto();
 			Set<String> to = new HashSet<String>();
 			to.add(repo.getContact());
