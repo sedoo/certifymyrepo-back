@@ -55,9 +55,9 @@ public class ValidationEmailSender implements EmailSender {
 		try {
 			SimpleEmail simpleemail = new SimpleEmail();
 			simpleemail.setHostName(mailConfig.getHostname());
-			simpleemail.addTo("thomas.romuald@obs-mip.fr");
-			//simpleemail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
-			//simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+			//simpleemail.addTo("thomas.romuald@obs-mip.fr");
+			simpleemail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
+			simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 			if(contact.getFromEmail() != null) {
 				if(contact.getFromName() != null) {
 					simpleemail.setFrom(contact.getFromEmail(), contact.getFromName());
@@ -67,7 +67,7 @@ public class ValidationEmailSender implements EmailSender {
 			} else {
 				simpleemail.setFrom(mailConfig.getFrom());
 			}
-			simpleemail.setSubject("[Validation platform] ".concat(contact.getSubject()));
+			simpleemail.setSubject("['Crusöe validation platform] ".concat(contact.getSubject()));
 			StringBuilder sb = new StringBuilder();
 			sb.append("Former recipients:");
 			for (String email : contact.getTo()) {
