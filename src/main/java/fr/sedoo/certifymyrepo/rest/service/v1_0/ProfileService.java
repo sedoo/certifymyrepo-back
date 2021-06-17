@@ -131,7 +131,11 @@ public class ProfileService {
 			to.add(createdProfile.getEmail());
 			contact.setTo(to);
 			contact.setSubject(messages.getString("create.user.notification.subject"));
-			contact.setMessage(String.format(messages.getString("create.user.notification.orcid.content"), profile.getOrcid()));
+			if(createdProfile.getOrcid() != null) {
+				contact.setMessage(String.format(messages.getString("create.user.notification.orcid.content"), profile.getOrcid()));
+			} else {
+				contact.setMessage(String.format(messages.getString("create.user.notification.renater.content"), profile.getEmail()));
+			}
 			emailSender.sendNotification(contact);
 		}
 		return createdProfile;
