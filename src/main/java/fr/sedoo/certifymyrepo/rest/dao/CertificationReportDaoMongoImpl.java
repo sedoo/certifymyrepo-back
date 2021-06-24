@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,6 +66,11 @@ public class CertificationReportDaoMongoImpl implements CertificationReportDao {
 		return certificationReportRepository.findFirstByRepositoryIdAndStatusIn(
 				repositoryId, new String[] {ReportStatus.NEW.name(), ReportStatus.IN_PROGRESS.name()}, 
 				Sort.by(Sort.Direction.DESC, "updateDate"));
+	}
+
+	@Override
+	public List<CertificationReport> findInProgressByUpdateDateLowerThan(Date date) {
+		return certificationReportRepository.findInProgressByUpdateDateLowerThan(date);
 	}
 	
 }

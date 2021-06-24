@@ -8,14 +8,12 @@ public interface RepositoryDao {
 	
 	List<Repository> findAll();
 	List<Repository> findAllByUserId(String userId);
+	List<Repository> findByNameOrKeywords(String regex);
 	
 	Repository findById(String id);
 	Repository findByName(String name);
-	
-	List<Repository> findByNameOrKeywords(String regex);
-	
 	Repository findByIdAndUserId(String id, String orcid);
-
+	
 	Repository save(Repository repository);
 	
 	void delete(String id);

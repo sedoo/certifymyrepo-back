@@ -46,6 +46,10 @@ shibboleth:
 ftp:
     host: sedur.sedoo.fr
     username: crusoe
+
+notification:
+    cronExpression: 0 30 20 * * *
+    unused.report.months.delay: 2
         
 ---
 

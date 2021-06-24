@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
@@ -13,6 +14,8 @@ public interface CertificationReportDao {
 	List<CertificationReport> deleteByRepositoryId(String repositoryId);
 
 	List<CertificationReport> findByRepositoryId(String repositoryId);
+	
+	List<CertificationReport> findInProgressByUpdateDateLowerThan(Date date);
 	
 	CertificationReport findById(String id);
 	

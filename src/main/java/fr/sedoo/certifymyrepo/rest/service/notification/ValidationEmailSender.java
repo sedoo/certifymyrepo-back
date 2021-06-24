@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.mail.EmailConstants;
 import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
+import org.apache.commons.mail.HtmlEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,21 +54,24 @@ public class ValidationEmailSender implements EmailSender {
 			}
 		}
 		try {
-			SimpleEmail simpleemail = new SimpleEmail();
-			simpleemail.setHostName(mailConfig.getHostname());
-			//simpleemail.addTo("thomas.romuald@obs-mip.fr");
+			HtmlEmail htmlEmail = new HtmlEmail();
+			htmlEmail.setCharset(EmailConstants.UTF_8);
+			htmlEmail.setHostName(mailConfig.getHostname());
+			htmlEmail.addTo("thomas.romuald@obs-mip.fr");
+			/**
 			simpleemail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
 			simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+			*/
 			if(contact.getFromEmail() != null) {
 				if(contact.getFromName() != null) {
-					simpleemail.setFrom(contact.getFromEmail(), contact.getFromName());
+					htmlEmail.setFrom(contact.getFromEmail(), contact.getFromName());
 				} else {
-					simpleemail.setFrom(contact.getFromEmail());
+					htmlEmail.setFrom(contact.getFromEmail());
 				}
 			} else {
-				simpleemail.setFrom(mailConfig.getFrom());
+				htmlEmail.setFrom(mailConfig.getFrom());
 			}
-			simpleemail.setSubject("['Crusöe validation platform] ".concat(contact.getSubject()));
+			htmlEmail.setSubject("['Crusöe validation platform] ".concat(contact.getSubject()));
 			StringBuilder sb = new StringBuilder();
 			sb.append("Former recipients:");
 			for (String email : contact.getTo()) {
@@ -75,8 +79,8 @@ public class ValidationEmailSender implements EmailSender {
 			}
 			sb.append("\n\n").append(contact.getMessage());
 			
-			simpleemail.setMsg(sb.toString());
-			simpleemail.send();
+			htmlEmail.setHtmlMsg(sb.toString());
+			htmlEmail.send();
 			return true;
 		} catch (EmailException e) {
 			LOG.error("Notification could not be send", e);

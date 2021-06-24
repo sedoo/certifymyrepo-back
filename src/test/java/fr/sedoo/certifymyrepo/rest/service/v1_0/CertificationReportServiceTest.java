@@ -182,7 +182,7 @@ public class CertificationReportServiceTest {
 		report.setRepositoryId("repository_id");
 		
 		try {
-			reportService.saveJson("myToken", report);
+			reportService.saveJson("myToken", report, "fr");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -198,7 +198,7 @@ public class CertificationReportServiceTest {
 		report.setRepositoryId("repository_id");
 		
 		try {
-			reportService.saveJson("myToken", report);
+			reportService.saveJson("myToken", report, "fr");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -216,7 +216,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.save(report)).thenReturn(report);
 		
 		try {
-			CertificationReport result = reportService.saveJson("myToken", report);
+			CertificationReport result = reportService.saveJson("myToken", report, "fr");
 			assertEquals(report.getVersion(),result.getVersion());
 		} catch(ForbiddenException e) {
 			assertTrue("An exception had to be thrown", false);

@@ -313,7 +313,10 @@ public class RepositoryService {
 	}
 	
 	/**
-	 * Before saving the repository check if any users have been added or removed
+	 * Before saving the repository check if any notification has to be sent
+	 * <li>An user has been added on the repository</li>
+	 * <li>An user has been removed from the repository</li>
+	 * <li>An user access request has been declined</li>
 	 * Then a notification if needed
 	 * @param repository updated
 	 * @param messages i18n
@@ -325,36 +328,50 @@ public class RepositoryService {
 		}
 		if(existingRepo != null) {
 			// List user id already in DB
-			Set<String> alreadyInDBUserId = existingRepo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+			Set<String> alreadyInDBUserIds = existingRepo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
 	
 			// List user id potentially updated
-			Set<String> newUserId = repository.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+			Set<String> newUserIds = repository.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
 	
 			// Identify symmetric differences
-			Set<String> symmetricDiff = new HashSet<String>(alreadyInDBUserId);
-			symmetricDiff.addAll(newUserId);
-			Set<String> tmp = new HashSet<String>(alreadyInDBUserId);
-			tmp.retainAll(newUserId);
+			Set<String> symmetricDiff = new HashSet<String>(alreadyInDBUserIds);
+			symmetricDiff.addAll(newUserIds);
+			Set<String> tmp = new HashSet<String>(alreadyInDBUserIds);
+			tmp.retainAll(newUserIds);
 			symmetricDiff.removeAll(tmp);
 	
 			// Identify deleted id
-			Set<String> deletedId = new HashSet<String>(alreadyInDBUserId);
-			deletedId.retainAll(symmetricDiff);
-			for (String userId : deletedId) {
+			Set<String> deletedIdList = new HashSet<String>(alreadyInDBUserIds);
+			deletedIdList.retainAll(symmetricDiff);
+			for (String userId : deletedIdList) {
 				Optional<Profile> userProfile = profileDao.findById(userId);
 				if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
+					
+					// Check the usre's status on this repository
+					// it may be an actual user who has been remove
+					// or a pending request which has been declined
+					RepositoryUser repoUser = repository.getUsers().stream()
+							  .filter(user -> userId.equals(user.getId()))
+							  .findAny()
+							  .orElse(null);
+					
 					ContactDto contact = new  ContactDto();
 					Set<String> to = new HashSet<String>();
 					to.add(userProfile.get().getEmail());
 					contact.setTo(to);
-					contact.setSubject(String.format(messages.getString("remove.user.notification.subject"), repository.getName()));
-					contact.setMessage(String.format(messages.getString("remove.user.notification.content"), repository.getName()));
+					if(repoUser != null && StringUtils.equals(RepositoryUser.PENDING, repoUser.getStatus())) {
+						contact.setSubject(String.format(messages.getString("declined.user.notification.subject"), repository.getName()));
+						contact.setMessage(String.format(messages.getString("declined.user.notification.content"), repository.getName()));
+					} else {
+						contact.setSubject(String.format(messages.getString("remove.user.notification.subject"), repository.getName()));
+						contact.setMessage(String.format(messages.getString("remove.user.notification.content"), repository.getName()));
+					}
 					emailSender.sendNotification(contact);
 				}
 			}
 			
 			// Identify added id
-			Set<String> addedId = new HashSet<String>(newUserId);
+			Set<String> addedId = new HashSet<String>(newUserIds);
 			addedId.retainAll(symmetricDiff);
 			for (String userId : addedId) {
 				Optional<Profile> userProfile = profileDao.findById(userId);
@@ -488,13 +505,23 @@ public class RepositoryService {
 			contact.setMessage(String.format(messages.getString("repository.access.request.content"), 
 					accessRequest.getUserName(), accessRequest.getEmail(),
 					messages.getString(accessRequest.getRole()), 
-					repo.getName(), accessRequest.getText()));
+					repo.getName(), getButton("http://localhost:8080", "Accepter"), accessRequest.getText()));
 			emailSender.sendNotification(contact);
 		} else {
 			LOG.error("No repository found. No access can be granted.");
 		}
 
 	}
+	
+	private String getButton(String link, String label) {
+        return "<table cellspacing=\"0\" cellpadding=\"0\"<tr> <td align=\"center\" height=\"40\" bgcolor=\"#5CB85C\" style=\"-webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; color: #ffffff; display: block;\">"
+                + "    <a href=\""
+                + link
+                + "\" style=\"font-size:12px; font-weight: bold; font-family: Helvetica, Arial, sans-serif; text-decoration: none; line-height:40px; width:100%; display:inline-block\">"
+                + "<span style=\"color: #FFFFFF;margin-right: 15px;margin-left: 15px;\">"
+                + label
+                + "</span></a></td></tr> </table>";
+    }
 
 	/**
 	 * 

@@ -9,11 +9,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -44,12 +48,14 @@ import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
+import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Comment;
 import fr.sedoo.certifymyrepo.rest.domain.MyReport;
 import fr.sedoo.certifymyrepo.rest.domain.MyReports;
+import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.ReportStatus;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
@@ -60,6 +66,7 @@ import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.CommentDto;
+import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RequirementCommentsDto;
 import fr.sedoo.certifymyrepo.rest.export.CommentExport;
@@ -71,6 +78,7 @@ import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
+import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 import fr.sedoo.certifymyrepo.rest.utils.MimeTypeUtils;
 
 @RestController
@@ -88,6 +96,12 @@ public class CertificationReportService {
 	
 	@Autowired
 	private CommentsDao commentsDao;
+	
+	@Autowired
+	ProfileDao profileDao;
+	
+	@Autowired
+	EmailSender emailSender;
 	
 	@Autowired
 	private AttachmentDao ftpClient;
@@ -241,7 +255,9 @@ public class CertificationReportService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
-	public CertificationReport saveJson(@RequestHeader("Authorization") String authHeader, @RequestBody CertificationReport certificationReport) {
+	public CertificationReport saveJson(@RequestHeader("Authorization") String authHeader, 
+			@RequestBody CertificationReport certificationReport,
+			@RequestParam String language) {
 		CertificationReport result = null;
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		
@@ -265,9 +281,74 @@ public class CertificationReportService {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 			}
 		}
+		
+		ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
+		checkNotifications(certificationReport, messages);
+		
 		return result;
 	}
 	
+	/**
+	 * Check if a notification has to be sent:
+	 * <li>a report has been validated. All the repository users has be to notified</li>
+	 * <li>a report has got a new version. All the repository users has be to notified</li>
+	 * @param certificationReportToSave current certification report
+	 * @param messages i18n bundle
+	 */
+	private void checkNotifications(CertificationReport certificationReportToSave, ResourceBundle messages) {
+		if(certificationReportToSave.getId() != null) {
+			CertificationReport reportInDB = certificationReportDao.findById(certificationReportToSave.getId());
+			if(reportInDB != null) {
+				if(!StringUtils.equals(certificationReportToSave.getStatus().name(), reportInDB.getStatus().name()) &&
+						StringUtils.equals(certificationReportToSave.getStatus().name(), ReportStatus.RELEASED.name())) {
+
+					// notification the report has been validated
+					buildNotification(certificationReportToSave.getRepositoryId(), messages, "report.validation", null);
+
+				} else if(!StringUtils.equals(certificationReportToSave.getVersion(), reportInDB.getVersion())) {
+					
+					// notification new version
+					buildNotification(certificationReportToSave.getRepositoryId(), messages, "report.new.version", null);
+					
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Build ContactDto object and send notification
+	 * @param repositoryId repository identifier
+	 * @param messages i18n bundle
+	 * @param key i18n key prefix ("report.validation" or "report.new.version")
+	 */
+	private void buildNotification(String repositoryId, ResourceBundle messages, String key, String message) {
+		// notification the report has been validated
+		Repository repo = repositoryDao.findById(repositoryId);
+		// List user id in DB
+		List<String> repoUsersEmail = new ArrayList<String>();
+		Set<String> repoUserIdList = repo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+		for(String userId : repoUserIdList) {
+			Optional<Profile> userProfile = profileDao.findById(userId);
+			if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
+				repoUsersEmail.add(userProfile.get().getEmail());
+			}
+		}
+		if( repoUsersEmail != null && repoUsersEmail.size() > 0) {
+			ContactDto contact = new  ContactDto();
+			Set<String> to = new HashSet<String>();
+			to.addAll(repoUsersEmail);
+			contact.setTo(to);
+			contact.setSubject(String.format(messages.getString(key.concat(".notification.subject")), repo.getName()));
+			if(message != null) {
+				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName(), message));	
+			} else {
+				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName()));
+			}
+
+			emailSender.sendNotification(contact);
+		}
+	}
+
 	/**
 	 * report with released status cannot be updated or deleted
 	 * @param id report id
@@ -330,7 +411,9 @@ public class CertificationReportService {
 	@RequestMapping(value = "/saveComments", method = RequestMethod.POST)
 	public RequirementComments saveComments(@RequestHeader("Authorization") String authHeader, 
 			@RequestParam String reportId,
+			@RequestParam String repositoryId,
 			@RequestParam String requirementCode,
+			@RequestParam String language,
 			@RequestBody List<Comment> comments) {
 		RequirementComments result = commentsDao.getCommentsByReportIdAndRequirementCode(reportId, requirementCode);
 		if(result == null) {
@@ -339,7 +422,17 @@ public class CertificationReportService {
 			result.setItemCode(requirementCode);
 		}
 		result.setComments(comments);
-		return commentsDao.save(result);
+		RequirementComments savedComments = commentsDao.save(result);
+		Comment latestComment = comments.get(comments.size()-1);
+		ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
+		Optional<Profile> commentEditor = profileDao.findById(latestComment.getUserId());
+		String postedComment = "";
+		if(commentEditor.isPresent()) {
+			postedComment = "@".concat(commentEditor.get().getName()).concat(": ");
+		}
+		postedComment = postedComment.concat(latestComment.getText());
+		buildNotification(repositoryId, messages, "new.comment", postedComment);
+		return savedComments;
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
