@@ -38,7 +38,6 @@ import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
-import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 
 @RestController

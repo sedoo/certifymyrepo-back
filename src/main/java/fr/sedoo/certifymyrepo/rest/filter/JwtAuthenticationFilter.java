@@ -49,7 +49,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 	JwtConfig jwtConfig;
 
 	public JwtAuthenticationFilter() {
-		this.jwtConfig = new JwtConfig();
 	}
 	
 	private String generateToken(String name, String uuid) throws Exception{

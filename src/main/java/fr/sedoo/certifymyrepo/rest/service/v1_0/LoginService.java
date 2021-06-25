@@ -199,15 +199,6 @@ public class LoginService {
 		
 		return user;
 	}
-
-	@Deprecated
-	private String generateToken(OrcidToken orcidToken) throws Exception{
-		Map<String, String> infos = new HashMap<>();
-		infos.put(ORCID_KEY, orcidToken.getOrcid());
-
-		String token = JwtUtil.generateToken(orcidToken.getName(), jwtConfig.getSigningKey(), jwtConfig.getTokenValidity(), null, infos);
-		return token;
-	}
 	
 	private String generateToken(String name, String uuid) throws Exception{
 		Map<String, String> infos = new HashMap<>();

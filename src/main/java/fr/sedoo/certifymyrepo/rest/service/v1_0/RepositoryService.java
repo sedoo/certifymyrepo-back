@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -51,6 +52,9 @@ import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
+import fr.sedoo.certifymyrepo.rest.filter.JwtAuthenticationFilter;
+import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtConfig;
+import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtUtil;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
@@ -84,6 +88,12 @@ public class RepositoryService {
 	
 	@Autowired
 	private AffiliationDao affiliationDao;
+	
+	@Autowired
+	JwtConfig jwtConfig;
+	
+	@Value("${app.url}")
+	private String appUrl;
 
 	@RequestMapping(value = "/isalive", method = RequestMethod.GET)
 	public String isalive() {
@@ -484,33 +494,65 @@ public class RepositoryService {
 		Repository repo = repositoryDao.findById(accessRequest.getRepositoryId());
 		if (repo != null) {
 			
-			// Add the user on the repository with the pending status
-			repo.getUsers().add(new RepositoryUser(accessRequest.getUserId(), accessRequest.getRole(), RepositoryUser.PENDING));
-			repositoryDao.save(repo);
+			// Search for the user and check his status
+			RepositoryUser repoUser = repo.getUsers().stream()
+					  .filter(user -> accessRequest.getUserId().equals(user.getId()))
+					  .findAny()
+					  .orElse(null);
 			
-			// Notify the repo editors
-			ContactDto contact = new ContactDto();
-			Set<String> to = new HashSet<String>();
-			to.add(repo.getContact());
-			List<String> repoManagerOrcid = getEditorUserId(repo.getUsers());
-			if (repoManagerOrcid != null && repoManagerOrcid.size() > 0) {
-				List<Profile> profiles = profileDao.findByOrcidIn(repoManagerOrcid);
-				if(profiles != null && profiles.size() > 0) {
-					to.addAll(profiles.stream().map(profile -> profile.getEmail()).collect(Collectors.toSet()));
+			if(repoUser != null) {
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "User already present in the repository");
+			} else {
+				// Add the user on the repository with the pending status
+				repo.getUsers().add(new RepositoryUser(accessRequest.getUserId(), accessRequest.getRole(), RepositoryUser.PENDING));
+				repositoryDao.save(repo);
+				
+				String link = appUrl.concat("/?token=").concat(generateToken())
+						.concat("#/requestValidation/").concat(accessRequest.getRepositoryId())
+						.concat("/").concat(accessRequest.getUserId());
+				
+				// Notify the repo editors
+				ContactDto contact = new ContactDto();
+				Set<String> to = new HashSet<String>();
+				to.add(repo.getContact());
+				List<String> repoManagerOrcid = getEditorUserId(repo.getUsers());
+				if (repoManagerOrcid != null && repoManagerOrcid.size() > 0) {
+					List<Profile> profiles = profileDao.findByOrcidIn(repoManagerOrcid);
+					if(profiles != null && profiles.size() > 0) {
+						to.addAll(profiles.stream().map(profile -> profile.getEmail()).collect(Collectors.toSet()));
+					}
 				}
+				contact.setTo(to);
+				contact.setSubject(String.format(messages.getString("repository.access.request.subject"), 
+						messages.getString(accessRequest.getRole()), repo.getName(), accessRequest.getUserName()));
+				
+				contact.setMessage(String.format(messages.getString("repository.access.request.content"), 
+						accessRequest.getUserName(), accessRequest.getEmail(),
+						messages.getString(accessRequest.getRole()), 
+						repo.getName(), getButton(link, "Accepter"), accessRequest.getText()));
+				emailSender.sendNotification(contact);
 			}
-			contact.setTo(to);
-			contact.setSubject(String.format(messages.getString("repository.access.request.subject"), 
-					messages.getString(accessRequest.getRole()), repo.getName(), accessRequest.getUserName()));
-			contact.setMessage(String.format(messages.getString("repository.access.request.content"), 
-					accessRequest.getUserName(), accessRequest.getEmail(),
-					messages.getString(accessRequest.getRole()), 
-					repo.getName(), getButton("http://localhost:8080", "Accepter"), accessRequest.getText()));
-			emailSender.sendNotification(contact);
 		} else {
 			LOG.error("No repository found. No access can be granted.");
 		}
 
+	}
+	
+	/**
+	 * Generate a token
+	 * @return
+	 * @throws Exception
+	 */
+	private String generateToken() {
+		try {
+			Map<String, String> infos = new HashMap<>();
+			infos.put(JwtAuthenticationFilter.UUID_KEY, "000-000-000");
+			String token;
+			token = JwtUtil.generateToken("robot", jwtConfig.getSigningKey(), jwtConfig.getTokenAccessResquestValidity(), null, infos);
+			return token;
+		} catch (Exception e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "YCould not generate a token");
+		}
 	}
 	
 	private String getButton(String link, String label) {
@@ -522,6 +564,46 @@ public class RepositoryService {
                 + label
                 + "</span></a></td></tr> </table>";
     }
+	
+	/**
+	 * 
+	 * @param authHeader
+	 * @param repositoryId
+	 * @param userId
+	 * @return true if the user has been accepted, false if the user had not a pending request anymore
+	 */
+	@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(value = "/validRequest/{repositoryId}/{userId}", method = RequestMethod.GET)
+	public boolean validRequest(@RequestHeader("Authorization") String authHeader, 
+			@PathVariable(name = "repositoryId") String repositoryId,
+			@PathVariable(name = "userId") String userId) {
+		boolean result = false;
+		Repository repository = repositoryDao.findById(repositoryId);
+		if(repository != null) {
+			// Search for the user and check his status
+			RepositoryUser repoUser = repository.getUsers().stream()
+					  .filter(user -> userId.equals(user.getId()))
+					  .findAny()
+					  .orElse(null);
+			if(repoUser != null) {
+				if(StringUtils.equals(RepositoryUser.PENDING, repoUser.getStatus())) {
+					// The user has been found and his status is pending.
+					// the request can be accepted
+					for(RepositoryUser user : repository.getUsers()) {
+						if(StringUtils.equals(userId, user.getId())){
+							user.setStatus(RepositoryUser.ACTIVE);
+							repositoryDao.save(repository);
+							result = true;
+							break;
+						}
+					}
+				}	
+			} else {
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "User not found");
+			}
+		}
+		return result;
+	}
 
 	/**
 	 * 

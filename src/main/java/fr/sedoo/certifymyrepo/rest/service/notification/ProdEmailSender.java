@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
+import org.apache.commons.mail.HtmlEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,22 +45,26 @@ public class ProdEmailSender implements EmailSender {
 			}
 		}
 		try {
-			SimpleEmail simpleemail = new SimpleEmail();
-			simpleemail.setHostName(mailConfig.getHostname());
-			simpleemail.addTo(contact.getTo().toArray(new String[contact.getTo().size()]));
-			simpleemail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+			HtmlEmail email = new HtmlEmail();
+			email.setHostName(mailConfig.getHostname());
+			email.addTo(contact.getTo().toArray(new String[contact.getTo().size()]));
+			email.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 			if(contact.getFromEmail() != null) {
 				if(contact.getFromName() != null) {
-					simpleemail.setFrom(contact.getFromEmail(), contact.getFromName());
+					email.setFrom(contact.getFromEmail(), contact.getFromName());
 				} else {
-					simpleemail.setFrom(contact.getFromEmail());
+					email.setFrom(contact.getFromEmail());
 				}
 			} else {
-				simpleemail.setFrom(mailConfig.getFrom());
+				email.setFrom(mailConfig.getFrom());
 			}
-			simpleemail.setSubject(contact.getSubject());
-			simpleemail.setMsg(contact.getMessage());
-			simpleemail.send();
+			email.setSubject(contact.getSubject());
+			StringBuilder msg = new StringBuilder();
+			msg.append("<html><body>");
+			msg.append(contact.getMessage());
+			msg.append("</body></html>");
+			email.setHtmlMsg(msg.toString());
+			email.send();
 			return true;
 		} catch (EmailException e) {
 			LOG.error("Notification could not be send", e);

@@ -2,6 +2,7 @@ package fr.sedoo.certifymyrepo.rest.filter.jwt;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,22 +28,13 @@ public class JwtUtil {
 	
 	public static final String ROLES_KEY = "roles";
 	
-	
-	public static final int DEFAULT_VALIDITY = 1800;//30 minutes
-	
 	public static final String ISSUER = "Sedoo";
 	public static final String AUTH_HEADER = "Authorization";
 	
-	public static String generateToken(String subject, String signingKey) throws Exception {
-		return generateToken(subject, signingKey, DEFAULT_VALIDITY);
-	}
-	
-	public static String generateToken(String subject, String signingKey, int validity) throws Exception {
-		return generateToken(subject, signingKey, validity, Collections.emptySet(), Collections.emptyMap());
-	}
 	public static String generateToken(String subject, String signingKey, int validity, Set<String> roles, Map<String, String> addPayload) throws Exception {
 		return generateToken(subject, signingKey, validity, roles, addPayload, null);
 	}
+	
 	public static String generateToken(String subject, String signingKey, int validity, Set<String> roles, Map<String, String> addPayload, String xsrfToken) throws Exception {
 		long nowMillis = System.currentTimeMillis();
 		Date iat = new Date(nowMillis);

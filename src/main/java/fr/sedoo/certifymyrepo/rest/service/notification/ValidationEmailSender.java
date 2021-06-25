@@ -72,14 +72,16 @@ public class ValidationEmailSender implements EmailSender {
 				htmlEmail.setFrom(mailConfig.getFrom());
 			}
 			htmlEmail.setSubject("['Crusöe validation platform] ".concat(contact.getSubject()));
-			StringBuilder sb = new StringBuilder();
-			sb.append("Former recipients:");
+			StringBuilder msg = new StringBuilder();
+			msg.append("<html><body>");
+			msg.append("<p>Former recipients:<ul>");
 			for (String email : contact.getTo()) {
-				sb.append(" ").append(email);
+				msg.append("<li>").append(email).append("</li>");
 			}
-			sb.append("\n\n").append(contact.getMessage());
-			
-			htmlEmail.setHtmlMsg(sb.toString());
+			msg.append("</ul></p>");
+			msg.append(contact.getMessage());
+			msg.append("</body></html>");
+			htmlEmail.setHtmlMsg(msg.toString());
 			htmlEmail.send();
 			return true;
 		} catch (EmailException e) {

@@ -1,15 +1,10 @@
 package fr.sedoo.certifymyrepo.rest.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDaoMongoImpl;
