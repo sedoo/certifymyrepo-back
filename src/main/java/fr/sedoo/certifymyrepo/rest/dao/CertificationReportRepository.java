@@ -19,7 +19,7 @@ public interface CertificationReportRepository extends MongoRepository<Certifica
 	
 	CertificationReport findFirstByRepositoryIdAndStatusIn(String repositoryId, String[] statusArray, Sort sort);
 	
-	@Query(value = "{$and:[{'updateDate' :  {$gte: ?0} }, {'status' : { $ne: 'RELEASED' } }]}")
+	@Query(value = "{$and:[{'updateDate' :  {$lte: ?0} }, {'status' : { $ne: 'RELEASED' } }, {$or:[{'lastNotificationDate' :  null }, {'lastNotificationDate' :  {$lte: ?0} }]}]}")
     List<CertificationReport> findInProgressByUpdateDateLowerThan(Date date);
 	
 

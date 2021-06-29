@@ -52,7 +52,13 @@ notification:
     unused.report.months.delay: 2
     
 app.url: http://localhost:8080
-        
+
+---
+
+spring.profiles: dev
+      
+notification.cronExpression: 0 * * ? * *
+
 ---
 
 spring.profiles: tunnelssh-preprod

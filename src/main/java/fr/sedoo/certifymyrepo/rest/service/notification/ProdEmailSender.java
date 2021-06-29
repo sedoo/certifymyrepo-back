@@ -58,7 +58,7 @@ public class ProdEmailSender implements EmailSender {
 			} else {
 				email.setFrom(mailConfig.getFrom());
 			}
-			email.setSubject(contact.getSubject());
+			email.setSubject("[Crusöe] ".concat(contact.getSubject()));
 			StringBuilder msg = new StringBuilder();
 			msg.append("<html><body>");
 			msg.append(contact.getMessage());

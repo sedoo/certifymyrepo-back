@@ -28,5 +28,6 @@ public class CertificationReport {
 	private String version;
 	private ReportStatus status;
 	private Date updateDate;
+	private Date lastNotificationDate;
 
 }

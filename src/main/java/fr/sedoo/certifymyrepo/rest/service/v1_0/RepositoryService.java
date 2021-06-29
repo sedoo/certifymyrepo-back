@@ -229,11 +229,10 @@ public class RepositoryService {
 			// init counters
 			Map<String, Integer> avg = new HashMap<String, Integer>();
 			
-			ReportDto latestReport = new ReportDto(report);
+			CertificationTemplate template = templateDao.getCertificationReportTemplate(report.getTemplateId());
+			ReportDto latestReport = new ReportDto(report, template);
 			result.setLatestReport(latestReport);
 			
-			CertificationTemplate template = templateDao.getCertificationReportTemplate(report.getTemplateId());
-			latestReport.setLevelMaxValue(template.getLevels().size() - 1);
 			List<CertificationItemDto> itemList = new ArrayList<CertificationItemDto>();
 			for(CertificationItem item : report.getItems()) {
 				CertificationItemDto itemDto = new CertificationItemDto(item);

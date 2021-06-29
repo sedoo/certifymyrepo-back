@@ -138,11 +138,9 @@ public class CertificationReportService {
 		// Add information from template (number of levels, level active for a given requirement etc)
 		List<ReportDto> reportsDto = new ArrayList<ReportDto>();
 		for(CertificationReport report : reports) {
-			ReportDto reportDto = new ReportDto(report);
 			// For a given repository, reports can be made from different template
 			CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
-			// Set the maximum value of radar chart yaxis
-			reportDto.setLevelMaxValue(template.getLevels().size()-1);
+			ReportDto reportDto = new ReportDto(report, template);
 			List<CertificationItemDto> itemList = new ArrayList<CertificationItemDto>();
 			for(CertificationItem item : report.getItems()) {
 				CertificationItemDto itemDto = new CertificationItemDto(item);
