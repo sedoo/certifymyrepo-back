@@ -360,7 +360,7 @@ public class RepositoryService {
 					// Check the usre's status on this repository
 					// it may be an actual user who has been remove
 					// or a pending request which has been declined
-					RepositoryUser repoUser = repository.getUsers().stream()
+					RepositoryUser existingRepoUser = existingRepo.getUsers().stream()
 							  .filter(user -> userId.equals(user.getId()))
 							  .findAny()
 							  .orElse(null);
@@ -369,7 +369,7 @@ public class RepositoryService {
 					Set<String> to = new HashSet<String>();
 					to.add(userProfile.get().getEmail());
 					contact.setTo(to);
-					if(repoUser != null && StringUtils.equals(RepositoryUser.PENDING, repoUser.getStatus())) {
+					if(existingRepoUser != null && StringUtils.equals(RepositoryUser.PENDING, existingRepoUser.getStatus())) {
 						contact.setSubject(String.format(messages.getString("declined.user.notification.subject"), repository.getName()));
 						contact.setMessage(String.format(messages.getString("declined.user.notification.content"), repository.getName()));
 					} else {
