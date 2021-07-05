@@ -27,31 +27,31 @@
     {
         "code" : "R2",
         "requirement": {"en": "R2. The repository maintains all applicable licenses covering data access and use and monitors compliance.",
-                        "fr": "R2. L’entrepôt maintient toutes les licences applicables à l'accès et à l'utilisation des donnéeset en surveille la conformité."},
+                        "fr": "R2. L’entrepôt maintient toutes les licences applicables à l'accès et à l'utilisation des données et en surveille la conformité."},
         "levelActive" : true
     },
     {
         "code" : "R3",
         "requirement": {"en": "R3. The repository has a continuity plan to ensure ongoing access to and preservation of its holdings.",
-                        "fr": "R3. L’entrepôt dispose d'un plan de continuité pour assurer un accès continu à ses collectionset leur préservation."},
+                        "fr": "R3. L’entrepôt dispose d'un plan de continuité pour assurer un accès continu à ses collections et leur préservation."},
         "levelActive" : true
     },        
     {
         "code" : "R4",
         "requirement": {"en": "R4. The repository ensures, to the extent possible, that data are created, curated, accessed, and used in compliance with disciplinary and ethical norms",
-                        "fr": "R4. L’entrepôt garantit, dans la mesure du possible, que les données sont créées, conservées,qu’on y accède et qu’elles sont utilisées dans le respect des normes disciplinaires etéthiques."},
+                        "fr": "R4. L’entrepôt garantit, dans la mesure du possible, que les données sont créées, conservées, qu’on y accède et qu’elles sont utilisées dans le respect des normes disciplinaires et éthiques."},
             "levelActive" : true
     },
     {
         "code" : "R5",
         "requirement": {"en": "R5. The repository has adequate funding and sufficient numbers of qualified staff managed through a clear system of governance to effectively carry out the mission.",
-                        "fr": "R5. L’entrepôt dispose d'un financement adéquat et d'un nombre suffisant d'employésqualifiés gérés par un système de gouvernance clair pour mener à bien sa mission."},
+                        "fr": "R5. L’entrepôt dispose d'un financement adéquat et d'un nombre suffisant d'employés qualifiés gérés par un système de gouvernance clair pour mener à bien sa mission."},
         "levelActive" : true
     },
     {
         "code" : "R6",
         "requirement": {"en": "R6. The repository adopts mechanism(s) to secure ongoing expert guidance and feedback (either in-house, or external, including scientific guidance, if relevant).",
-                        "fr": "R6. L’entrepôt adopte un ou plusieurs mécanismes pour s’entourer de façon continue d’avis etcommentaires d’experts (en interne ou en externe, incluant une expertise scientifique si lebesoin en est pertinent)."},
+                        "fr": "R6. L’entrepôt adopte un ou plusieurs mécanismes pour s’entourer de façon continue d’avis et commentaires d’experts (en interne ou en externe, incluant une expertise scientifique si le besoin en est pertinent)."},
             "levelActive" : true
     },
     {
@@ -63,13 +63,13 @@
     {
         "code" : "R8",
         "requirement": {"en": "R8. The repository accepts data and metadata based on defined criteria to ensure relevance and understandability for data users.",
-                        "fr": "R8. L’entrepôt accepte des données et des métadonnées sur la base de critères définisgarantissant pertinence et intelligibilité pour les utilisateurs."},
+                        "fr": "R8. L’entrepôt accepte des données et des métadonnées sur la base de critères définis garantissant pertinence et intelligibilité pour les utilisateurs."},
         "levelActive" : true
     },
     {
         "code" : "R9",
         "requirement": {"en": "R9. The repository applies documented processes and procedures in managing archival storage of the data.",
-                        "fr": "R9. L’entrepôt applique des processus et des procédures documentés pour l'archivage desdonnées."},
+                        "fr": "R9. L’entrepôt applique des processus et des procédures documentés pour l'archivage des données."},
         "levelActive" : true
     },
     {
@@ -81,7 +81,7 @@
     {
         "code" : "R11",
         "requirement": {"en": "R11. The repository has appropriate expertise to address technical data and metadata quality and ensures that sufficient information is available for end users to make quality-related evaluations.",
-                        "fr": "R11. L’entrepôt dispose de l’expertise appropriée pour traiter la question de la qualité techniquedes données et métadonnées et pour assurer qu’une information suffisante est accessibleaux utilisateurs pour leur permettre d’évaluer la qualité des données."},
+                        "fr": "R11. L’entrepôt dispose de l’expertise appropriée pour traiter la question de la qualité techniquedes données et métadonnées et pour assurer qu’une information suffisante est accessible aux utilisateurs pour leur permettre d’évaluer la qualité des données."},
         "levelActive" : true
 	},
     {
@@ -93,13 +93,13 @@
     {
         "code" : "R13",
         "requirement": {"en": "R13. The repository enables users to discover the data and refer to them in a persistent way through proper citation.",
-                        "fr": "R13. L’entrepôt permet aux utilisateurs de découvrir les données et d’y faire référence de façonpérenne par un mécanisme de citation approprié."},
+                        "fr": "R13. L’entrepôt permet aux utilisateurs de découvrir les données et d’y faire référence de façon pérenne par un mécanisme de citation approprié."},
         "levelActive" : true
     },
     {
         "code" : "R14",
         "requirement": {"en": "R14. The repository enables reuse of the data over time, ensuring that appropriate metadata are available to support the understanding and use of the data.",
-                        "fr": "R14. L’entrepôt permet de réutiliser les données sur la durée, en veillant à ce que desmétadonnées appropriées soient disponibles pour permettre la compréhension etl’utilisation des données."},
+                        "fr": "R14. L’entrepôt permet de réutiliser les données sur la durée, en veillant à ce que des métadonnées appropriées soient disponibles pour permettre la compréhension et l’utilisation des données."},
         "levelActive" : true
     },
     {

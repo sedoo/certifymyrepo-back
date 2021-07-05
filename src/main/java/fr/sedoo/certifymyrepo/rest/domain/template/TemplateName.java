@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TemplateName {
+public class TemplateName implements Comparable<TemplateName>{
 	
 	public TemplateName(String id, String name) {
 		this.setId(id);
@@ -14,5 +14,9 @@ public class TemplateName {
 	
 	private String id;
 	private String name;
+	@Override
+	public int compareTo(TemplateName arg) {
+		return this.getName().compareTo(arg.getName());
+	}
 
 }

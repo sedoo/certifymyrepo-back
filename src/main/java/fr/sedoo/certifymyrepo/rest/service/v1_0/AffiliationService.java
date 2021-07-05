@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
@@ -53,7 +55,7 @@ public class AffiliationService {
 	public Affiliation saveAffiliation(@RequestBody Affiliation affiliation) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		if (loggedUser == null) {
-			throw new RuntimeException("Not logged");
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "Not logged");
 		} else {
 			return affiliationDao.save(affiliation);
 		}
@@ -64,7 +66,7 @@ public class AffiliationService {
 	public void delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String id) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		if (loggedUser == null) {
-			throw new RuntimeException("Not logged");
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "Not logged");
 		} else {
 			affiliationDao.deleteById(id);
 		}

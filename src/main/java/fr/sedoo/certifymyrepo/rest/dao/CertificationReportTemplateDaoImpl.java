@@ -3,6 +3,7 @@ package fr.sedoo.certifymyrepo.rest.dao;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -65,6 +66,7 @@ public class CertificationReportTemplateDaoImpl implements CertificationReportTe
 				CertificationTemplate template = this.getCertificationReportTemplate(templateId);
 				fileList.add(new TemplateName(templateId, template.getName()));
 			}
+			Collections.sort(fileList);
 		} catch (IOException e) {
 			LOG.error(e.getMessage(), e);
 		}

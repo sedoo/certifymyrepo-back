@@ -15,6 +15,7 @@ public class AffiliationDto implements Comparable<AffiliationDto> {
 	private String country;
 	private String website;
 	private String address;
+	private boolean isInternational;
 
 	public AffiliationDto(Affiliation source) {
 		if(source != null) {
@@ -25,6 +26,7 @@ public class AffiliationDto implements Comparable<AffiliationDto> {
 			setDepartment(source.getDepartment());
 			setWebsite(source.getWebsite());
 			setAddress(source.getAddress());
+			setInternational(source.isInternational());
 		}
 	}
 

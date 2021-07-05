@@ -21,6 +21,7 @@ public class Affiliation {
 	private String address;
 	private String country;
 	private String website;
+	private boolean isInternational;
 
 	@Override
 	public int hashCode() {

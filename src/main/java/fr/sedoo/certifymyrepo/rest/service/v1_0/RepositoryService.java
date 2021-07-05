@@ -125,7 +125,9 @@ public class RepositoryService {
 			for(RepositoryUser user : repo.getUsers()) {
 				Optional<Profile> userProfile = profileDao.findById(user.getId());
 				if(userProfile.isPresent()) {
-					repoUserDto.add(new RepositoryUserDto(user.getId(), userProfile.get().getName(), user.getRole(), user.getStatus()));
+					repoUserDto.add(new RepositoryUserDto(user.getId(),
+							userProfile.get().getName(), userProfile.get().getEmail(),
+							user.getRole(), user.getStatus()));
 				}
 			}
 			repositoryDto.setUsers(repoUserDto);
