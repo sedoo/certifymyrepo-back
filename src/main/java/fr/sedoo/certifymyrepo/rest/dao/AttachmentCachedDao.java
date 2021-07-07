@@ -71,4 +71,10 @@ public class AttachmentCachedDao implements AttachmentDao {
 
 	}
 
+	@Override
+	public void uploadFiles(File localFolder, String folderName) {
+		cache.invalidate(folderName);
+		proxyDao.uploadFiles(localFolder, folderName);
+	}
+
 }

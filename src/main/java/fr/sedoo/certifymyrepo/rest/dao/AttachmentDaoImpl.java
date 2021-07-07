@@ -1,6 +1,7 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -228,7 +229,7 @@ public class AttachmentDaoImpl implements AttachmentDao {
 			if (folderName != null) {
 				boolean result = client.changeWorkingDirectory(folderName);
 				if (result == false) {
-					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "The corresponding folder doesn't exist");
+					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "The root folder does not exist");
 				}
 			}
 			FTPFile[] listFiles = client.listFiles();
@@ -336,6 +337,54 @@ public class AttachmentDaoImpl implements AttachmentDao {
 			}
 		}
 		return result;
+	}
+	
+	@Override
+	public void uploadFiles(File localFolder, String rootFolderName) {
+		FTPClient client = new FTPClient();
+
+		try {
+			client.connect(ftpConfiguration.getHost());
+			client.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
+			client.setFileTransferMode(FTP.BINARY_FILE_TYPE);
+			client.enterLocalPassiveMode();
+			client.login(ftpConfiguration.getLogin(), ftpConfiguration.getPassword());
+			if (rootFolderName != null) {
+				client.makeDirectory(rootFolderName);
+				boolean result = client.changeWorkingDirectory(rootFolderName);
+				if (result == false) {
+					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "The root folder does not exist");
+				}
+			}
+			File[] allRequirementFolder = localFolder.listFiles();
+			List<File> attachments = new ArrayList<File>();
+			for(File requirementFolder : allRequirementFolder) {
+				if(requirementFolder.isDirectory()) {
+					File[] requirementFiles = requirementFolder.listFiles();
+					for(File requirementFile : requirementFiles) {
+						if(requirementFile.isFile()) {
+							attachments.add(requirementFile);
+						}
+					}
+				}
+			}
+	
+			for (int i = 0; i < attachments.size(); i++) {
+				try (InputStream fis = new FileInputStream(attachments.get(i))) {
+					String path = attachments.get(i).getParent();
+					String folder = path.substring(path.lastIndexOf("/"), path.length());
+					uploadFile(fis, rootFolderName.concat(folder), attachments.get(i).getName());
+				} catch (IOException e) {
+					throw e;
+				}
+			}
+
+			client.disconnect();
+		} catch (IOException e) {
+			logger.error("Error while download content {}", rootFolderName, e);
+		} catch (DownloadException e) {
+			logger.error("Error while download content folder {} does not exist", rootFolderName, e);
+		}
 	}
 
 }

@@ -81,13 +81,13 @@
     {
         "code" : "R11",
         "requirement": {"en": "R11. The repository has appropriate expertise to address technical data and metadata quality and ensures that sufficient information is available for end users to make quality-related evaluations.",
-                        "fr": "R11. L’entrepôt dispose de l’expertise appropriée pour traiter la question de la qualité techniquedes données et métadonnées et pour assurer qu’une information suffisante est accessible aux utilisateurs pour leur permettre d’évaluer la qualité des données."},
+                        "fr": "R11. L’entrepôt dispose de l’expertise appropriée pour traiter la question de la qualité technique des données et métadonnées et pour assurer qu’une information suffisante est accessible aux utilisateurs pour leur permettre d’évaluer la qualité des données."},
         "levelActive" : true
 	},
     {
         "code" : "R12",
         "requirement": {"en": "R12. Archiving takes place according to defined workflows from ingest to dissemination.",
-                        "fr": "R12. L'archivage s'effectue selon des processus de traitement (workflows) précisément définis,de l’ingestion des données à leur diffusion."},
+                        "fr": "R12. L'archivage s'effectue selon des processus de traitement (workflows) précisément définis, de l’ingestion des données à leur diffusion."},
         "levelActive" : true
     },
     {
@@ -105,13 +105,13 @@
     {
         "code" : "R15",
         "requirement": {"en": "R15. The repository functions on well-supported operating systems and other core infrastructural software and is using hardware and software technologies appropriate to the services it provides to its Designated Community.",
-                        "fr": "R15. L’entrepôt fonctionne avec des systèmes d'exploitation et d'autres systèmes de base bienmaintenus et utilise des technologies matérielles et logicielles adaptées aux services qu'ilfournit à sa communauté cible."},
+                        "fr": "R15. L’entrepôt fonctionne avec des systèmes d'exploitation et d'autres systèmes de base bien maintenus et utilise des technologies matérielles et logicielles adaptées aux services qu'il fournit à sa communauté cible."},
        	"levelActive" : true
     },
     {
         "code" : "R16",
         "requirement": {"en": "R16. The technical infrastructure of the repository provides for protection of the facility and its data, products, services, and users.",
-                        "fr": "R16. L'infrastructure technique de l’entrepôt assure la protection de l'installation et de sesdonnées, de ses produits, de ses services et de ses utilisateurs."},
+                        "fr": "R16. L'infrastructure technique de l’entrepôt assure la protection de l'installation et de ses données, de ses produits, de ses services et de ses utilisateurs."},
         "levelActive" : true
     } 
 ]

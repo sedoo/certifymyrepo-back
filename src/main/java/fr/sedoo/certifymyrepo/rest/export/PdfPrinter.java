@@ -115,8 +115,8 @@ public class PdfPrinter {
 			}
 			
 			for(Requirement r : report.getRequirements()) {
-				addBookmark(r.getRequirement(), root, writer);
-				h3(r.getRequirement(), document);
+				addBookmark(r.getRequirementLabel(), root, writer);
+				h3(r.getRequirementLabel(), document);
 				writePairValue(messages.getString("requirement.response"), r.getResponse(), document);
 				writePairValue(messages.getString("requirement.compliance.level"), r.getLevelLabel(), document);
 				writePairValues(messages.getString("requirement.attachments"), r.getAttachments(), document);

@@ -59,5 +59,12 @@ public interface AttachmentDao {
 	 * @param fileName name of the file on the FTP server (can be different than original file name)
 	 */
 	void uploadFile(InputStream inputStream, String path, String fileName);
+	
+	/**
+	 * Upload files on FTP server
+	 * @param localFolder destination file on local machine
+	 * @param folderName root folder name of the file on the FTP server
+	 */
+	void uploadFiles(File localFolder, String folderName);
 
 }

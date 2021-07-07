@@ -39,7 +39,7 @@ public class CertificationReportDaoMongoImpl implements CertificationReportDao {
 
 	@Override
 	public List<CertificationReport> findByRepositoryId(String repositoryId) {
-		return certificationReportRepository.findByRepositoryId(repositoryId);
+		return certificationReportRepository.findByRepositoryId(repositoryId, Sort.by(Sort.Direction.DESC, "updateDate"));
 
 	}
 

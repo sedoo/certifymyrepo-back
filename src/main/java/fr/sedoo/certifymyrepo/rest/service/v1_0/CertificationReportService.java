@@ -252,6 +252,54 @@ public class CertificationReportService {
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(value = "/copy/{reportId}/to/{repositoryIdDestination}", method = RequestMethod.GET)
+	public MyReport getCopy(@RequestHeader("Authorization") String authHeader, 
+			@PathVariable(name = "reportId") String reportId,
+			@PathVariable(name = "repositoryIdDestination") String repositoryIdDestination) {
+		
+		MyReport result = new MyReport();
+		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		
+		// Double check on API side only administrators or EDITOR can create a new report
+		Repository repo = repositoryDao.findByIdAndUserId(repositoryIdDestination, loggedUser.getUserId());
+		if (null != repo) {
+			for( RepositoryUser user : repo.getUsers()) {
+				if(StringUtils.equals(user.getId(),loggedUser.getUserId())) {
+					if(!StringUtils.equals(Roles.EDITOR, user.getRole())) {
+						throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
+					}
+					break;
+				}
+			}
+		} else if(!loggedUser.isAdmin()) {
+			LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), repositoryIdDestination));
+			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
+		}
+		
+		CertificationReport originalReport = certificationReportDao.findById(reportId);
+		CertificationReport copiedReport = new CertificationReport(originalReport);
+		copiedReport.setRepositoryId(repositoryIdDestination);
+		copiedReport.setStatus(ReportStatus.IN_PROGRESS);
+		certificationReportDao.save(copiedReport);
+		result.setReport(copiedReport);
+
+		result.setTemplate(certificationReportTemplateDao.getCertificationReportTemplate(copiedReport.getTemplateId()));
+		// TODO copy files from FTP 
+		// {originalRepositoryId}/{originalReportId} to {repositoryIdDestination}/{reportIdDestination}
+		
+		File workDirectory = new File(temporaryFolderName);
+		if (workDirectory.exists() == false) {
+			workDirectory.mkdirs();
+		}
+		File localFolder = new File(workDirectory, UUID.randomUUID().toString());
+		localFolder.mkdirs();
+		ftpClient.downloadFiles(localFolder, reportId, new DomainFilter());
+		ftpClient.uploadFiles(localFolder, copiedReport.getId());
+		result.setAttachments(ftpClient.listFiles(copiedReport.getId()));
+		return result;
+	}
+	
+	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
 	public CertificationReport saveJson(@RequestHeader("Authorization") String authHeader, 
 			@RequestBody CertificationReport certificationReport,
@@ -616,13 +664,15 @@ public class CertificationReportService {
 		
 		for (CertificationItem r : report.getItems()) {
 			Requirement printableRequirement = new Requirement();
+			printableRequirement.setCode(r.getCode());
+			printableRequirement.setLevel(r.getLevel());
 			if(StringUtils.equals("fr", language)) {
-				printableRequirement.setRequirement(requirements.get(r.getCode()).getRequirement().getFr());
+				printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement().getFr());
 				if(r.getLevel() != null) {
 					printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel().getFr());
 				}
 			} else {
-				printableRequirement.setRequirement(requirements.get(r.getCode()).getRequirement().getEn());
+				printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement().getEn());
 				if(r.getLevel() != null) {
 					printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel().getEn());
 				}

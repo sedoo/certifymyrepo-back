@@ -11,7 +11,7 @@ import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 
 public interface CertificationReportRepository extends MongoRepository<CertificationReport, String> {
 	
-	List<CertificationReport> findByRepositoryId(String repositoryId);
+	List<CertificationReport> findByRepositoryId(String repositoryId, Sort sort);
 	
 	List<CertificationReport> deleteByRepositoryId(String repositoryId);
 	

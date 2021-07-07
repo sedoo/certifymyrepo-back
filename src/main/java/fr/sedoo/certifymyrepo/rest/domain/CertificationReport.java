@@ -18,6 +18,17 @@ public class CertificationReport {
 		super();
 	}
 	
+	/**
+	 * @param report object to copy
+	 */
+	public CertificationReport(CertificationReport report) {
+		this.setTemplateId(report.getTemplateId());
+		this.setItems(report.getItems());
+		this.setVersion(report.getVersion());
+		this.setUpdateDate(new Date());
+		this.setLastNotificationDate(report.getLastNotificationDate());
+	}
+	
 	public final static String REPOSITORY_COLLECTION_NAME = "certificationReport";
 	
 	@Id
