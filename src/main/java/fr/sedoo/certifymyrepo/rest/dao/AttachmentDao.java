@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.scheduling.annotation.Async;
+
 import fr.sedoo.certifymyrepo.rest.ftp.DomainFilter;
 
 public interface AttachmentDao {
@@ -50,7 +52,7 @@ public interface AttachmentDao {
 	 * @param folderName root folder name on FTP server
 	 * @param domainFilter optional filter (not implemented yet)
 	 */
-	void downloadFiles(File localFolder, String folderName, DomainFilter domainFilter);
+	boolean downloadFiles(File localFolder, String folderName, DomainFilter domainFilter);
 	
 	/**
 	 * Upload file on FTP server
@@ -66,5 +68,14 @@ public interface AttachmentDao {
 	 * @param folderName root folder name of the file on the FTP server
 	 */
 	void uploadFiles(File localFolder, String folderName);
+	
+	/**
+	 * Copy files from on folder to another on the FTP server
+	 * @param localFolder destination file on local machine
+	 * @param originalFolderName original root folder
+	 * @param destinationFolderName destination root folder
+	 */
+	@Async
+	void copyFiles(File localFolder, String originalFolderName, String destinationFolderName);
 
 }

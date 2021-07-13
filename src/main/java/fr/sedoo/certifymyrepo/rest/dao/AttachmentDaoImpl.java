@@ -217,7 +217,7 @@ public class AttachmentDaoImpl implements AttachmentDao {
 	}
 
 	@Override
-	public void downloadFiles(File localFolder, String folderName, DomainFilter domainFilter) {
+	public boolean downloadFiles(File localFolder, String folderName, DomainFilter domainFilter) {
 		FTPClient client = new FTPClient();
 
 		try {
@@ -229,7 +229,7 @@ public class AttachmentDaoImpl implements AttachmentDao {
 			if (folderName != null) {
 				boolean result = client.changeWorkingDirectory(folderName);
 				if (result == false) {
-					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "The root folder does not exist");
+					return false;
 				}
 			}
 			FTPFile[] listFiles = client.listFiles();
@@ -244,6 +244,7 @@ public class AttachmentDaoImpl implements AttachmentDao {
 		} catch (DownloadException e) {
 			logger.error("Error while download content folder {} does not exist", folderName, e);
 		}
+		return true;
 	}
 	
 	private void downloadFile(File localFolder, FTPFile ftpFile, FTPClient client, DomainFilter domainFilter) throws IOException {
@@ -384,6 +385,14 @@ public class AttachmentDaoImpl implements AttachmentDao {
 			logger.error("Error while download content {}", rootFolderName, e);
 		} catch (DownloadException e) {
 			logger.error("Error while download content folder {} does not exist", rootFolderName, e);
+		}
+	}
+
+	@Override
+	public void copyFiles(File localFolder, String originalFolderName, String destinationFolderName) {
+		boolean isFiles = this.downloadFiles(localFolder, originalFolderName, new DomainFilter());
+		if(isFiles) {
+			this.uploadFiles(localFolder, destinationFolderName);
 		}
 	}
 

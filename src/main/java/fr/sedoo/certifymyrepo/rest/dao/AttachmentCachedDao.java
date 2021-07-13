@@ -60,8 +60,8 @@ public class AttachmentCachedDao implements AttachmentDao {
 	}
 
 	@Override
-	public void downloadFiles(File localFolder, String folderName, DomainFilter domainFilter) {
-		proxyDao.downloadFiles(localFolder, folderName, domainFilter);
+	public boolean downloadFiles(File localFolder, String folderName, DomainFilter domainFilter) {
+		return proxyDao.downloadFiles(localFolder, folderName, domainFilter);
 	}
 
 	@Override
@@ -75,6 +75,11 @@ public class AttachmentCachedDao implements AttachmentDao {
 	public void uploadFiles(File localFolder, String folderName) {
 		cache.invalidate(folderName);
 		proxyDao.uploadFiles(localFolder, folderName);
+	}
+
+	@Override
+	public void copyFiles(File localFolder, String originalFolderName, String destinationFolderName) {
+		proxyDao.copyFiles(localFolder, originalFolderName, destinationFolderName);
 	}
 
 }

@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
@@ -253,11 +254,11 @@ public class CertificationReportService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/copy/{reportId}/to/{repositoryIdDestination}", method = RequestMethod.GET)
-	public MyReport getCopy(@RequestHeader("Authorization") String authHeader, 
+	public CertificationReport copy(@RequestHeader("Authorization") String authHeader, 
 			@PathVariable(name = "reportId") String reportId,
 			@PathVariable(name = "repositoryIdDestination") String repositoryIdDestination) {
 		
-		MyReport result = new MyReport();
+		CertificationReport result = null;
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		
 		// Double check on API side only administrators or EDITOR can create a new report
@@ -280,12 +281,18 @@ public class CertificationReportService {
 		CertificationReport copiedReport = new CertificationReport(originalReport);
 		copiedReport.setRepositoryId(repositoryIdDestination);
 		copiedReport.setStatus(ReportStatus.IN_PROGRESS);
-		certificationReportDao.save(copiedReport);
-		result.setReport(copiedReport);
-
-		result.setTemplate(certificationReportTemplateDao.getCertificationReportTemplate(copiedReport.getTemplateId()));
-		// TODO copy files from FTP 
-		// {originalRepositoryId}/{originalReportId} to {repositoryIdDestination}/{reportIdDestination}
+		copiedReport.setVersion("0.1");
+		if(StringUtils.equals(originalReport.getStatus().name(), ReportStatus.RELEASED.name())) {
+			if(originalReport.getVersion().contains(".")) {
+				String[] version = originalReport.getVersion().split(Pattern.quote("."));
+				if(StringUtils.isNumeric(version[0])) {
+					Integer newVersionDigit = Integer.parseInt(version[0]) + 1;
+					copiedReport.setVersion(newVersionDigit.toString().concat(".0"));
+				}
+				
+			}
+		}
+		result = certificationReportDao.save(copiedReport);
 		
 		File workDirectory = new File(temporaryFolderName);
 		if (workDirectory.exists() == false) {
@@ -293,9 +300,7 @@ public class CertificationReportService {
 		}
 		File localFolder = new File(workDirectory, UUID.randomUUID().toString());
 		localFolder.mkdirs();
-		ftpClient.downloadFiles(localFolder, reportId, new DomainFilter());
-		ftpClient.uploadFiles(localFolder, copiedReport.getId());
-		result.setAttachments(ftpClient.listFiles(copiedReport.getId()));
+		ftpClient.copyFiles(localFolder, reportId, copiedReport.getId());
 		return result;
 	}
 	
