@@ -3,8 +3,8 @@
 
 	<!-- 
 	1. copy this file in ./src/main/resources
-	2. add in application.yml the property logging.file: ../logs/myApp.log (spring boot version < 2.30)
-	   or logging.file.name: ../logs/myApp.log (spring boot version >= 2.30)
+	2. add in application.yml the property logging.file: ../logs/myApp.log (spring boot version < 2.3.0)
+	   or logging.file.name: ../logs/myApp.log (spring boot version >= 2.3.0)
 	 if you use the following directory tree
 		myApp
 		|_logs
