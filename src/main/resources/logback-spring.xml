@@ -9,8 +9,21 @@
 		|_logs
 		|_services
 			|_myApp.jar
+			
+	More information on:
+	https://docs.spring.io/spring-boot/docs/2.1.9.RELEASE/reference/html/boot-features-logging.html#boot-features-custom-log-configuration
 	 -->
     
+    
+    <!-- 
+    Logback uses :- as its default value operator. The line in question is setting the LOG_FILE property:
+
+	If LOG_FILE is already set, use that (Spring Environment "logging.file" <=> System Property "LOG_FILE")
+	Otherwise, if LOG_PATH is set, use that suffixed with spring.log
+	Otherwise, if LOG_TEMP is set, use that suffixed with /spring.log
+	Otherwise, if java.io.tmpdir is set, use that suffixed with /spring.log
+	Otherwise use /tmp/spring.log
+     -->
     <property name="LOG_FILE"
         value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}spring.log}" />
     
