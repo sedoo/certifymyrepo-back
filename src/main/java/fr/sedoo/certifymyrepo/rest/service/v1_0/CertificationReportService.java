@@ -45,6 +45,7 @@ import org.zeroturnaround.zip.ZipUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
+import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
@@ -112,6 +113,9 @@ public class CertificationReportService {
 	
 	@Autowired
 	private PdfPrinter pdfPrinter;
+	
+	@Autowired
+	private ApplicationConfig appConfig;
 	
 	@Value("${temporary.folder}")
 	String temporaryFolderName;
@@ -395,6 +399,46 @@ public class CertificationReportService {
 			} else {
 				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName()));
 			}
+
+			emailSender.sendNotification(contact);
+		}
+	}
+	
+	/**
+	 * Build ContactDto object and send notification
+	 * @param repositoryId repository identifier
+	 * @param messages i18n bundle
+	 * @param key i18n key prefix ("report.validation" or "report.new.version")
+	 */
+	private void buildNotification(String repositoryId, String subject, 
+			String frenchContent, String englishContent, String message) {
+		// notification the report has been validated
+		Repository repo = repositoryDao.findById(repositoryId);
+		// List user id in DB
+		List<String> repoUsersEmail = new ArrayList<String>();
+		Set<String> repoUserIdList = repo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
+		for(String userId : repoUserIdList) {
+			Optional<Profile> userProfile = profileDao.findById(userId);
+			if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
+				repoUsersEmail.add(userProfile.get().getEmail());
+			}
+		}
+		if( repoUsersEmail != null && repoUsersEmail.size() > 0) {
+			ContactDto contact = new  ContactDto();
+			Set<String> to = new HashSet<String>();
+			to.addAll(repoUsersEmail);
+			contact.setTo(to);
+			contact.setSubject(String.format(subject, repo.getName()));
+			String content = appConfig.getEnglishHeader().concat("\br");
+			if(message != null) {
+				content = content.concat(String.format(frenchContent, repo.getName(), message))
+						.concat("\br\br").concat(String.format(englishContent, repo.getName(), message));	
+
+			} else {
+				content = content.concat(String.format(frenchContent, repo.getName()))
+						.concat("\br\br").concat(String.format(englishContent, repo.getName()));
+			}
+			contact.setMessage(content);
 
 			emailSender.sendNotification(contact);
 		}
