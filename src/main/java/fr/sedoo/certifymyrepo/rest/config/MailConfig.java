@@ -9,7 +9,6 @@ public class MailConfig {
 
 	private String hostname;
 	private String subjectPrefix;
-	private String contact;
 	private String from;
 
 	public MailConfig() {
@@ -21,12 +20,6 @@ public class MailConfig {
 	}
 	public void setHostname(String hostname) {
 		this.hostname = hostname;
-	}
-	public String getContact() {
-		return contact;
-	}
-	public void setContact(String contact) {
-		this.contact = contact;
 	}
 	public String getFrom() {
 		return from;

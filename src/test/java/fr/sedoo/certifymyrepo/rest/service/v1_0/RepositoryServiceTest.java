@@ -26,6 +26,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
@@ -40,12 +41,10 @@ import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
-import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
-import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -77,6 +76,9 @@ public class RepositoryServiceTest {
 	
 	@Mock
 	private EmailSender emailSender;
+	
+	@Mock
+	private ApplicationConfig appConfig;
 	
 	@InjectMocks
 	private RepositoryService repositoryService;
@@ -226,6 +228,11 @@ public class RepositoryServiceTest {
 			// As when an user is remove or added an email must be sent
 			when(emailSender.sendNotification(any()))
 				.thenThrow(new RuntimeException("It passed by here"));
+			
+			when(appConfig.getEnglishHeader()).thenReturn("");
+			when(appConfig.getRemoveUserNotificationSubject()).thenReturn("");
+			when(appConfig.getRemoveUserNotificationFrenchContent()).thenReturn("");
+			when(appConfig.getRemoveUserNotificationEnglishContent()).thenReturn("");
 
 			Repository result = repositoryService.save("myToken", repoToSave, "fr");
 			assertTrue("The notification have not been reached", result != null);

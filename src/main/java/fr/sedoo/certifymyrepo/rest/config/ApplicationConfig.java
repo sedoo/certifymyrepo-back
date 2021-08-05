@@ -109,10 +109,8 @@ public class ApplicationConfig {
 	/**
 	 * Repository access
 	 */
-	@Value("${repository.access.request.fr.subject}")
-	private String repositoryAccessFrenchSubject;
-	@Value("${repository.access.request.en.subject}")
-	private String repositoryAccessEnglishSubject;
+	@Value("${repository.access.request.subject}")
+	private String repositoryAccessSubject;
 	@Value("${repository.access.request.fr.content}")
 	private String repositoryAccessFrenchContent;
 	@Value("${repository.access.request.en.content}")

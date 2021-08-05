@@ -57,8 +57,9 @@ public class ValidationEmailSender implements EmailSender {
 			HtmlEmail htmlEmail = new HtmlEmail();
 			htmlEmail.setCharset(EmailConstants.UTF_8);
 			htmlEmail.setHostName(mailConfig.getHostname());
-			htmlEmail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
-			htmlEmail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+			htmlEmail.addTo("thomas.romuald@obs-mip.fr");
+			//htmlEmail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
+			//htmlEmail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 			if(contact.getFromEmail() != null) {
 				if(contact.getFromName() != null) {
 					htmlEmail.setFrom(contact.getFromEmail(), contact.getFromName());
@@ -75,7 +76,7 @@ public class ValidationEmailSender implements EmailSender {
 			for (String email : contact.getTo()) {
 				msg.append("<li>").append(email).append("</li>");
 			}
-			msg.append("</ul></p>");
+			msg.append("</ul></p><br/>");
 			msg.append(contact.getMessage());
 			msg.append("</body></html>");
 			htmlEmail.setHtmlMsg(msg.toString());

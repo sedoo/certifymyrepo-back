@@ -319,6 +319,7 @@ public class CertificationReportService {
 		checkStatus(certificationReport.getId());
 		
 		if (loggedUser.isAdmin()) {
+			checkNotifications(certificationReport);
 			result = certificationReportDao.save(certificationReport);
 		} else {
 			Repository repo = repositoryDao.findByIdAndUserId(certificationReport.getRepositoryId(), loggedUser.getUserId());
@@ -329,6 +330,7 @@ public class CertificationReportService {
 					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
 					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 				} else {
+					checkNotifications(certificationReport);
 					result = certificationReportDao.save(certificationReport);
 				}
 			} else {
@@ -336,9 +338,7 @@ public class CertificationReportService {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 			}
 		}
-		
-		ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
-		checkNotifications(certificationReport, messages);
+
 		
 		return result;
 	}
@@ -348,9 +348,10 @@ public class CertificationReportService {
 	 * <li>a report has been validated. All the repository users has be to notified</li>
 	 * <li>a report has got a new version. All the repository users has be to notified</li>
 	 * @param certificationReportToSave current certification report
+	 * @param repositoryName 
 	 * @param messages i18n bundle
 	 */
-	private void checkNotifications(CertificationReport certificationReportToSave, ResourceBundle messages) {
+	private void checkNotifications(CertificationReport certificationReportToSave) {
 		if(certificationReportToSave.getId() != null) {
 			CertificationReport reportInDB = certificationReportDao.findById(certificationReportToSave.getId());
 			if(reportInDB != null) {
@@ -358,12 +359,17 @@ public class CertificationReportService {
 						StringUtils.equals(certificationReportToSave.getStatus().name(), ReportStatus.RELEASED.name())) {
 
 					// notification the report has been validated
-					buildNotification(certificationReportToSave.getRepositoryId(), messages, "report.validation", null);
+					buildNotification(certificationReportToSave.getRepositoryId(), 
+							appConfig.getReportValidationNotificationSubject(),
+							appConfig.getReportValidationNotificationFrenchContent(), 
+							appConfig.getReportValidationNotificationEnglishContent(), null);
 
 				} else if(!StringUtils.equals(certificationReportToSave.getVersion(), reportInDB.getVersion())) {
 					
 					// notification new version
-					buildNotification(certificationReportToSave.getRepositoryId(), messages, "report.new.version", null);
+					buildNotification(certificationReportToSave.getRepositoryId(), appConfig.getReportNewVersionNotificationSubject(),
+							appConfig.getReportNewVersionNotificationFrenchContent(), 
+							appConfig.getReportNewVersionNotificationEnglishContent(), null);
 					
 				}
 			}
@@ -373,42 +379,10 @@ public class CertificationReportService {
 	/**
 	 * Build ContactDto object and send notification
 	 * @param repositoryId repository identifier
-	 * @param messages i18n bundle
-	 * @param key i18n key prefix ("report.validation" or "report.new.version")
-	 */
-	private void buildNotification(String repositoryId, ResourceBundle messages, String key, String message) {
-		// notification the report has been validated
-		Repository repo = repositoryDao.findById(repositoryId);
-		// List user id in DB
-		List<String> repoUsersEmail = new ArrayList<String>();
-		Set<String> repoUserIdList = repo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
-		for(String userId : repoUserIdList) {
-			Optional<Profile> userProfile = profileDao.findById(userId);
-			if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
-				repoUsersEmail.add(userProfile.get().getEmail());
-			}
-		}
-		if( repoUsersEmail != null && repoUsersEmail.size() > 0) {
-			ContactDto contact = new  ContactDto();
-			Set<String> to = new HashSet<String>();
-			to.addAll(repoUsersEmail);
-			contact.setTo(to);
-			contact.setSubject(String.format(messages.getString(key.concat(".notification.subject")), repo.getName()));
-			if(message != null) {
-				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName(), message));	
-			} else {
-				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName()));
-			}
-
-			emailSender.sendNotification(contact);
-		}
-	}
-	
-	/**
-	 * Build ContactDto object and send notification
-	 * @param repositoryId repository identifier
-	 * @param messages i18n bundle
-	 * @param key i18n key prefix ("report.validation" or "report.new.version")
+	 * @param subject
+	 * @param frenchContent
+	 * @param englishContent
+	 * @param message optional
 	 */
 	private void buildNotification(String repositoryId, String subject, 
 			String frenchContent, String englishContent, String message) {
@@ -428,15 +402,15 @@ public class CertificationReportService {
 			Set<String> to = new HashSet<String>();
 			to.addAll(repoUsersEmail);
 			contact.setTo(to);
-			contact.setSubject(String.format(subject, repo.getName()));
-			String content = appConfig.getEnglishHeader().concat("\br");
+			contact.setSubject(String.format(subject, repo.getName(), repo.getName()));
+			String content = appConfig.getEnglishHeader().concat("<br/><br/>");
 			if(message != null) {
 				content = content.concat(String.format(frenchContent, repo.getName(), message))
-						.concat("\br\br").concat(String.format(englishContent, repo.getName(), message));	
+						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName(), message));	
 
 			} else {
 				content = content.concat(String.format(frenchContent, repo.getName()))
-						.concat("\br\br").concat(String.format(englishContent, repo.getName()));
+						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName()));
 			}
 			contact.setMessage(content);
 
@@ -519,14 +493,19 @@ public class CertificationReportService {
 		result.setComments(comments);
 		RequirementComments savedComments = commentsDao.save(result);
 		Comment latestComment = comments.get(comments.size()-1);
-		ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
+		//ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
 		Optional<Profile> commentEditor = profileDao.findById(latestComment.getUserId());
 		String postedComment = "";
 		if(commentEditor.isPresent()) {
 			postedComment = "@".concat(commentEditor.get().getName()).concat(": ");
 		}
 		postedComment = postedComment.concat(latestComment.getText());
-		buildNotification(repositoryId, messages, "new.comment", postedComment);
+		
+		//FIXME delete this after validation of bilingual email
+		//buildNotification(repositoryId, messages, "new.comment", postedComment);
+		buildNotification(repositoryId, appConfig.getNewCommentNotificationSubject(), 
+				appConfig.getNewCommentNotificationFrenchContent(), 
+				appConfig.getNewCommentNotificationEnglishContent(), postedComment);
 		return savedComments;
 	}
 	
