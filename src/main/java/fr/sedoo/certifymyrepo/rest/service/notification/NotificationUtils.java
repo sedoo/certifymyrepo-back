@@ -54,8 +54,10 @@ public class NotificationUtils {
 		if(reportList != null) {
 			for(CertificationReport report : reportList) {
 				buildNotification(report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
-						appConfig.getRepositoryAccessFrenchContent(),
-						appConfig.getNoActivityNotificationEnglishContent());
+						appConfig.getNoActivityNotificationFrenchContent(),
+						appConfig.getNoActivityNotificationEnglishContent(), delay);
+				report.setLastNotificationDate(new Date());
+				reportDao.save(report);
 			}
 		}
 	}
@@ -66,10 +68,11 @@ public class NotificationUtils {
 	 * @param subject
 	 * @param frenchContent
 	 * @param englishContent
+	 * @param month 
 	 * @param message optional
 	 */
 	private void buildNotification(String repositoryId, String subject, 
-			String frenchContent, String englishContent) {
+			String frenchContent, String englishContent, Integer month) {
 		// notification the report has been validated
 		Repository repo = repositoryDao.findById(repositoryId);
 		// List user id in DB
@@ -88,8 +91,8 @@ public class NotificationUtils {
 			contact.setTo(to);
 			contact.setSubject(String.format(subject, repo.getName(), repo.getName()));
 			String content = appConfig.getEnglishHeader().concat("<br/><br/>");
-			content = content.concat(String.format(frenchContent, repo.getName()))
-						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName()));
+			content = content.concat(String.format(frenchContent, repo.getName(), delay))
+						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName(), delay));
 			contact.setMessage(content);
 
 			emailSender.sendNotification(contact);
