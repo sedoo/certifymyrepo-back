@@ -89,9 +89,9 @@ repository.access.request.subject: Demande d'access à l'entrepôt %s / Access h
 repository.access.request.fr.content: <p>Cher collègue,</p><p>%s (%s) a demandé le rôle %s sur l'entrepôt %s.</p><p>%s</p><p>Message de l'utilisateur:%s</p>
 repository.access.request.en.content: <p>Dear colleague,</p><p> %s (%s) has requested %s role on %s repository.</p><p>%s</p><p> User message:</p><p>%s</p>
 
-no.activity.subject: L'entrepôt %s n'a pas été mis à jour depuis un moment / The repository %s has not been updated for a while
-no.activity.fr.content: <p>Cher collègue,</p><p>Il n'y a eu aucunes activitées sur votre entrepôt %s depuis %s mois.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-no.activity.en.content: <p>Dear colleagues,</p><p>No update has been made on your %s repository for the last %s months.</p><p>Best regards,</p><p>The COSO team</p>
+no.activity.subject: La fiche %s de l'entrepôt %s n'a pas été mis à jour depuis un moment / The report %s on %s repository has not been updated for a while
+no.activity.fr.content: <p>Cher collègue,</p><p>Il n'y a eu aucunes activitées sur votre fiche %s de l'entrepôt %s depuis %s mois.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
+no.activity.en.content: <p>Dear colleagues,</p><p>No update has been made on your report %s on %s repository for the last %s months.</p><p>Best regards,</p><p>The COSO team</p>
 
 ---
 

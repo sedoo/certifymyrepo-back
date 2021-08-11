@@ -1,5 +1,6 @@
 package fr.sedoo.certifymyrepo.rest.service.notification;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,11 +17,13 @@ import org.springframework.stereotype.Component;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
+import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 
 @Component
@@ -34,6 +37,9 @@ public class NotificationUtils {
 	
 	@Autowired
 	private RepositoryDao repositoryDao;
+	
+	@Autowired
+	private CertificationReportTemplateDao certificationReportTemplateDao;
 	
 	@Autowired
 	ProfileDao profileDao;
@@ -53,7 +59,16 @@ public class NotificationUtils {
 		List<CertificationReport> reportList = reportDao.findInProgressByUpdateDateLowerThan(c.getTime());
 		if(reportList != null) {
 			for(CertificationReport report : reportList) {
-				buildNotification(report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
+				String reportName = "";
+				CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
+				if(template != null) {
+					reportName = template.getName().concat("-");
+				}
+				String formatUpdateDate = new SimpleDateFormat("yyyyMMdd").format(report.getUpdateDate());
+				reportName = reportName.concat(formatUpdateDate)
+						.concat("-").concat(report.getVersion());
+				
+				buildNotification(reportName, report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
 						appConfig.getNoActivityNotificationFrenchContent(),
 						appConfig.getNoActivityNotificationEnglishContent(), delay);
 				report.setLastNotificationDate(new Date());
@@ -71,7 +86,7 @@ public class NotificationUtils {
 	 * @param month 
 	 * @param message optional
 	 */
-	private void buildNotification(String repositoryId, String subject, 
+	private void buildNotification(String reportName, String repositoryId, String subject, 
 			String frenchContent, String englishContent, Integer month) {
 		// notification the report has been validated
 		Repository repo = repositoryDao.findById(repositoryId);
@@ -89,10 +104,10 @@ public class NotificationUtils {
 			Set<String> to = new HashSet<String>();
 			to.addAll(repoUsersEmail);
 			contact.setTo(to);
-			contact.setSubject(String.format(subject, repo.getName(), repo.getName()));
+			contact.setSubject(String.format(subject, reportName, repo.getName(), reportName, repo.getName()));
 			String content = appConfig.getEnglishHeader().concat("<br/><br/>");
-			content = content.concat(String.format(frenchContent, repo.getName(), delay))
-						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName(), delay));
+			content = content.concat(String.format(frenchContent,  reportName, repo.getName(), delay))
+						.concat("<br/><br/>").concat(String.format(englishContent, reportName, repo.getName(), delay));
 			contact.setMessage(content);
 
 			emailSender.sendNotification(contact);
