@@ -62,11 +62,11 @@ public class NotificationUtils {
 				String reportName = "";
 				CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
 				if(template != null) {
-					reportName = template.getName().concat("-");
+					reportName = template.getName().concat("_");
 				}
 				String formatUpdateDate = new SimpleDateFormat("yyyyMMdd").format(report.getUpdateDate());
 				reportName = reportName.concat(formatUpdateDate)
-						.concat("-").concat(report.getVersion());
+						.concat("_v").concat(report.getVersion());
 				
 				buildNotification(reportName, report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
 						appConfig.getNoActivityNotificationFrenchContent(),
