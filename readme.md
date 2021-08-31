@@ -4,7 +4,7 @@
 
 Use those args :
 
-> -Dspring.profiles.active=dev -DFTP_USERUSERNAME=crusoe -DFTP_PASSWORD=xxx -DCLIENT_ID=xxx -DCLIENT_SECRET=xxx -DMONGODB_USERNAME=crusoe -DMONGODB_PASSWORD=xxx
+> -Dspring.profiles.active=dev -DFTP_USERUSERNAME=crusoe -DFTP_PASSWORD=xxx -DCLIENT_ID=xxx -DCLIENT_SECRET=xxx -DMONGODB_USERNAME=crusoe -DMONGODB_PASSWORD=xxx -DSIGNIN_KEY=xxx -DTOKEN_VALIDITY=xxx -DTOKEN_ACCESS_REQUEST_VALIDITY=xxx
 
 * MongoDB: your application will point to local MongoDB. Make sure those follow command have been run on Robo3T or other tools: 
 
@@ -26,7 +26,20 @@ Use those args :
 
 * then use:
 
-> -Dspring.profiles.active=dev,tunnelssh-preprod -DFTP_USERUSERNAME=crusoe -DFTP_PASSWORD=xxx -DCLIENT_ID=xxx -DCLIENT_SECRET=xxx -DMONGODB_USERNAME=crusoe-preprod -DMONGODB_PASSWORD=xxx
+> -Dspring.profiles.active=dev,tunnelssh-preprod -DFTP_USERUSERNAME=crusoe -DFTP_PASSWORD=xxx -DCLIENT_ID=xxx -DCLIENT_SECRET=xxx -DMONGODB_USERNAME=crusoe-preprod -DMONGODB_PASSWORD=xxx -DSIGNIN_KEY=xxx -DTOKEN_VALIDITY=xxx -DTOKEN_ACCESS_REQUEST_VALIDITY=xxx
+
+
+| Variable name  | Description | Type |
+| :--------------- |:---------------:| :---------------: | 
+| spring.profiles.active  		| spring profile     |  		| 
+| FTP_USERUSERNAME 	| FTP server user name. This server is used to store reports attachments 	|  	| 
+| FTP_PASSWORD  		| FTP server password       |  		| 
+| CLIENT_ID  		|   ORCID Client id    |  		| 
+| CLIENT_SECRET  		|  ORCID Client Secret     |  		| 
+| SIGNIN_KEY  		|   JWT signin key     |  		| 
+| TOKEN_VALIDITY  		| Token validity when an user is logged on the website. This token is refreshed as long as the user is using the website.   | Number in ms 		| 
+| TOKEN_ACCESS_REQUEST_VALIDITY  		| Token validity used when a request has been made to access a repository. An email is sent with a link to accept the request. This token must have a longer validity       |  Number in ms		| 
+
 
 
 
