@@ -255,7 +255,7 @@ public class RepositoryService {
 			latestReport.setItems(itemList);
 			
 			// Green: all the requirements are at the level 4, 3 or 0 for not applicable.
-			// Orange: at list half of the requirements has been considered (level > 1 or 0 for not applicable).
+			// Orange: at least half of the requirements has been considered (level > 1 or 0 for not applicable).
 			// Red: more than half of the requirements has not been considered yet.
 			if((!avg.containsKey("null") || avg.get("null") == 0) 
 					&& (!avg.containsKey("1") || avg.get("1") == 0 )
