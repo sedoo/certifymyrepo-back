@@ -176,8 +176,9 @@ public class RepositoryService {
 		List<RepositoryDto> result = new ArrayList<>();
 		for(Repository repo : repos) {
 			Affiliation affiliation = null;
-			if(repo.getAffiliationId() != null)
+			if(repo.getAffiliationId() != null) {
 				affiliation = affiliationDao.findById(repo.getAffiliationId());
+			}
 			result.add(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 		}
 		
@@ -255,21 +256,24 @@ public class RepositoryService {
 			latestReport.setItems(itemList);
 			
 			// Green: all the requirements are at the level 4, 3 or 0 for not applicable.
-			// Orange: at least half of the requirements has been considered (level > 1 or 0 for not applicable).
-			// Red: more than half of the requirements has not been considered yet.
+			// Orange: at least half of the requirements has got a level 4, 3 or 0 for not applicable.
+			// Red: more than half of the requirements has got a level lower than 3 or has not been filled yet.
 			if((!avg.containsKey("null") || avg.get("null") == 0) 
 					&& (!avg.containsKey("1") || avg.get("1") == 0 )
 					&& (!avg.containsKey("2") || avg.get("2") == 0)) {
 				result.setGreen(Boolean.TRUE);
 			} else {
 				int occurencies = 0;
-				if(avg.containsKey("null")) {
-					occurencies = avg.get("null");
+				if(avg.containsKey("4")) {
+					occurencies = avg.get("4");
 				}
-				if(avg.containsKey("1")) {
-					occurencies += avg.get("1");
+				if(avg.containsKey("3")) {
+					occurencies += avg.get("3");
 				}
-				if(occurencies <= report.getItems().size() / 2) {
+				if(avg.containsKey("0")) {
+					occurencies += avg.get("0");
+				}
+				if(occurencies >= report.getItems().size() / 2) {
 					result.setOrange(Boolean.TRUE);
 				} else {
 					result.setRed(Boolean.TRUE);
