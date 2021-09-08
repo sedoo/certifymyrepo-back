@@ -60,7 +60,7 @@ public class PdfPrinter {
 			BaseFont calibriLightBaseFont = calibriLightFont.getBaseFont();
 			BaseFont calibriRegularBaseFont = calibriLightFont.getBaseFont();
 	
-			Font font40 = new Font(baseFont, 40);
+			Font font20 = new Font(baseFont, 20);
 	
 			h3Font = new Font(Font.FontFamily.HELVETICA, 14, Font.NORMAL);
 			h4Font = new Font(calibriRegularBaseFont, 12, Font.NORMAL);
@@ -79,7 +79,7 @@ public class PdfPrinter {
 			PdfOutline root = writer.getRootOutline();
 			
 			Paragraph ph = new Paragraph();
-			ph.add(new Phrase(report.getTitle(), font40));
+			ph.add(new Phrase(report.getTitle(), font20));
 			PdfPCell cell = new PdfPCell();
 			cell.setBorder(2);
 			cell.setPadding(8f);
