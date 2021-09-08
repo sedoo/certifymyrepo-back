@@ -73,9 +73,9 @@ declined.user.notification.subject: Demande d'accès à l'entrepôt %s refusée 
 declined.user.notification.fr.content: <p>Cher collègue,</p><p>Votre demande d'accès à l'entrepôt %s vous a été refusée.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 declined.user.notification.en.content: <p>Dear colleague,</p><p>Your request on %s repository has been declined.</p><p>Best regards,</p><p>The COSO team</p>
 
-report.validation.notification.subject: Une fiche a été validé pour l'entrepôt %s / A report has been validated on the %s repository
-report.validation.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle fiche a été validée pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-report.validation.notification.en.content: <p>Dear colleagues,</p><p>A new report has been validated on the %s repository.</p><p>Best regards,</p><p>The COSO team</p>
+report.validation.notification.subject: Une fiche a été figée pour l'entrepôt %s / A report has been frozen on the %s repository
+report.validation.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle fiche a été figée pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
+report.validation.notification.en.content: <p>Dear colleagues,</p><p>A new report has been frozen on the %s repository.</p><p>Best regards,</p><p>The COSO team</p>
 
 report.new.version.notification.subject: Nouvelle version de fiche sur l'entrepôt %s / New report version available on %s repository
 report.new.version.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle version de fiche est disponible pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
