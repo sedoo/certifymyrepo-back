@@ -15,8 +15,8 @@ spring:
       password: ${MONGODB_PASSWORD}
    servlet:
       multipart:
-         max-file-size: 10MB
-         max-request-size: 10MB
+         max-file-size: 25MB
+         max-request-size: 25MB
    profiles:
       include:
       - local
@@ -47,7 +47,7 @@ ftp:
     username: crusoe
 
 notification:
-    cronExpression: 0 30 20 * * *
+    cronExpression: 0/1 09-18 * * * *
     unused.report.months.delay: 2
     
 app.url: http://localhost:8080
@@ -73,15 +73,15 @@ declined.user.notification.subject: Demande d'accès à l'entrepôt %s refusée 
 declined.user.notification.fr.content: <p>Cher collègue,</p><p>Votre demande d'accès à l'entrepôt %s vous a été refusée.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 declined.user.notification.en.content: <p>Dear colleague,</p><p>Your request on %s repository has been declined.</p><p>Best regards,</p><p>The COSO team</p>
 
-report.validation.notification.subject: Une fiche a été figée pour l'entrepôt %s / A report has been frozen on the %s repository
-report.validation.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle fiche a été figée pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
+report.validation.notification.subject: Un dossier de certification a été figé pour l'entrepôt %s / A report has been frozen on the %s repository
+report.validation.notification.fr.content: <p>Cher collègues,</p><p>Un nouveau dossier de certification a été figé pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 report.validation.notification.en.content: <p>Dear colleagues,</p><p>A new report has been frozen on the %s repository.</p><p>Best regards,</p><p>The COSO team</p>
 
-report.new.version.notification.subject: Nouvelle version de fiche sur l'entrepôt %s / New report version available on %s repository
-report.new.version.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle version de fiche est disponible pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
+report.new.version.notification.subject: Nouvelle version du dossier de certification sur l'entrepôt %s / New report version available on %s repository
+report.new.version.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle version du dossier de certification est disponible pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 report.new.version.notification.en.content: <p>Dear colleagues,</p><p>A new report version is available on %s repository.</p><p>Best regards,</p><p>The COSO team</p>
 
-new.comment.notification.subject: Nouvel commentaire sur l'entrepôt %s / New comment has been posted on %s repository
+new.comment.notification.subject: Nouveau commentaire sur l'entrepôt %s / New comment has been posted on %s repository
 new.comment.notification.fr.content: <p>Cher collègues,</p><p>Un commentaire a été posté pour l'entrepôt %s.</p><p>%s</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 new.comment.notification.en.content: <p>Dear colleagues,</p><p>A new comment has been posted on %s repository.</p><p>%s</p><p>Best regards,</p><p>The COSO team</p>
 
@@ -89,8 +89,8 @@ repository.access.request.subject: Demande d'access à l'entrepôt %s / Access h
 repository.access.request.fr.content: <p>Cher collègue,</p><p>%s (%s) a demandé le rôle %s sur l'entrepôt %s.</p><p>%s</p><p>Message de l'utilisateur:%s</p>
 repository.access.request.en.content: <p>Dear colleague,</p><p> %s (%s) has requested %s role on %s repository.</p><p>%s</p><p> User message:</p><p>%s</p>
 
-no.activity.subject: La fiche %s de l'entrepôt %s n'a pas été mis à jour depuis un moment / The report %s on %s repository has not been updated for a while
-no.activity.fr.content: <p>Cher collègue,</p><p>Pour information, il n'y a eu aucune activité sur votre fiche %s de l'entrepôt %s depuis %s mois.</p><p>Si votre auto-évaluation est terminée vous pouvez utiliser 'Figer cette version' pour la finaliser en rendant cette fiche non modifiable. Vous ne recevrez alors plus de rappel. Vous pourrez créer une nouvelle fiche d'évaluation en partant de cette version si besoin.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
+no.activity.subject: Le dossier de certification %s de l'entrepôt %s n'a pas été mis à jour depuis un moment / The report %s on %s repository has not been updated for a while
+no.activity.fr.content: <p>Cher collègue,</p><p>Pour information, il n'y a eu aucune activité sur votre dossier de certification %s de l'entrepôt %s depuis %s mois.</p><p>Si votre auto-évaluation est terminée vous pouvez utiliser 'Figer cette version' pour la finaliser en rendant ce dossier de certification non modifiable. Vous ne recevrez alors plus de rappel. Vous pourrez créer un nouveau dossier de certification en partant de cette version si besoin.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 no.activity.en.content: <p>Dear colleagues,</p><p>For you information, no update has been made on your report %s on %s repository for the last %s months.</p>If your self assessment is over you can use the button 'Freeze this version' to finalize it by making the report unchangeable. You will not receive reminder anymore. You will be able to create a new assessment report based on this version if you need.<p></p><p>Best regards,</p><p>The COSO team</p>
 
 ---

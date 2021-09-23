@@ -96,14 +96,14 @@ public class ProfileService {
 			Profile existingProfile = profileDao.findByEmail(profile.getEmail());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-						messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+						messages.getString("create.user.error.duplicate.email").concat(" ").concat(profile.getName()));
 			}
 		}
 		if(profile.getOrcid() != null) {
 			Profile existingProfile = profileDao.findByOrcid(profile.getOrcid());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-						messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+						messages.getString("create.user.error.duplicate.orcid").concat(" ").concat(profile.getName()));
 			}
 		}
 		return profileDao.save(profile);
@@ -120,11 +120,11 @@ public class ProfileService {
         
 		if(profile.getEmail() != null && profileDao.findByEmail(profile.getEmail()) != null) {
 			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-					messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+					messages.getString("create.user.error.duplicate.email").concat(" ").concat(profile.getName()));
 		}
 		if(profile.getOrcid() != null && profileDao.findByOrcid(profile.getOrcid()) != null) {
 			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-					messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+					messages.getString("create.user.error.duplicate.orcid").concat(" ").concat(profile.getName()));
 		}
 		Profile createdProfile = profileDao.save(profile);
 		

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.slf4j.Logger;
@@ -58,7 +59,11 @@ public class ProdEmailSender implements EmailSender {
 			} else {
 				email.setFrom(mailConfig.getFrom());
 			}
-			email.setSubject("[Crusöe] ".concat(contact.getSubject()));
+			if(StringUtils.isNotEmpty(contact.getCategory())) {
+				email.setSubject("[Crusöe] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));
+			} else {
+				email.setSubject("[Crusöe] ".concat(contact.getSubject()));
+			}
 			StringBuilder msg = new StringBuilder();
 			msg.append("<html><body>");
 			msg.append(contact.getMessage());

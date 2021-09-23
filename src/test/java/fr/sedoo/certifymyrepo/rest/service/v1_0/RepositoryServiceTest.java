@@ -141,6 +141,27 @@ public class RepositoryServiceTest {
 		return report;
 	}
 	
+	private CertificationTemplate createTemplate() {
+		CertificationTemplate value = new CertificationTemplate();
+		List<LevelTemplate> list = new ArrayList<LevelTemplate>();
+		value.setLevels(list);
+		List<RequirementTemplate> requirements = new ArrayList<RequirementTemplate>();
+		RequirementTemplate rt = new RequirementTemplate();
+		rt.setCode("R0");
+		rt.setLevelActive(true);
+		requirements.add(rt);
+		rt = new RequirementTemplate();
+		rt.setCode("R1");
+		rt.setLevelActive(true);
+		requirements.add(rt);
+		rt = new RequirementTemplate();
+		rt.setCode("R2");
+		rt.setLevelActive(true);
+		requirements.add(rt);
+		value.setRequirements(requirements);
+		return value;
+	}
+	
 	@Test
     public void testListAllFullRepositoryGreenHealthCheck() {
 		
@@ -163,12 +184,8 @@ public class RepositoryServiceTest {
     public void testListAllFullRepositoryRedHealthCheck() {
 		
         when(certificationReportDaoMock.findReportInProgressByRepositoryIdAndMaxUpdateDate(anyString())).thenReturn(createCertificationReport("1"));
-		CertificationTemplate value = new CertificationTemplate();
-		List<LevelTemplate> list = new ArrayList<LevelTemplate>();
-		value.setLevels(list);
-		List<RequirementTemplate> requirements = new ArrayList<RequirementTemplate>();
-		value.setRequirements(requirements);
-		when(templateDao.getCertificationReportTemplate(any())).thenReturn(value);
+		
+		when(templateDao.getCertificationReportTemplate(any())).thenReturn(createTemplate());
 		
         List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
         

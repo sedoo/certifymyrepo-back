@@ -249,9 +249,12 @@ public class RepositoryService {
 					}
 				}
 				itemList.add(itemDto);
-				String level = (item.getLevel() != null && item.getLevel() != null)
-						? item.getLevel() : null;
-				incrementCounter(avg, level);
+				if(itemDto.isLevelActive()) {
+					String level = (item.getLevel() != null && item.getLevel() != null)
+							? item.getLevel() : null;
+					incrementCounter(avg, level);
+				}
+
 			}
 			latestReport.setItems(itemList);
 			
@@ -265,7 +268,7 @@ public class RepositoryService {
 			} else {
 				int occurencies = 0;
 				if(avg.containsKey("4")) {
-					occurencies = avg.get("4");
+					occurencies += avg.get("4");
 				}
 				if(avg.containsKey("3")) {
 					occurencies += avg.get("3");

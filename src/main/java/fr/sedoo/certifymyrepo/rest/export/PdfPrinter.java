@@ -93,6 +93,17 @@ public class PdfPrinter {
 			table.setWidthPercentage(100f);
 			document.add(table);
 			
+			if(report.getAffiliation() != null) {
+				String affiliation = null;
+				if(StringUtils.isNotEmpty(report.getAffiliation().getInstitute())) {
+					affiliation = report.getAffiliation().getInstitute().concat(" (").concat(report.getAffiliation().getAcronym()).concat(")");
+					if(StringUtils.isNotEmpty(report.getAffiliation().getDepartment())) {
+						affiliation = affiliation.concat(" / ").concat(report.getAffiliation().getDepartment());
+					}
+					writePairValue("Affiliation", affiliation, document);
+				}
+			}
+			
 			writePairValue(messages.getString("report.status"), report.getStatus(), document);
 			SimpleDateFormat df = null;
 			if(StringUtils.equals("fr", language)) {

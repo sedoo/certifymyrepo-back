@@ -13,6 +13,7 @@ public class ContactDto {
 	private String fromName;
 	private String fromEmail;
 	private String subject;
+	private String category;
 	private String message;
 
 }

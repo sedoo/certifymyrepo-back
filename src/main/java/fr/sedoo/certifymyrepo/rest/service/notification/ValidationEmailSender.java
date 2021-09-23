@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.EmailConstants;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
@@ -69,7 +70,12 @@ public class ValidationEmailSender implements EmailSender {
 			} else {
 				htmlEmail.setFrom(mailConfig.getFrom());
 			}
-			htmlEmail.setSubject("[Crusöe validation platform] ".concat(contact.getSubject()));
+			if(StringUtils.isNotEmpty(contact.getCategory())) {
+				htmlEmail.setSubject("[Crusöe validation platform] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));
+			} else {
+				htmlEmail.setSubject("[Crusöe validation platform] ".concat(contact.getSubject()));
+			}
+			
 			StringBuilder msg = new StringBuilder();
 			msg.append("<html><body>");
 			msg.append("<p>Former recipients:<ul>");

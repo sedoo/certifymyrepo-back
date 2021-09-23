@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,12 +47,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
+import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
+import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Comment;
@@ -66,6 +69,7 @@ import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
+import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.CommentDto;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
@@ -116,6 +120,9 @@ public class CertificationReportService {
 	
 	@Autowired
 	private ApplicationConfig appConfig;
+	
+	@Autowired
+	AffiliationDao affiliationDao;
 	
 	@Value("${temporary.folder}")
 	String temporaryFolderName;
@@ -551,6 +558,10 @@ public class CertificationReportService {
 			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 			Report printableReport = getFullReportInformation(loggedUser, reportId, language, Boolean.parseBoolean(comments));
 			String fileName = printableReport.getTitle();
+			fileName = fileName.replace(" ", "_");
+			fileName = Normalizer
+			           .normalize(fileName, Normalizer.Form.NFD)
+			           .replaceAll("[^\\p{ASCII}]", "");;
 			Path filePath = null;
 			
 			// report and attachments have to be copied into the localFolder
@@ -636,6 +647,10 @@ public class CertificationReportService {
 					repo = repositoryDao.findById(report.getRepositoryId());
 				}
 				if (null != repo) {
+					if(repo.getAffiliationId() != null) {
+						Affiliation affiliation = affiliationDao.findById(repo.getAffiliationId());
+						printableReport.setAffiliation(new AffiliationDto(affiliation));
+					}
 					for(TemplateName templateName :templatesName) {
 						if(StringUtils.equals(report.getTemplateId(), templateName.getId())) {
 							printableReport.setTitle(repo.getName().concat(" ").concat(templateName.getName()));
@@ -694,16 +709,9 @@ public class CertificationReportService {
 			Requirement printableRequirement = new Requirement();
 			printableRequirement.setCode(r.getCode());
 			printableRequirement.setLevel(r.getLevel());
-			if(StringUtils.equals("fr", language)) {
-				printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement().getFr());
-				if(r.getLevel() != null) {
-					printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel().getFr());
-				}
-			} else {
-				printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement().getEn());
-				if(r.getLevel() != null) {
-					printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel().getEn());
-				}
+			printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement());
+			if(r.getLevel() != null) {
+				printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel());
 			}
 			printableRequirement.setResponse(r.getResponse());
 			

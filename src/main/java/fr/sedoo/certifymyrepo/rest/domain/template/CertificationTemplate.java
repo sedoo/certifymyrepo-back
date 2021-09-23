@@ -10,7 +10,7 @@ import lombok.Setter;
 public class CertificationTemplate {
 	
 	private String name;
-	private Description description;
+	private String description;
 	private List<LevelTemplate> levels;
 	private List<RequirementTemplate> requirements;
 

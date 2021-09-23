@@ -8,6 +8,6 @@ import lombok.Setter;
 public class LevelTemplate {
 	
 	private String code;
-	private Label label;
+	private String label;
 
 }
