@@ -136,48 +136,6 @@ public class LoginService {
 		return result;
 	}
 	
-	@Deprecated
-	@RequestMapping(value="/orcid",method=RequestMethod.POST)
-	public LoggedUser orcid(HttpServletResponse response, @RequestParam String code, @RequestParam(name="redirect_uri") String redirectUri) throws Exception{
-		
-		ClientConfig config = new DefaultClientConfig();
-		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-		Client client = Client.create(config);
-
-		WebResource service = client.resource(orcidConfig.getTokenUrl());
-
-		MultivaluedMap<String, String> data = new MultivaluedMapImpl();		
-		data.add("client_id", orcidConfig.getClientId());
-		data.add("client_secret", orcidConfig.getClientSecret());
-		data.add("grant_type", "authorization_code");
-		data.add("redirect_uri", redirectUri);
-		data.add("code", code);
-		
-		ClientResponse clientResponse =  service.accept("application/json").post(ClientResponse.class, data);
-		
-		if (clientResponse.getStatus() == 200){
-			OrcidToken orcidToken = clientResponse.getEntity(OrcidToken.class);
-			
-			LoggedUser user = new LoggedUser();
-			Profile profile = profileDao.findByOrcid(orcidToken.getOrcid());
-			if(profile == null) {
-				profile = new Profile();
-				profile.setName(orcidToken.getName());
-				profile.setOrcid(orcidToken.getOrcid());
-				profile = profileDao.save(profile);
-			}
-			user.setProfile(profile);
-			user.setToken(generateToken(profile.getName(), profile.getId()));
-			user.setAdmin(adminDao.isAdmin(profile.getId()));
-			user.setSuperAdmin(adminDao.isSuperAdmin(profile.getId()));
-			
-			return user;
-		} else{
-			response.setStatus(clientResponse.getStatus());
-			return null;
-		}
-	}
-	
 	private LoggedUser getLoggedUser(String orcid, String email, String name) throws Exception {
 		LoggedUser user = new LoggedUser();
 		Profile profile = null;
@@ -194,7 +152,7 @@ public class LoginService {
 			profile.setOrcid(orcid);
 			profile = profileDao.save(profile);
 		// Check if the user name has been update on ORCID or Renater
-		} else if(!StringUtils.equals(profile.getName(), name) || !StringUtils.equals(profile.getEmail(), email)) {
+		} else if(!StringUtils.equals(profile.getName(), name) || ( email != null && !StringUtils.equals(profile.getEmail(), email))) {
 			profile.setName(name);
 			profile.setEmail(email);
 			profile = profileDao.save(profile);	
