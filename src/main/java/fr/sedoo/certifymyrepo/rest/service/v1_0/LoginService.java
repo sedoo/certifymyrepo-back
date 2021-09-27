@@ -33,9 +33,11 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import fr.sedoo.certifymyrepo.rest.config.OrcidConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
+import fr.sedoo.certifymyrepo.rest.dao.OrcidDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.LoggedUser;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
+import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtConfig;
 import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtUtil;
 import fr.sedoo.certifymyrepo.rest.filter.jwt.OrcidToken;
@@ -66,6 +68,9 @@ public class LoginService {
 	
 	@Autowired
 	private ProfileDao profileDao;
+	
+	@Autowired
+	private OrcidDao orcidDao;
 	
 	@Value("${shibboleth.url}")
 	private String shibbolethUrl;
@@ -101,7 +106,8 @@ public class LoginService {
 			ClientResponse clientResponse =  service.accept("application/json").post(ClientResponse.class, data);
 			if (clientResponse.getStatus() == 200){
 				OrcidToken orcidToken = clientResponse.getEntity(OrcidToken.class);
-				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), null, orcidToken.getName());
+				ProfileDto orcidProfile = orcidDao.getUserInfoByOrcid(orcidToken.getOrcid());
+				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), orcidProfile.getEmail(), orcidToken.getName());
 			} else {
 				response.setStatus(clientResponse.getStatus());
 			}
@@ -188,8 +194,9 @@ public class LoginService {
 			profile.setOrcid(orcid);
 			profile = profileDao.save(profile);
 		// Check if the user name has been update on ORCID or Renater
-		} else if(!StringUtils.equals(profile.getName(), name)) {
+		} else if(!StringUtils.equals(profile.getName(), name) || !StringUtils.equals(profile.getEmail(), email)) {
 			profile.setName(name);
+			profile.setEmail(email);
 			profile = profileDao.save(profile);	
 		}
 		user.setProfile(profile);

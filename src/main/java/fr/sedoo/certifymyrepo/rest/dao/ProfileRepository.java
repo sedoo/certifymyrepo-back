@@ -10,7 +10,11 @@ import fr.sedoo.certifymyrepo.rest.domain.Profile;
 public interface ProfileRepository extends MongoRepository<Profile, String> {
 	
 	Profile findByOrcid(String orcid);
+	
+	@Query(value = "{'email':{$regex : ?0, $options: 'i'}}")
+	
 	Profile findByEmail(String email);
+	
 	List<Profile> findByIdIn(List<String> idList);
 	
 	@Query(value = "{$or:[{'name':{$regex : ?0, $options: 'i'}},{'email':{$regex : ?0, $options: 'i'}}]}")
