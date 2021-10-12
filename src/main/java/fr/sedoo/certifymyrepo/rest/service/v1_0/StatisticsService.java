@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.Statistics;
@@ -21,9 +22,12 @@ public class StatisticsService {
 	@Autowired
 	RepositoryDao repositoryDao;
 	
+	@Autowired
+	CertificationReportDao reportDao;
+	
 	@RequestMapping(value = "/statistics", method = RequestMethod.GET)
 	public Statistics statistics() {	
-		return new Statistics(repositoryDao.count(), profileDao.count());
+		return new Statistics(repositoryDao.count(), profileDao.count(), reportDao.countInprogress(), reportDao.countValidated());
 	}
 
 }

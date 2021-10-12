@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,29 +19,34 @@ import org.springframework.stereotype.Component;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
-import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
-import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 
 @Component
 public class NotificationUtils {
 	
+	Logger logger = LoggerFactory.getLogger(NotificationUtils.class);
+	
 	@Value("${notification.unused.report.months.delay}")
 	private Integer delay;
 	
+	public Integer getDelay() {
+		return delay;
+	}
+
+	public void setDelay(Integer delay) {
+		this.delay = delay;
+	}
+
 	@Autowired
 	CertificationReportDao reportDao;
 	
 	@Autowired
 	private RepositoryDao repositoryDao;
-	
-	@Autowired
-	private CertificationReportTemplateDao certificationReportTemplateDao;
 	
 	@Autowired
 	ProfileDao profileDao;
@@ -55,22 +62,21 @@ public class NotificationUtils {
 		
 		Calendar c = Calendar.getInstance();
         c.setTime(new Date());
-        c.add(Calendar.MONTH, -delay);
+        c.add(Calendar.MONTH, -this.getDelay());
 		List<CertificationReport> reportList = reportDao.findInProgressByUpdateDateLowerThan(c.getTime());
 		if(reportList != null) {
+			logger.info("{} notifications has to be sent", reportList.size());
 			for(CertificationReport report : reportList) {
-				String reportName = "";
-				CertificationTemplate template = certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId());
-				if(template != null) {
-					reportName = template.getName().concat("_");
-				}
+				String reportName = report.getTemplateId();
 				String formatUpdateDate = new SimpleDateFormat("yyyyMMdd").format(report.getUpdateDate());
 				reportName = reportName.concat(formatUpdateDate)
 						.concat("_v").concat(report.getVersion());
 				
+				logger.info("A notification will be send for the report {} in the repository id {}", reportName, report.getRepositoryId());
+				
 				buildNotification(reportName, report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
 						appConfig.getNoActivityNotificationFrenchContent(),
-						appConfig.getNoActivityNotificationEnglishContent(), delay);
+						appConfig.getNoActivityNotificationEnglishContent());
 				report.setLastNotificationDate(new Date());
 				reportDao.save(report);
 			}
@@ -83,11 +89,10 @@ public class NotificationUtils {
 	 * @param subject
 	 * @param frenchContent
 	 * @param englishContent
-	 * @param month 
 	 * @param message optional
 	 */
 	private void buildNotification(String reportName, String repositoryId, String subject, 
-			String frenchContent, String englishContent, Integer month) {
+			String frenchContent, String englishContent) {
 		// notification the report has been validated
 		Repository repo = repositoryDao.findById(repositoryId);
 		// List user id in DB
@@ -104,10 +109,10 @@ public class NotificationUtils {
 			Set<String> to = new HashSet<String>();
 			to.addAll(repoUsersEmail);
 			contact.setTo(to);
-			contact.setSubject(String.format(subject, reportName, repo.getName(), reportName, repo.getName()));
+			contact.setSubject(String.format(subject, repo.getName(), this.getDelay(), repo.getName(), this.getDelay()));
 			String content = appConfig.getEnglishHeader().concat("<br/><br/>");
-			content = content.concat(String.format(frenchContent,  reportName, repo.getName(), delay))
-						.concat("<br/><br/>").concat(String.format(englishContent, reportName, repo.getName(), delay));
+			content = content.concat(String.format(frenchContent,  reportName, repo.getName(), this.getDelay()))
+						.concat("<br/><br/>").concat(String.format(englishContent, reportName, repo.getName(), this.getDelay()));
 			contact.setMessage(content);
 
 			emailSender.sendNotification(contact);

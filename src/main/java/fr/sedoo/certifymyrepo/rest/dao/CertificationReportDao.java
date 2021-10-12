@@ -24,6 +24,8 @@ public interface CertificationReportDao {
 	CertificationReport findReportValidatedByRepositoryIdAndMaxUpdateDate(String repositoryId);
 	
 	CertificationReport findReportInProgressByRepositoryIdAndMaxUpdateDate(String repositoryId);
-
+	
+	long countInprogress();
+	long countValidated();
 
 }

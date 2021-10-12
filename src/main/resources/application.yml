@@ -89,7 +89,7 @@ repository.access.request.subject: Demande d'access à l'entrepôt %s / Access h
 repository.access.request.fr.content: <p>Cher collègue,</p><p>%s (%s) a demandé le rôle %s sur l'entrepôt %s.</p><p>%s</p><p>Message de l'utilisateur:%s</p>
 repository.access.request.en.content: <p>Dear colleague,</p><p> %s (%s) has requested %s role on %s repository.</p><p>%s</p><p> User message:</p><p>%s</p>
 
-no.activity.subject: Le dossier de certification %s de l'entrepôt %s n'a pas été mis à jour depuis un moment / The report %s on %s repository has not been updated for a while
+no.activity.subject: Un dossier de certification de l'entrepôt %s n'a pas été mis à jour depuis %s mois / A %s repository report has not been updated for %s months
 no.activity.fr.content: <p>Cher collègue,</p><p>Pour information, il n'y a eu aucune activité sur votre dossier de certification %s de l'entrepôt %s depuis %s mois.</p><p>Si votre auto-évaluation est terminée vous pouvez utiliser 'Figer cette version' pour la finaliser en rendant ce dossier de certification non modifiable. Vous ne recevrez alors plus de rappel. Vous pourrez créer un nouveau dossier de certification en partant de cette version si besoin.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
 no.activity.en.content: <p>Dear colleagues,</p><p>For you information, no update has been made on your report %s on %s repository for the last %s months.</p>If your self assessment is over you can use the button 'Freeze this version' to finalize it by making the report unchangeable. You will not receive reminder anymore. You will be able to create a new assessment report based on this version if you need.<p></p><p>Best regards,</p><p>The COSO team</p>
 

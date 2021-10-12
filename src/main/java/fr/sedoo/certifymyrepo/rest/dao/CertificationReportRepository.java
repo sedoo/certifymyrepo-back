@@ -22,5 +22,11 @@ public interface CertificationReportRepository extends MongoRepository<Certifica
 	@Query(value = "{$and:[{'updateDate' :  {$lte: ?0} }, {'status' : { $ne: 'RELEASED' } }, {$or:[{'lastNotificationDate' :  { $exists : false } }, {'lastNotificationDate' :  null }, {'lastNotificationDate' :  {$lte: ?0} }]} ]}")
     List<CertificationReport> findInProgressByUpdateDateLowerThan(Date date);
 	
+	@Query(value = "{'status' :  'IN_PROGRESS'}", count = true)
+    long countInprogress();
+	
+	@Query(value = "{'status' :  'RELEASED'}", count = true)
+    long countValidated();
+	
 
 }

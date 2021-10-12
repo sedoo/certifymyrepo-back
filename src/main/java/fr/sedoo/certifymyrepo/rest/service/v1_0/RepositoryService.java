@@ -200,12 +200,20 @@ public class RepositoryService {
 				if(repo.getAffiliationId() != null)
 					affiliation = affiliationDao.findById(repo.getAffiliationId());
 				full.setName(repo.getName());
+				full.setCreationDate(repo.getCreationDate());
 				full.setRepository(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 				CertificationReport lastRepoNotValidated = certificationReportDao.findReportInProgressByRepositoryIdAndMaxUpdateDate(repo.getId());
 				full.setHealthLatestInProgressReport(repositoryHealthCheck(lastRepoNotValidated));
-				
+				if(lastRepoNotValidated != null) {
+					full.setLatestInProgressReportUpdateDate(lastRepoNotValidated.getUpdateDate());
+				}
+
 				CertificationReport lastRepoValidated = certificationReportDao.findReportValidatedByRepositoryIdAndMaxUpdateDate(repo.getId());
 				full.setHealthLatestValidReport(repositoryHealthCheck(lastRepoValidated));
+				if(lastRepoValidated != null) {
+					full.setLatestValidReportUpdateDate(lastRepoValidated.getUpdateDate());
+				}
+				
 				// Repositories are read only by default
 				// only SuperAdmin or user(Editor) associated with a repository have write access
 				full.setReadonly(true);
