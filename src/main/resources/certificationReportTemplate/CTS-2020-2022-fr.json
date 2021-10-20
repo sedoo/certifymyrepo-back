@@ -1,0 +1,99 @@
+{
+	"name": "CTS-2020-2022 en français",
+	"description": "Exigences CoreTrustSeal 2020-2022 relatives aux référentiels de données",              
+    "levels":  [
+            {"code": 0, "label": "0 ‐ Sans objet"},
+            {"code": 1, "label": "1 ‐ L’entrepôt n'en a pas encore tenu compte"},
+            {"code": 2, "label": "2 - L’entrepôt maîtrise le concept de façon théorique"},
+            {"code": 3, "label": "3 - L’entrepôt est en phase d’implémentation"},
+            {"code": 4, "label": "4 - Le critère a été entièrement implémenté"}
+        ],
+    "requirements" : [ 
+    {
+        "code" : "R0",
+        "requirement": "R0. Veuillez fournir les éléments de contexte de votre entrepôt.",
+        "levelActive" : false,
+        "response": "– Type d’entrepôt. Sélectionnez tous les types pertinents :\n● Entrepôt disciplinaire ou thématique\n● Entrepôt institutionnel\n● Système national d'archivage, y compris les archives gouvernementales\n● Dépôt de publications\n● Bibliothèque\n● Musée\n● Archives\n● Entrepôt de projet de recherche\n● Autre (précisez)\n\n– Brève description de l’entrepôt de données\n\n– Brève description de la communauté cible concernée\n\n– Niveau de curation. Sélectionnez tous les types pertinents :\nA. Contenu mis en accès tel que déposé\nB. Curation de base – p. ex. vérification rapide, ajout de métadonnées de base ou de documentation\nC. Curation avancée – p. ex. conversion vers de nouveaux formats, amélioration de la qualité de la documentation\nD. Curation au niveau des données – comme dans C ci-dessus, mais avec une édition supplémentaire des données déposées pour améliorer l’exactitude\n\nCommentaires\n\n– Partenaires internes et sous-traitants. S'il y a lieu, veuillez les énumérer.\n\n– Résumé des changements significatifs depuis la dernière soumission (s'il y a lieu)\n\n– Autres renseignements pertinents\n\n"
+    }, 
+    {
+        "code" : "R1",
+        "requirement": "R1. L’entrepôt de données a pour mission explicite de donner accès à des données dans son domaine et de les préserver",
+        "levelActive" : true
+    }, 
+    {
+        "code" : "R2",
+        "requirement": "R2. L’entrepôt maintient toutes les licences applicables à l'accès et à l'utilisation des données et en surveille la conformité.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R3",
+        "requirement": "R3. L’entrepôt dispose d'un plan de continuité pour assurer un accès continu à ses collections et leur préservation.",
+        "levelActive" : true
+    },        
+    {
+        "code" : "R4",
+        "requirement": "R4. L’entrepôt garantit, dans la mesure du possible, que les données sont créées, conservées, qu’on y accède et qu’elles sont utilisées dans le respect des normes disciplinaires et éthiques.",
+            "levelActive" : true
+    },
+    {
+        "code" : "R5",
+        "requirement": "R5. L’entrepôt dispose d'un financement adéquat et d'un nombre suffisant d'employés qualifiés gérés par un système de gouvernance clair pour mener à bien sa mission.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R6",
+        "requirement": "R6. L’entrepôt adopte un ou plusieurs mécanismes pour s’entourer de façon continue d’avis et commentaires d’experts (en interne ou en externe, incluant une expertise scientifique si le besoin en est pertinent).",
+            "levelActive" : true
+    },
+    {
+        "code" : "R7",
+        "requirement": "R7. L’entrepôt garantit l'intégrité et l'authenticité des données.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R8",
+        "requirement": "R8. L’entrepôt accepte des données et des métadonnées sur la base de critères définis garantissant pertinence et intelligibilité pour les utilisateurs.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R9",
+        "requirement": "R9. L’entrepôt applique des processus et des procédures documentés pour l'archivage des données.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R10",
+        "requirement": "R10. L’entrepôt de données assume la responsabilité de la préservation à long terme et gèrecette fonction de façon planifiée et documentée.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R11",
+        "requirement": "R11. L’entrepôt dispose de l’expertise appropriée pour traiter la question de la qualité technique des données et métadonnées et pour assurer qu’une information suffisante est accessible aux utilisateurs pour leur permettre d’évaluer la qualité des données.",
+        "levelActive" : true
+	},
+    {
+        "code" : "R12",
+        "requirement": "R12. L'archivage s'effectue selon des processus de traitement (workflows) précisément définis, de l’ingestion des données à leur diffusion.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R13",
+        "requirement": "R13. L’entrepôt permet aux utilisateurs de découvrir les données et d’y faire référence de façon pérenne par un mécanisme de citation approprié.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R14",
+        "requirement": "R14. L’entrepôt permet de réutiliser les données sur la durée, en veillant à ce que des métadonnées appropriées soient disponibles pour permettre la compréhension et l’utilisation des données.",
+        "levelActive" : true
+    },
+    {
+        "code" : "R15",
+        "requirement": "R15. L’entrepôt fonctionne avec des systèmes d'exploitation et d'autres systèmes de base bien maintenus et utilise des technologies matérielles et logicielles adaptées aux services qu'il fournit à sa communauté cible.",
+       	"levelActive" : true
+    },
+    {
+        "code" : "R16",
+        "requirement": "R16. L'infrastructure technique de l’entrepôt assure la protection de l'installation et de ses données, de ses produits, de ses services et de ses utilisateurs.",
+        "levelActive" : true
+    } 
+]
+}

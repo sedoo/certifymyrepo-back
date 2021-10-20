@@ -33,9 +33,11 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import fr.sedoo.certifymyrepo.rest.config.OrcidConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
+import fr.sedoo.certifymyrepo.rest.dao.OrcidDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.LoggedUser;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
+import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtConfig;
 import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtUtil;
 import fr.sedoo.certifymyrepo.rest.filter.jwt.OrcidToken;
@@ -67,6 +69,9 @@ public class LoginService {
 	@Autowired
 	private ProfileDao profileDao;
 	
+	@Autowired
+	private OrcidDao orcidDao;
+	
 	@Value("${shibboleth.url}")
 	private String shibbolethUrl;
 	
@@ -86,7 +91,12 @@ public class LoginService {
 			ClientResponse clientResponse =  service.accept("application/json").get(ClientResponse.class);
 			if (clientResponse.getStatus() == 200){
 				ShibbolethToken shibbolethToken = clientResponse.getEntity(ShibbolethToken.class);
-				loggedUser = this.getLoggedUser(null, shibbolethToken.getMail(), shibbolethToken.getGivenname().concat(" ").concat(shibbolethToken.getName()));
+				// An email can have upper case letter it must be stored  in  lower case
+				String email = null;
+				if(shibbolethToken.getMail() != null) {
+					email = shibbolethToken.getMail().toLowerCase();
+				}
+				loggedUser = this.getLoggedUser(null, email, shibbolethToken.getGivenname().concat(" ").concat(shibbolethToken.getName()));
 			} else {
 				response.setStatus(clientResponse.getStatus());
 			}
@@ -101,7 +111,13 @@ public class LoginService {
 			ClientResponse clientResponse =  service.accept("application/json").post(ClientResponse.class, data);
 			if (clientResponse.getStatus() == 200){
 				OrcidToken orcidToken = clientResponse.getEntity(OrcidToken.class);
-				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), null, orcidToken.getName());
+				ProfileDto orcidProfile = orcidDao.getUserInfoByOrcid(orcidToken.getOrcid());
+				// An email can have upper case letter it must be stored  in  lower case
+				String email = null;
+				if(orcidProfile.getEmail() != null) {
+					email = orcidProfile.getEmail().toLowerCase();
+				}
+				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), email, orcidToken.getName());
 			} else {
 				response.setStatus(clientResponse.getStatus());
 			}
@@ -130,48 +146,6 @@ public class LoginService {
 		return result;
 	}
 	
-	@Deprecated
-	@RequestMapping(value="/orcid",method=RequestMethod.POST)
-	public LoggedUser orcid(HttpServletResponse response, @RequestParam String code, @RequestParam(name="redirect_uri") String redirectUri) throws Exception{
-		
-		ClientConfig config = new DefaultClientConfig();
-		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-		Client client = Client.create(config);
-
-		WebResource service = client.resource(orcidConfig.getTokenUrl());
-
-		MultivaluedMap<String, String> data = new MultivaluedMapImpl();		
-		data.add("client_id", orcidConfig.getClientId());
-		data.add("client_secret", orcidConfig.getClientSecret());
-		data.add("grant_type", "authorization_code");
-		data.add("redirect_uri", redirectUri);
-		data.add("code", code);
-		
-		ClientResponse clientResponse =  service.accept("application/json").post(ClientResponse.class, data);
-		
-		if (clientResponse.getStatus() == 200){
-			OrcidToken orcidToken = clientResponse.getEntity(OrcidToken.class);
-			
-			LoggedUser user = new LoggedUser();
-			Profile profile = profileDao.findByOrcid(orcidToken.getOrcid());
-			if(profile == null) {
-				profile = new Profile();
-				profile.setName(orcidToken.getName());
-				profile.setOrcid(orcidToken.getOrcid());
-				profile = profileDao.save(profile);
-			}
-			user.setProfile(profile);
-			user.setToken(generateToken(profile.getName(), profile.getId()));
-			user.setAdmin(adminDao.isAdmin(profile.getId()));
-			user.setSuperAdmin(adminDao.isSuperAdmin(profile.getId()));
-			
-			return user;
-		} else{
-			response.setStatus(clientResponse.getStatus());
-			return null;
-		}
-	}
-	
 	private LoggedUser getLoggedUser(String orcid, String email, String name) throws Exception {
 		LoggedUser user = new LoggedUser();
 		Profile profile = null;
@@ -188,8 +162,9 @@ public class LoginService {
 			profile.setOrcid(orcid);
 			profile = profileDao.save(profile);
 		// Check if the user name has been update on ORCID or Renater
-		} else if(!StringUtils.equals(profile.getName(), name)) {
+		} else if(!StringUtils.equals(profile.getName(), name) || ( email != null && !StringUtils.equals(profile.getEmail(), email))) {
 			profile.setName(name);
+			profile.setEmail(email);
 			profile = profileDao.save(profile);	
 		}
 		user.setProfile(profile);

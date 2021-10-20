@@ -1,9 +1,11 @@
 package fr.sedoo.certifymyrepo.rest.dto;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
+import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +22,13 @@ public class RepositoryDto {
 		this.setContact(repository.getContact());
 		this.setUrl(repository.getUrl());
 		this.setDescription(repository.getDescription());
+		if(repository.getUsers() != null && !repository.getUsers().isEmpty()) {
+			List<RepositoryUserDto> userDtoList = new ArrayList<RepositoryUserDto>();
+			for(RepositoryUser user : repository.getUsers()) {
+				userDtoList.add(new RepositoryUserDto(user.getId(), null, null, user.getRole(), user.getStatus()));
+			}
+			this.setUsers(userDtoList);
+		}
 	}
 	private String id;
 	private String name;

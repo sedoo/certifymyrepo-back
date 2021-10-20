@@ -64,12 +64,12 @@
     <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
     
     <!-- Spring boot application used as service (service myApp start) must disable console appender on production environment -->
-    <springProfile name="prod">
+    <springProfile name="prod,preprod">
 	    <root level="INFO">
 	        <appender-ref ref="FILE" />
 	    </root>
   	</springProfile>
-    <springProfile name="!prod">
+    <springProfile name="dev">
 	    <root level="INFO">
 	        <appender-ref ref="CONSOLE" />
 	    </root>

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.EmailConstants;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
@@ -57,6 +58,7 @@ public class ValidationEmailSender implements EmailSender {
 			HtmlEmail htmlEmail = new HtmlEmail();
 			htmlEmail.setCharset(EmailConstants.UTF_8);
 			htmlEmail.setHostName(mailConfig.getHostname());
+			//htmlEmail.addTo("thomas.romuald@obs-mip.fr");
 			htmlEmail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
 			htmlEmail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 			if(contact.getFromEmail() != null) {
@@ -68,14 +70,19 @@ public class ValidationEmailSender implements EmailSender {
 			} else {
 				htmlEmail.setFrom(mailConfig.getFrom());
 			}
-			htmlEmail.setSubject("[Crusöe validation platform] ".concat(contact.getSubject()));
+			if(StringUtils.isNotEmpty(contact.getCategory())) {
+				htmlEmail.setSubject("[Crusöe validation platform] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));
+			} else {
+				htmlEmail.setSubject("[Crusöe validation platform] ".concat(contact.getSubject()));
+			}
+			
 			StringBuilder msg = new StringBuilder();
 			msg.append("<html><body>");
 			msg.append("<p>Former recipients:<ul>");
 			for (String email : contact.getTo()) {
 				msg.append("<li>").append(email).append("</li>");
 			}
-			msg.append("</ul></p>");
+			msg.append("</ul></p><br/>");
 			msg.append(contact.getMessage());
 			msg.append("</body></html>");
 			htmlEmail.setHtmlMsg(msg.toString());

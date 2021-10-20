@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,12 +46,15 @@ import org.zeroturnaround.zip.ZipUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
+import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
+import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
+import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Comment;
@@ -65,6 +69,7 @@ import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
+import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.CommentDto;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
@@ -112,6 +117,12 @@ public class CertificationReportService {
 	
 	@Autowired
 	private PdfPrinter pdfPrinter;
+	
+	@Autowired
+	private ApplicationConfig appConfig;
+	
+	@Autowired
+	AffiliationDao affiliationDao;
 	
 	@Value("${temporary.folder}")
 	String temporaryFolderName;
@@ -315,6 +326,7 @@ public class CertificationReportService {
 		checkStatus(certificationReport.getId());
 		
 		if (loggedUser.isAdmin()) {
+			checkNotifications(certificationReport);
 			result = certificationReportDao.save(certificationReport);
 		} else {
 			Repository repo = repositoryDao.findByIdAndUserId(certificationReport.getRepositoryId(), loggedUser.getUserId());
@@ -325,6 +337,7 @@ public class CertificationReportService {
 					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
 					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 				} else {
+					checkNotifications(certificationReport);
 					result = certificationReportDao.save(certificationReport);
 				}
 			} else {
@@ -332,9 +345,7 @@ public class CertificationReportService {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 			}
 		}
-		
-		ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
-		checkNotifications(certificationReport, messages);
+
 		
 		return result;
 	}
@@ -344,9 +355,10 @@ public class CertificationReportService {
 	 * <li>a report has been validated. All the repository users has be to notified</li>
 	 * <li>a report has got a new version. All the repository users has be to notified</li>
 	 * @param certificationReportToSave current certification report
+	 * @param repositoryName 
 	 * @param messages i18n bundle
 	 */
-	private void checkNotifications(CertificationReport certificationReportToSave, ResourceBundle messages) {
+	private void checkNotifications(CertificationReport certificationReportToSave) {
 		if(certificationReportToSave.getId() != null) {
 			CertificationReport reportInDB = certificationReportDao.findById(certificationReportToSave.getId());
 			if(reportInDB != null) {
@@ -354,12 +366,17 @@ public class CertificationReportService {
 						StringUtils.equals(certificationReportToSave.getStatus().name(), ReportStatus.RELEASED.name())) {
 
 					// notification the report has been validated
-					buildNotification(certificationReportToSave.getRepositoryId(), messages, "report.validation", null);
+					buildNotification(certificationReportToSave.getRepositoryId(), 
+							appConfig.getReportValidationNotificationSubject(),
+							appConfig.getReportValidationNotificationFrenchContent(), 
+							appConfig.getReportValidationNotificationEnglishContent(), null);
 
 				} else if(!StringUtils.equals(certificationReportToSave.getVersion(), reportInDB.getVersion())) {
 					
 					// notification new version
-					buildNotification(certificationReportToSave.getRepositoryId(), messages, "report.new.version", null);
+					buildNotification(certificationReportToSave.getRepositoryId(), appConfig.getReportNewVersionNotificationSubject(),
+							appConfig.getReportNewVersionNotificationFrenchContent(), 
+							appConfig.getReportNewVersionNotificationEnglishContent(), null);
 					
 				}
 			}
@@ -369,10 +386,13 @@ public class CertificationReportService {
 	/**
 	 * Build ContactDto object and send notification
 	 * @param repositoryId repository identifier
-	 * @param messages i18n bundle
-	 * @param key i18n key prefix ("report.validation" or "report.new.version")
+	 * @param subject
+	 * @param frenchContent
+	 * @param englishContent
+	 * @param message optional
 	 */
-	private void buildNotification(String repositoryId, ResourceBundle messages, String key, String message) {
+	private void buildNotification(String repositoryId, String subject, 
+			String frenchContent, String englishContent, String message) {
 		// notification the report has been validated
 		Repository repo = repositoryDao.findById(repositoryId);
 		// List user id in DB
@@ -389,12 +409,17 @@ public class CertificationReportService {
 			Set<String> to = new HashSet<String>();
 			to.addAll(repoUsersEmail);
 			contact.setTo(to);
-			contact.setSubject(String.format(messages.getString(key.concat(".notification.subject")), repo.getName()));
+			contact.setSubject(String.format(subject, repo.getName(), repo.getName()));
+			String content = appConfig.getEnglishHeader().concat("<br/><br/>");
 			if(message != null) {
-				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName(), message));	
+				content = content.concat(String.format(frenchContent, repo.getName(), message))
+						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName(), message));	
+
 			} else {
-				contact.setMessage(String.format(messages.getString(key.concat(".notification.content")), repo.getName()));
+				content = content.concat(String.format(frenchContent, repo.getName()))
+						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName()));
 			}
+			contact.setMessage(content);
 
 			emailSender.sendNotification(contact);
 		}
@@ -475,14 +500,19 @@ public class CertificationReportService {
 		result.setComments(comments);
 		RequirementComments savedComments = commentsDao.save(result);
 		Comment latestComment = comments.get(comments.size()-1);
-		ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
+		//ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
 		Optional<Profile> commentEditor = profileDao.findById(latestComment.getUserId());
 		String postedComment = "";
 		if(commentEditor.isPresent()) {
 			postedComment = "@".concat(commentEditor.get().getName()).concat(": ");
 		}
 		postedComment = postedComment.concat(latestComment.getText());
-		buildNotification(repositoryId, messages, "new.comment", postedComment);
+		
+		//FIXME delete this after validation of bilingual email
+		//buildNotification(repositoryId, messages, "new.comment", postedComment);
+		buildNotification(repositoryId, appConfig.getNewCommentNotificationSubject(), 
+				appConfig.getNewCommentNotificationFrenchContent(), 
+				appConfig.getNewCommentNotificationEnglishContent(), postedComment);
 		return savedComments;
 	}
 	
@@ -528,6 +558,10 @@ public class CertificationReportService {
 			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 			Report printableReport = getFullReportInformation(loggedUser, reportId, language, Boolean.parseBoolean(comments));
 			String fileName = printableReport.getTitle();
+			fileName = fileName.replace(" ", "_");
+			fileName = Normalizer
+			           .normalize(fileName, Normalizer.Form.NFD)
+			           .replaceAll("[^\\p{ASCII}]", "");;
 			Path filePath = null;
 			
 			// report and attachments have to be copied into the localFolder
@@ -613,6 +647,10 @@ public class CertificationReportService {
 					repo = repositoryDao.findById(report.getRepositoryId());
 				}
 				if (null != repo) {
+					if(repo.getAffiliationId() != null) {
+						Affiliation affiliation = affiliationDao.findById(repo.getAffiliationId());
+						printableReport.setAffiliation(new AffiliationDto(affiliation));
+					}
 					for(TemplateName templateName :templatesName) {
 						if(StringUtils.equals(report.getTemplateId(), templateName.getId())) {
 							printableReport.setTitle(repo.getName().concat(" ").concat(templateName.getName()));
@@ -671,16 +709,9 @@ public class CertificationReportService {
 			Requirement printableRequirement = new Requirement();
 			printableRequirement.setCode(r.getCode());
 			printableRequirement.setLevel(r.getLevel());
-			if(StringUtils.equals("fr", language)) {
-				printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement().getFr());
-				if(r.getLevel() != null) {
-					printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel().getFr());
-				}
-			} else {
-				printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement().getEn());
-				if(r.getLevel() != null) {
-					printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel().getEn());
-				}
+			printableRequirement.setRequirementLabel(requirements.get(r.getCode()).getRequirement());
+			if(r.getLevel() != null) {
+				printableRequirement.setLevelLabel(levels.get(r.getLevel()).getLabel());
 			}
 			printableRequirement.setResponse(r.getResponse());
 			

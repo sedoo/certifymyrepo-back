@@ -22,6 +22,9 @@ public class ProfileDaoMongoImpl implements ProfileDao {
 
 	@Override
 	public Profile save(Profile profile) {
+		if(profile.getEmail() != null) {
+			profile.setEmail(profile.getEmail().toLowerCase());
+		}
 		return profileRepository.save(profile);
 	}
 
@@ -57,7 +60,7 @@ public class ProfileDaoMongoImpl implements ProfileDao {
 
 	@Override
 	public Profile findByEmail(String email) {
-		return profileRepository.findByEmail(email);
+		return profileRepository.findByEmail(email.toLowerCase());
 	}
 
 }

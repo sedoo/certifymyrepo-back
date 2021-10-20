@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -88,6 +89,9 @@ public class RepositoryService {
 	
 	@Autowired
 	private AffiliationDao affiliationDao;
+	
+	@Autowired
+	private ApplicationConfig appConfig;
 	
 	@Autowired
 	JwtConfig jwtConfig;
@@ -172,8 +176,9 @@ public class RepositoryService {
 		List<RepositoryDto> result = new ArrayList<>();
 		for(Repository repo : repos) {
 			Affiliation affiliation = null;
-			if(repo.getAffiliationId() != null)
+			if(repo.getAffiliationId() != null) {
 				affiliation = affiliationDao.findById(repo.getAffiliationId());
+			}
 			result.add(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 		}
 		
@@ -195,12 +200,20 @@ public class RepositoryService {
 				if(repo.getAffiliationId() != null)
 					affiliation = affiliationDao.findById(repo.getAffiliationId());
 				full.setName(repo.getName());
+				full.setCreationDate(repo.getCreationDate());
 				full.setRepository(new RepositoryDto(repo, new AffiliationDto(affiliation)));
 				CertificationReport lastRepoNotValidated = certificationReportDao.findReportInProgressByRepositoryIdAndMaxUpdateDate(repo.getId());
 				full.setHealthLatestInProgressReport(repositoryHealthCheck(lastRepoNotValidated));
-				
+				if(lastRepoNotValidated != null) {
+					full.setLatestInProgressReportUpdateDate(lastRepoNotValidated.getUpdateDate());
+				}
+
 				CertificationReport lastRepoValidated = certificationReportDao.findReportValidatedByRepositoryIdAndMaxUpdateDate(repo.getId());
 				full.setHealthLatestValidReport(repositoryHealthCheck(lastRepoValidated));
+				if(lastRepoValidated != null) {
+					full.setLatestValidReportUpdateDate(lastRepoValidated.getUpdateDate());
+				}
+				
 				// Repositories are read only by default
 				// only SuperAdmin or user(Editor) associated with a repository have write access
 				full.setReadonly(true);
@@ -244,28 +257,34 @@ public class RepositoryService {
 					}
 				}
 				itemList.add(itemDto);
-				String level = (item.getLevel() != null && item.getLevel() != null)
-						? item.getLevel() : null;
-				incrementCounter(avg, level);
+				if(itemDto.isLevelActive()) {
+					String level = (item.getLevel() != null && item.getLevel() != null)
+							? item.getLevel() : null;
+					incrementCounter(avg, level);
+				}
+
 			}
 			latestReport.setItems(itemList);
 			
 			// Green: all the requirements are at the level 4, 3 or 0 for not applicable.
-			// Orange: at list half of the requirements has been considered (level > 1 or 0 for not applicable).
-			// Red: more than half of the requirements has not been considered yet.
+			// Orange: at least half of the requirements has got a level 4, 3 or 0 for not applicable.
+			// Red: more than half of the requirements has got a level lower than 3 or has not been filled yet.
 			if((!avg.containsKey("null") || avg.get("null") == 0) 
 					&& (!avg.containsKey("1") || avg.get("1") == 0 )
 					&& (!avg.containsKey("2") || avg.get("2") == 0)) {
 				result.setGreen(Boolean.TRUE);
 			} else {
 				int occurencies = 0;
-				if(avg.containsKey("null")) {
-					occurencies = avg.get("null");
+				if(avg.containsKey("4")) {
+					occurencies += avg.get("4");
 				}
-				if(avg.containsKey("1")) {
-					occurencies += avg.get("1");
+				if(avg.containsKey("3")) {
+					occurencies += avg.get("3");
 				}
-				if(occurencies <= report.getItems().size() / 2) {
+				if(avg.containsKey("0")) {
+					occurencies += avg.get("0");
+				}
+				if(occurencies >= report.getItems().size() / 2) {
 					result.setOrange(Boolean.TRUE);
 				} else {
 					result.setRed(Boolean.TRUE);
@@ -306,17 +325,17 @@ public class RepositoryService {
 			@RequestBody(required = true) Repository repository,
 			@RequestParam String language) {
 		Repository result = null;
-        ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
 		Repository repo = repositoryDao.findByName(repository.getName());
 		if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
 			if(repository.getId() != null) {
-				checkUsersNotification(repository, messages);
+				checkUsersNotification(repository);
 			}
 			if(repository.getId() == null) {
 				repository.setCreationDate(new Date());
 			}
 			result =  repositoryDao.save(repository);	
 		} else {
+	        ResourceBundle messages = ResourceBundle.getBundle("messages", new Locale(language));
 			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
 					String.format(messages.getString("repository.duplicate.error"), repo.getName()));
 		}
@@ -330,14 +349,17 @@ public class RepositoryService {
 	 * <li>An user access request has been declined</li>
 	 * Then a notification if needed
 	 * @param repository updated
-	 * @param messages i18n
 	 */
-	private void checkUsersNotification(Repository repository, ResourceBundle messages) {
+	private void checkUsersNotification(Repository repository) {
+        ResourceBundle messagesFr = ResourceBundle.getBundle("messages", new Locale("fr"));
+        ResourceBundle messagesEn = ResourceBundle.getBundle("messages", new Locale("en"));
+        
 		Repository existingRepo = null;
 		if(repository.getId() != null) {
 			existingRepo = repositoryDao.findById(repository.getId());
 		}
 		if(existingRepo != null) {
+	        
 			// List user id already in DB
 			Set<String> alreadyInDBUserIds = existingRepo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
 	
@@ -371,11 +393,17 @@ public class RepositoryService {
 					to.add(userProfile.get().getEmail());
 					contact.setTo(to);
 					if(existingRepoUser != null && StringUtils.equals(RepositoryUser.PENDING, existingRepoUser.getStatus())) {
-						contact.setSubject(String.format(messages.getString("declined.user.notification.subject"), repository.getName()));
-						contact.setMessage(String.format(messages.getString("declined.user.notification.content"), repository.getName()));
+						contact.setSubject(String.format(appConfig.getDeclinedUserAccessNotificationSubject(), repository.getName(), repository.getName()));
+						String content = appConfig.getEnglishHeader().concat("<br/><br/>");
+						content = content.concat(String.format(appConfig.getDeclinedUserAccessNotificationFrenchContent(), repository.getName()))
+									.concat("<br/><br/>").concat(String.format(appConfig.getDeclinedUserAccessNotificationEnglishContent(), repository.getName()));
+						contact.setMessage(content);
 					} else {
-						contact.setSubject(String.format(messages.getString("remove.user.notification.subject"), repository.getName()));
-						contact.setMessage(String.format(messages.getString("remove.user.notification.content"), repository.getName()));
+						contact.setSubject(String.format(appConfig.getRemoveUserNotificationSubject(), repository.getName(), repository.getName()));
+						String content = appConfig.getEnglishHeader().concat("<br/><br/>");
+						content = content.concat(String.format(appConfig.getRemoveUserNotificationFrenchContent(), repository.getName()))
+									.concat("<br/><br/>").concat(String.format(appConfig.getRemoveUserNotificationEnglishContent(), repository.getName()));
+						contact.setMessage(content);
 					}
 					emailSender.sendNotification(contact);
 				}
@@ -391,8 +419,11 @@ public class RepositoryService {
 					Set<String> to = new HashSet<String>();
 					to.add(userProfile.get().getEmail());
 					contact.setTo(to);
-					contact.setSubject(String.format(messages.getString("add.user.notification.subject"), repository.getName()));
-					contact.setMessage(String.format(messages.getString("add.user.notification.content"), repository.getName(), getUserRole(repository.getUsers(), userId)));
+					contact.setSubject(String.format(appConfig.getAddUserNotificationSubject(), repository.getName(), repository.getName()));
+					String content = appConfig.getEnglishHeader().concat("<br\\><br\\>");
+					content = content.concat(String.format(appConfig.getAddUserNotificationFrenchContent(), repository.getName(), messagesFr.getString(getUserRole(repository.getUsers(), userId))))
+								.concat("<br\\><br\\>").concat(String.format(appConfig.getAddUserNotificationEnglishContent(), repository.getName(), messagesEn.getString(getUserRole(repository.getUsers(), userId))));
+					contact.setMessage(content);
 					emailSender.sendNotification(contact);
 				}
 			}
@@ -407,8 +438,11 @@ public class RepositoryService {
 					Set<String> to = new HashSet<String>();
 					to.add(userProfile.get().getEmail());
 					contact.setTo(to);
-					contact.setSubject(String.format(messages.getString("add.user.notification.subject"), repository.getName()));
-					contact.setMessage(String.format(messages.getString("add.user.notification.content"), repository.getName(), getUserRole(repository.getUsers(), userId)));
+					contact.setSubject(String.format(appConfig.getAddUserNotificationSubject(), repository.getName(), repository.getName()));
+					String content = appConfig.getEnglishHeader().concat("<br\\><br\\>");
+					content = content.concat(String.format(appConfig.getAddUserNotificationFrenchContent(), repository.getName(), messagesFr.getString(getUserRole(repository.getUsers(), userId))))
+								.concat("<br\\><br\\>").concat(String.format(appConfig.getAddUserNotificationEnglishContent(), repository.getName(), messagesEn.getString(getUserRole(repository.getUsers(), userId))));
+					contact.setMessage(content);
 					emailSender.sendNotification(contact);
 				}
 			}
@@ -524,13 +558,21 @@ public class RepositoryService {
 					}
 				}
 				contact.setTo(to);
-				contact.setSubject(String.format(messages.getString("repository.access.request.subject"), 
-						messages.getString(accessRequest.getRole()), repo.getName(), accessRequest.getUserName()));
+				contact.setSubject(String.format(appConfig.getRepositoryAccessSubject(), repo.getName(), repo.getName()));
 				
-				contact.setMessage(String.format(messages.getString("repository.access.request.content"), 
+				String content = appConfig.getEnglishHeader().concat("<br/><br/>");
+				
+				content = content.concat(String.format(appConfig.getRepositoryAccessFrenchContent(), 
 						accessRequest.getUserName(), accessRequest.getEmail(),
 						messages.getString(accessRequest.getRole()), 
 						repo.getName(), getButton(link, "Accepter"), accessRequest.getText()));
+				content = content.concat("<br/><br/>");
+				content = content.concat(String.format(appConfig.getRepositoryAccessEnglishContent(), 
+						accessRequest.getUserName(), accessRequest.getEmail(),
+						messages.getString(accessRequest.getRole()), 
+						repo.getName(), getButton(link, "Accept"), accessRequest.getText()));
+				
+				contact.setMessage(content);
 				emailSender.sendNotification(contact);
 			}
 		} else {

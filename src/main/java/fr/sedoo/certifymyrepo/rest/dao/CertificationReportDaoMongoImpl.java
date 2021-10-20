@@ -72,5 +72,15 @@ public class CertificationReportDaoMongoImpl implements CertificationReportDao {
 	public List<CertificationReport> findInProgressByUpdateDateLowerThan(Date date) {
 		return certificationReportRepository.findInProgressByUpdateDateLowerThan(date);
 	}
+
+	@Override
+	public long countInprogress() {
+		return certificationReportRepository.countInprogress();
+	}
+
+	@Override
+	public long countValidated() {
+		return certificationReportRepository.countValidated();
+	}
 	
 }

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -68,6 +69,9 @@ public class ProfileService {
 	@Autowired
 	private EmailSender emailSender;
 	
+	@Autowired
+	private ApplicationConfig appConfig;
+	
 	@Secured({ Roles.AUTHORITY_USER })
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     public Profile profile(@RequestHeader("Authorization") String authHeader) {	
@@ -92,14 +96,14 @@ public class ProfileService {
 			Profile existingProfile = profileDao.findByEmail(profile.getEmail());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-						messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+						messages.getString("create.user.error.duplicate.email").concat(" ").concat(existingProfile.getName()));
 			}
 		}
 		if(profile.getOrcid() != null) {
 			Profile existingProfile = profileDao.findByOrcid(profile.getOrcid());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-						messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+						messages.getString("create.user.error.duplicate.orcid").concat(" ").concat(existingProfile.getName()));
 			}
 		}
 		return profileDao.save(profile);
@@ -114,13 +118,16 @@ public class ProfileService {
         Locale locale = new Locale(language);
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
         
-		if(profile.getEmail() != null && profileDao.findByEmail(profile.getEmail()) != null) {
-			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-					messages.getString("create.user.error.duplicate.email").concat(profile.getName()));
+		if(profile.getEmail() != null) {
+			Profile foundProfile = profileDao.findByEmail(profile.getEmail());
+			if(foundProfile != null) {
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+						messages.getString("create.user.error.duplicate.email").concat(" ").concat(foundProfile.getName()));
+			}
 		}
 		if(profile.getOrcid() != null && profileDao.findByOrcid(profile.getOrcid()) != null) {
 			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-					messages.getString("create.user.error.duplicate.orcid").concat(profile.getName()));
+					messages.getString("create.user.error.duplicate.orcid").concat(" ").concat(profile.getName()));
 		}
 		Profile createdProfile = profileDao.save(profile);
 		
@@ -129,11 +136,17 @@ public class ProfileService {
 			Set<String> to = new HashSet<String>();
 			to.add(createdProfile.getEmail());
 			contact.setTo(to);
-			contact.setSubject(messages.getString("create.user.notification.subject"));
+			contact.setSubject(appConfig.getCreateUserNotificationSubject());
 			if(createdProfile.getOrcid() != null) {
-				contact.setMessage(String.format(messages.getString("create.user.notification.orcid.content"), profile.getOrcid()));
+				String content = appConfig.getEnglishHeader().concat("<br/><br/>");
+				content = content.concat(String.format(appConfig.getCreateUserNotificationOrcidFrenchContent(), profile.getOrcid()))
+							.concat("<br/><br/>").concat(String.format(appConfig.getCreateUserNotificationOrcidEnglishContent(), profile.getOrcid()));
+				contact.setMessage(content);
 			} else {
-				contact.setMessage(String.format(messages.getString("create.user.notification.renater.content"), profile.getEmail()));
+				String content = appConfig.getEnglishHeader().concat("<br/><br/>");
+				content = content.concat(String.format(appConfig.getCreateUserNotificationRenaterFrenchContent(), profile.getEmail()))
+							.concat("<br/><br/>").concat(String.format(appConfig.getCreateUserNotificationRenaterEnglishContent(), profile.getEmail()));
+				contact.setMessage(content);
 			}
 			emailSender.sendNotification(contact);
 		}
@@ -285,21 +298,4 @@ public class ProfileService {
 		}
 	}
 	
-//	/**
-//	 * Set user name to null for all the comments of the given userId
-//	 * @param userId id of the user collection
-//	 */
-//	private void removeUserNameFromComments(String userId) {
-//		List<RequirementCommentsDto> allRequirementscomments = commentsDao.getCommentsByUserId(userId);
-//		if(allRequirementscomments != null && allRequirementscomments.size() > 0) {
-//			for(RequirementCommentsDto singleRequirementComments : allRequirementscomments) {
-//				for(CommentDto comment : singleRequirementComments.getComments()) {
-//					if(StringUtils.equals(comment.getUserId(), userId)) {
-//						comment.setUserName(null);
-//					}
-//					commentsDao.save(singleRequirementComments);
-//				}
-//			}
-//		}
-//	}
 }

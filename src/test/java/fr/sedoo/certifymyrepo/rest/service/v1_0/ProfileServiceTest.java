@@ -40,11 +40,15 @@ public class ProfileServiceTest {
 			profile.setName("TEST");
 			profile.setEmail("toto@gmail.com");
 			
-			when(profileDao.findByEmail("toto@gmail.com")).thenReturn(new Profile());
+			Profile existingProfile = new Profile();
+			existingProfile.setName("TOTO");
+			existingProfile.setEmail("toto@gmail.com");
+			
+			when(profileDao.findByEmail("toto@gmail.com")).thenReturn(existingProfile);
 			profileService.createNewProfile("myToken", profile, "fr");
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
-			assertEquals("Ce courriel est déjà dans la base de données pour l'utilisateur TEST", e.getReason());
+			assertEquals("Ce courriel est déjà dans la base de données pour l'utilisateur TOTO", e.getReason());
 		}
 	}
 	
