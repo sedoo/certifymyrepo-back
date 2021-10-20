@@ -50,6 +50,9 @@ notification:
     cronExpression: 0/1 09-18 * * * *
     unused.report.months.delay: 2
     
+statistics:
+    cronExpression: 0/1 09-18 * * * *
+    
 app.url: http://localhost:8080
 
 

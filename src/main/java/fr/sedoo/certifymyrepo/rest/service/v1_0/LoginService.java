@@ -91,7 +91,12 @@ public class LoginService {
 			ClientResponse clientResponse =  service.accept("application/json").get(ClientResponse.class);
 			if (clientResponse.getStatus() == 200){
 				ShibbolethToken shibbolethToken = clientResponse.getEntity(ShibbolethToken.class);
-				loggedUser = this.getLoggedUser(null, shibbolethToken.getMail(), shibbolethToken.getGivenname().concat(" ").concat(shibbolethToken.getName()));
+				// An email can have upper case letter it must be stored  in  lower case
+				String email = null;
+				if(shibbolethToken.getMail() != null) {
+					email = shibbolethToken.getMail().toLowerCase();
+				}
+				loggedUser = this.getLoggedUser(null, email, shibbolethToken.getGivenname().concat(" ").concat(shibbolethToken.getName()));
 			} else {
 				response.setStatus(clientResponse.getStatus());
 			}
@@ -107,7 +112,12 @@ public class LoginService {
 			if (clientResponse.getStatus() == 200){
 				OrcidToken orcidToken = clientResponse.getEntity(OrcidToken.class);
 				ProfileDto orcidProfile = orcidDao.getUserInfoByOrcid(orcidToken.getOrcid());
-				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), orcidProfile.getEmail(), orcidToken.getName());
+				// An email can have upper case letter it must be stored  in  lower case
+				String email = null;
+				if(orcidProfile.getEmail() != null) {
+					email = orcidProfile.getEmail().toLowerCase();
+				}
+				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), email, orcidToken.getName());
 			} else {
 				response.setStatus(clientResponse.getStatus());
 			}

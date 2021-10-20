@@ -96,14 +96,14 @@ public class ProfileService {
 			Profile existingProfile = profileDao.findByEmail(profile.getEmail());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-						messages.getString("create.user.error.duplicate.email").concat(" ").concat(profile.getName()));
+						messages.getString("create.user.error.duplicate.email").concat(" ").concat(existingProfile.getName()));
 			}
 		}
 		if(profile.getOrcid() != null) {
 			Profile existingProfile = profileDao.findByOrcid(profile.getOrcid());
 			if(existingProfile != null && !StringUtils.equals(profile.getId(), existingProfile.getId())) {
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-						messages.getString("create.user.error.duplicate.orcid").concat(" ").concat(profile.getName()));
+						messages.getString("create.user.error.duplicate.orcid").concat(" ").concat(existingProfile.getName()));
 			}
 		}
 		return profileDao.save(profile);
@@ -118,9 +118,12 @@ public class ProfileService {
         Locale locale = new Locale(language);
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
         
-		if(profile.getEmail() != null && profileDao.findByEmail(profile.getEmail()) != null) {
-			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
-					messages.getString("create.user.error.duplicate.email").concat(" ").concat(profile.getName()));
+		if(profile.getEmail() != null) {
+			Profile foundProfile = profileDao.findByEmail(profile.getEmail());
+			if(foundProfile != null) {
+				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
+						messages.getString("create.user.error.duplicate.email").concat(" ").concat(foundProfile.getName()));
+			}
 		}
 		if(profile.getOrcid() != null && profileDao.findByOrcid(profile.getOrcid()) != null) {
 			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, 
