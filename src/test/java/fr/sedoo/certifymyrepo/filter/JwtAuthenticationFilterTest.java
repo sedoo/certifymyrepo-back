@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
@@ -43,7 +44,7 @@ public class JwtAuthenticationFilterTest {
 	
 	@Test
 	public void testgetUserFromAuthHeader() {
-		
+		SecurityContextHolder.clearContext();
 		when(request.getHeader(JwtUtil.AUTH_HEADER)).thenReturn(TOKEN_0000_0000_0000_1234);
 		when(adminDao.isAdmin(any())).thenReturn(true);
 		when(jwtConfig.getSigningKey()).thenReturn("secretkey");
