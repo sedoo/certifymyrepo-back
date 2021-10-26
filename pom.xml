@@ -208,6 +208,10 @@
                 <configuration>
                     <to>
                         <image>registry.hub.docker.com/tromuald/sedoo-crusoe-rest</image>
+                        <auth>
+                        	<username>${DOCKER_USERNAME}</username>
+                        	<password>${DOCKER_PASSWORD}</password>
+                        </auth>
                     </to>
 			        <ports>
 			            <port>8485</port>
