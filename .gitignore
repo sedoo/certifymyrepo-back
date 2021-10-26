@@ -25,3 +25,7 @@ hs_err_pid*
 
 # local properties
 /src/main/resources/application-local.yml
+/src/main/resources/env.*
+/src/main/resources/.env.*
+.env.*
+mongo-init.js

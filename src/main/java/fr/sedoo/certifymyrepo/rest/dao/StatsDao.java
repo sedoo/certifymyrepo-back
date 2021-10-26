@@ -9,5 +9,7 @@ public interface StatsDao {
 	Stats save(Stats stats);
 	Stats findByYearAndMonth(long year, long month);
 	List<Stats> findByYear(long year);
+	List<Stats> findAll();
+	
 
 }

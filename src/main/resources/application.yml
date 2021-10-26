@@ -45,6 +45,7 @@ shibboleth:
 ftp:
     host: sedur.sedoo.fr
     username: crusoe
+    password: ${FTP_PASSWORD}
 
 notification:
     cronExpression: 0/1 09-18 * * * *
@@ -101,6 +102,18 @@ no.activity.en.content: <p>Dear colleagues,</p><p>For you information, no update
 spring.profiles: dev
       
 notification.cronExpression: 0 * * ? * *
+
+---
+
+spring.profiles: docker
+
+spring:
+   data.mongodb:
+      port: 27017
+      host: container-mongodb
+      
+ftp:
+    host: container-ftp-server
 
 ---
 

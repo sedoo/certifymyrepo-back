@@ -10,5 +10,6 @@ public interface StatsRepository extends MongoRepository<Stats, String> {
 	
 	Stats findByYearAndMonth(long year, long month);
 	List<Stats> findByYear(long year);
+	List<Stats> findAllOrderByYearAndMonth();
 
 }

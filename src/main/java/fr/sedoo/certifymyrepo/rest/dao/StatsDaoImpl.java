@@ -29,5 +29,10 @@ public class StatsDaoImpl implements StatsDao {
 		return repository.findByYear(year);
 	}
 
+	@Override
+	public List<Stats> findAll() {
+		return repository.findAll();
+	}
+
 
 }
