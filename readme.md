@@ -1,32 +1,120 @@
 # Instructions for developers
 
-###Localhost with local mongoDB. 
+#1 Application as service
 
-Use those args :
+You must have a mongoDB installed and a FTP server access
 
-> -Dspring.profiles.active=dev -DFTP_USERUSERNAME=crusoe -DFTP_PASSWORD=xxx -DCLIENT_ID=xxx -DCLIENT_SECRET=xxx -DMONGODB_USERNAME=crusoe -DMONGODB_PASSWORD=xxx -DSIGNIN_KEY=xxx -DTOKEN_VALIDITY=xxx -DTOKEN_ACCESS_REQUEST_VALIDITY=xxx
+###1.1 Project setup
 
-* MongoDB: your application will point to local MongoDB. Make sure those follow command have been run on Robo3T or other tools: 
+```
+mvn clean install
+```
+
+Compiles and launch application on eclipse for development use those args :
+
+```
+-Dspring.profiles.active=dev 
+-DFTP_PASSWORD=xx 
+-DCLIENT_ID=xx 
+-DCLIENT_SECRET=xx
+-DMONGODB_PASSWORD=xx
+-DSUPER_ADMIN_ORCID_LIST=xx,xx
+-DADMIN_ORCID_LIST=xx,xx,xx
+-DSIGNIN_KEY=xxx 
+-DTOKEN_VALIDITY=xxx 
+-DTOKEN_ACCESS_REQUEST_VALIDITY=xxx
+```
+
+or add the file **application-local.yml** in src/main/resources with this conent (cannot be commited):
+
+```
+FTP_PASSWORD: xx
+CLIENT_ID: xx
+CLIENT_SECRET: xx
+MONGODB_PASSWORD: xx
+SUPER_ADMIN_ORCID_LIST: xx,xx
+ADMIN_ORCID_LIST: xx,xx,xx
+SIGNIN_KEY: xxx 
+TOKEN_VALIDITY: xxx 
+TOKEN_ACCESS_REQUEST_VALIDITY: xxx
+```
+
+MongoDB: your application will point to local MongoDB. Make sure those follow command have been run on Robo3T or other tools: 
 
 > use certifymyrepo
 
 > db.createUser({user: "crusoe", pwd: "xxx",roles: [ "readWrite", "dbAdmin" ]})
      
-* EmailSender: **TestEmailSender.java** is used to route notification to the hard coded email in this class. It's activated with dev profile.
+EmailSender: **TestEmailSender.java** is used to route notification to the hard coded email in this class. It's activated with dev profile.
 
 
-* Dev swagger: ``http://localhost:8485/swagger-ui.html``
+Dev swagger: ``http://localhost:8485/swagger-ui.html``
 
 
-###Localhost with remote preprod mongoDB.
+###1.2 Localhost with remote preprod mongoDB.
 
-* ssh tunnel
+ssh tunnel
 
 > ssh -p 2222 wwwadm@sedur.sedoo.fr -L 27018:sedur.sedoo.fr:27017
 
-* then use:
+then use the spring profile **tunnelssh-preprod**
 
-> -Dspring.profiles.active=dev,tunnelssh-preprod -DFTP_USERUSERNAME=crusoe -DFTP_PASSWORD=xxx -DCLIENT_ID=xxx -DCLIENT_SECRET=xxx -DMONGODB_USERNAME=crusoe-preprod -DMONGODB_PASSWORD=xxx -DSIGNIN_KEY=xxx -DTOKEN_VALIDITY=xxx -DTOKEN_ACCESS_REQUEST_VALIDITY=xxx
+
+
+###1.3 Deploy as init.d service (System V)
+```
+scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar wwwadm@twodoo.sedoo.fr:/export1/crusoe-preprod/services/crusoe-rest.jar
+```
+Reboot
+
+```
+service crusoe-preprod restart
+```
+
+Logs
+
+```
+tail -f /export1/crusoe-preprod/logs/crusoe-preprod.log 
+```
+
+More information on: [Installation as an init.d Service (System V)](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment.installing.nix-services.init-d)
+
+
+###1.5 Notes
+
+Spring profile is set to **prod** in ``/export1/certifymyrepo/services/sedoo-certifymyrepo-rest.conf``
+
+Spring profile is set to **preprod** in ``/export1/crusoe-preprod/services/crusoe-rest.conf``
+
+**logback-spring.xml** provide file rolling when prod profile is activated and classic console otherwise.
+
+Prod swagger: ``https://services.sedoo.fr/certifymyrepo/swagger-ui.html``
+
+Preprod swagger ``https://services.sedoo.fr/crusoe-preprod/swagger-ui.html``
+
+
+#2 Dockerized application
+
+The application can be deployed using docker compose with the following command:
+> docker-compose --env-file ./.env.dev up --build
+
+.env.dev file:
+
+```
+FTP_PASSWORD=*
+CLIENT_ID=*
+CLIENT_SECRET=*
+SIGNIN_KEY=*
+TOKEN_VALIDITY=*
+TOKEN_ACCESS_REQUEST_VALIDITY=*
+MONGODB_PASSWORD=*
+SUPER_ADMIN_ORCID_LIST=*,*
+ADMIN_ORCID_LIST=*,*,*
+EMAIL_NOTIFICATION_DEV=*
+```
+
+#3 Authentication instructions
+
 
 
 | Variable name  | Description | Type |
@@ -42,50 +130,3 @@ Use those args :
 
 
 
-
-# Prod Deployment instructions (v1)
-
-* Run the following maven command on eclipse
-
-> mvn clean install
-
-* Open a terminal on your local computer
-
-> cd /data/git/certifymyrepo (or the path on your machine)
-
-> scp ./sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar wwwadm@twodoo:/export1/certifymyrepo/services/sedoo-certifymyrepo-rest.jar
-
-> [Enter twodoo password]
-
-* Open a terminal on twodoo
-
-> service sedoo-certifymyrepo-rest restart
-
-
-# Preprod Deployment instructions (v2)
-
-* Run the following maven command on eclipse
-
-> mvn clean install
-
-* Open a terminal on your local computer
-
-> scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar  wwwadm@twodoo.sedoo.fr:/export1/crusoe-preprod/services/crusoe-rest.jar
-> [Enter twodoo password]
-
-* Open a terminal on twodoo
-
-> service crusoe-preprod restart
-
-
-#Notes
-
-Spring profile is set to **prod** in ``/export1/certifymyrepo/services/sedoo-certifymyrepo-rest.conf``
-
-Spring profile is set to **preprod** in ``/export1/crusoe-preprod/services/crusoe-rest.conf``
-
-**logback-spring.xml** provide file rolling when prod profile is activated and classic console otherwise.
-
-Prod swagger: ``https://services.sedoo.fr/certifymyrepo/swagger-ui.html``
-
-Preprod swagger ``https://services.sedoo.fr/crusoe-preprod/swagger-ui.html``

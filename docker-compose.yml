@@ -1,7 +1,7 @@
 version: '3.6'
 
 services:
-  container-ftp-server:
+  ftp-server:
     image: stilliard/pure-ftpd
     container_name: container-ftp-server
     ports: 
@@ -15,7 +15,7 @@ services:
       FTP_USER_NAME: crusoe
       FTP_USER_PASS: ${FTP_PASSWORD}
       FTP_USER_HOME: /data
-  container-mongodb:
+  mongodb:
     image: mongo:latest
     container_name: container-mongodb
     environment:
@@ -24,15 +24,12 @@ services:
       - 27019:27017
     volumes:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-  container-crusoe-rest:
-    image: crusoe-rest:latest
+  crusoe-rest:
+    image: tromuald/sedoo-crusoe-rest:latest
     container_name: container-crusoe-rest
-    build:
-      context: .
-      dockerfile: Dockerfile
     depends_on:
-      - container-mongodb
-      - container-ftp-server
+      - mongodb
+      - ftp-server
     ports:
       - 8485:8485
     environment: 
