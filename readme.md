@@ -8,8 +8,7 @@
     - 1.3 [Deploy as init.d service](#deploy-as-init.d-service)
     - 1.4 [Notes](#notes)
 2. [Dockerized application](#dockerized-application)   
-3. [Authentication instructions](#authentication-instructions)   
-5. [Packing and deployement](#packing-and-deployement)
+3. [Environment variables description and authentication instructions](#environment-variables-description-and-authentication-instructions)   
 
 # 1 Spring boot application
 
@@ -73,20 +72,18 @@ then use the spring profile **tunnelssh-preprod**
 
 
 ### 1.3 Deploy as init.d service
-```
-scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar wwwadm@twodoo.sedoo.fr:/export1/crusoe-preprod/services/crusoe-rest.jar
-```
+
+> scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar wwwadm@twodoo.sedoo.fr:/export1/crusoe-preprod/services/crusoe-rest.jar
+
+
 Reboot
 
-```
-service crusoe-preprod restart
-```
+> service crusoe-preprod restart
 
 Logs
 
-```
-tail -f /export1/crusoe-preprod/logs/crusoe-preprod.log 
-```
+> tail -f /export1/crusoe-preprod/logs/crusoe-preprod.log 
+
 
 More information on: [Installation as an init.d Service (System V)](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment.installing.nix-services.init-d)
 
@@ -124,7 +121,7 @@ ADMIN_ORCID_LIST=*,*,*
 EMAIL_NOTIFICATION_DEV=*
 ```
 
-# 3 Authentication instructions
+# 3 Environment variables description and authentication instructions
 
 
 
@@ -133,11 +130,20 @@ EMAIL_NOTIFICATION_DEV=*
 | spring.profiles.active  		| spring profile     |  		| 
 | FTP_USERUSERNAME 	| FTP server user name. This server is used to store reports attachments 	|  	| 
 | FTP_PASSWORD  		| FTP server password       |  		| 
+| MONGODB_PASSWORD 		| MongoDB password       |  		| 
 | CLIENT_ID  		|   ORCID Client id    |  		| 
 | CLIENT_SECRET  		|  ORCID Client Secret     |  		| 
 | SIGNIN_KEY  		|   JWT signin key     |  		| 
 | TOKEN_VALIDITY  		| Token validity when an user is logged on the website. This token is refreshed as long as the user is using the website.   | Number in ms 		| 
 | TOKEN_ACCESS_REQUEST_VALIDITY  		| Token validity used when a request has been made to access a repository. An email is sent with a link to accept the request. This token must have a longer validity       |  Number in ms		| 
+
+### ORCID sign in
+The application use ORCID authentication and has been registered as redirect URL. **CLIENT_ID** and **CLIENT_SECRET** values come from orcid.
+For more information (Get an Authenticated ORCID iD)[https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/#easy-faq-2606]
+
+### JSON Web Tokens
+JSON Web Token (JWT) is an open standard (RFC 7519) that defines a way for securely transmitting information between parties as a JSON object. It is used to securized communication between the spring boot backend application and the VueJS frontend application. The tree variables used are **SIGNIN_KEY**, **TOKEN_VALIDITY**, **TOKEN_ACCESS_REQUEST_VALIDITY**.
+
 
 
 
