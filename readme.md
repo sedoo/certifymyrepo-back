@@ -1,10 +1,21 @@
 # Instructions for developers
 
-#1 Application as service
+# Table of Contents
+
+1. [Spring boot application](#spring-boot-application)
+    - 1.1 [Project setup](#project-setup)
+    - 1.2 [Localhost with remote preprod mongoDB](#localhost-with-remote-preprod-mongodb)
+    - 1.3 [Deploy as init.d service](#deploy-as-init.d-service)
+    - 1.4 [Notes](#notes)
+2. [Dockerized application](#dockerized-application)   
+3. [Authentication instructions](#authentication-instructions)   
+5. [Packing and deployement](#packing-and-deployement)
+
+# 1 Spring boot application
 
 You must have a mongoDB installed and a FTP server access
 
-###1.1 Project setup
+### 1.1 Project setup
 
 ```
 mvn clean install
@@ -51,7 +62,7 @@ EmailSender: **TestEmailSender.java** is used to route notification to the hard 
 Dev swagger: ``http://localhost:8485/swagger-ui.html``
 
 
-###1.2 Localhost with remote preprod mongoDB.
+### 1.2 Localhost with remote preprod mongoDB.
 
 ssh tunnel
 
@@ -61,7 +72,7 @@ then use the spring profile **tunnelssh-preprod**
 
 
 
-###1.3 Deploy as init.d service (System V)
+### 1.3 Deploy as init.d service
 ```
 scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar wwwadm@twodoo.sedoo.fr:/export1/crusoe-preprod/services/crusoe-rest.jar
 ```
@@ -80,7 +91,7 @@ tail -f /export1/crusoe-preprod/logs/crusoe-preprod.log
 More information on: [Installation as an init.d Service (System V)](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment.installing.nix-services.init-d)
 
 
-###1.5 Notes
+### 1.4 Notes
 
 Spring profile is set to **prod** in ``/export1/certifymyrepo/services/sedoo-certifymyrepo-rest.conf``
 
@@ -93,7 +104,7 @@ Prod swagger: ``https://services.sedoo.fr/certifymyrepo/swagger-ui.html``
 Preprod swagger ``https://services.sedoo.fr/crusoe-preprod/swagger-ui.html``
 
 
-#2 Dockerized application
+# 2 Dockerized application
 
 The application can be deployed using docker compose with the following command:
 > docker-compose --env-file ./.env.dev up --build
@@ -113,7 +124,7 @@ ADMIN_ORCID_LIST=*,*,*
 EMAIL_NOTIFICATION_DEV=*
 ```
 
-#3 Authentication instructions
+# 3 Authentication instructions
 
 
 
