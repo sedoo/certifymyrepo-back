@@ -2,13 +2,13 @@
 
 # Table of Contents
 
-1. [Spring boot application](#spring-boot-application)
-    - 1.1 [Project setup](#project-setup)
-    - 1.2 [Localhost with remote preprod mongoDB](#localhost-with-remote-preprod-mongodb)
-    - 1.3 [Deploy as init.d service](#deploy-as-init.d-service)
+1. [Spring boot application](#1-spring-boot-application)
+    - 1.1 [Project setup](#1.1-project-setup)
+    - 1.2 [Localhost with remote preprod mongoDB](#1.2-localhost-with-remote-preprod-mongodb)
+    - 1.3 [Deploy as init.d service](#1.3-deploy-as-init.d-service)
     - 1.4 [Notes](#notes)
-2. [Dockerized application](#dockerized-application)   
-3. [Environment variables description and authentication instructions](#environment-variables-description-and-authentication-instructions)   
+2. [Dockerized application](#2-dockerized-application)   
+3. [Environment variables description and authentication instructions](#3-environment-variables-description-and-authentication-instructions)   
 
 # 1 Spring boot application
 
