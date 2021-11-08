@@ -2,6 +2,8 @@ package fr.sedoo.certifymyrepo.rest;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -19,6 +21,8 @@ import fr.sedoo.certifymyrepo.rest.config.DefaultAdminUtils;
 @ComponentScan(basePackages = {"fr.sedoo.certifymyrepo"} )
 public class CertifyMyRepoRestApplication {
 	
+	private static final Logger LOG = LoggerFactory.getLogger(CertifyMyRepoRestApplication.class);
+	
 	@Autowired
 	DefaultAdminUtils defaultAdminUtils;
 	
@@ -29,6 +33,9 @@ public class CertifyMyRepoRestApplication {
 	@PostConstruct
 	private void initAdmin() {
 		defaultAdminUtils.init();
+		LOG.info("-------------------------------------------------------------------------------");
+		LOG.info("------------------------------- NOUVEAU CODE ----------------------------------");
+		LOG.info("-------------------------------------------------------------------------------");
 	}
 	
 	

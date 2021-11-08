@@ -48,11 +48,11 @@ ftp:
     password: ${FTP_PASSWORD}
 
 notification:
-    cronExpression: 0/1 09-18 * * * *
+    cronExpression: 00 12 * * * *
     unused.report.months.delay: 2
     
 statistics:
-    cronExpression: 0/1 09-18 * * * *
+    cronExpression: 00 12 * * * *
     
 app.url: http://localhost:8080
 
@@ -114,6 +114,9 @@ spring:
       
 ftp:
     host: container-ftp-server
+    
+mail:
+   hostname: container-smtp
 
 ---
 

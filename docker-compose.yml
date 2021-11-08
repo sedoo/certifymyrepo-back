@@ -1,6 +1,13 @@
 version: '3.6'
 
 services:
+  smtp:
+    image: namshi/smtp
+    container_name: container-smtp
+    ports:
+     - "25:25"
+    environment:
+     - DISABLE_IPV6=true
   ftp-server:
     image: stilliard/pure-ftpd
     container_name: container-ftp-server
