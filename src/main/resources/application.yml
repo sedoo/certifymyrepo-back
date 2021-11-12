@@ -59,43 +59,43 @@ app.url: http://localhost:8080
 
 english.header: See below for the English translation.
 
-create.user.notification.subject: Votre compte CRUSÖE a été créé / You CRUSÖE account has been created
-create.user.notification.orcid.fr.content: <p>Cher collègue,</p><p>Vous pouvez vous connecter en utilisant votre orcid %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-create.user.notification.renater.fr.content: <p>Cher collègue,</p><p>Vous pouvez vous connecter en utilisant votre courriel Renater %s.</p><p>Si ce n'est pas votre courriel Renater veuillez contacter un administrateur via le menu contact du site.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-create.user.notification.orcid.en.content: <p>Dear colleague,</p><p>You have now a CRUSÖE account. Log in using your orcid %s.</p><p>Best regards,</p><p>The COSO team</p>
-create.user.notification.renater.en.content: <p>Dear colleague,</p><p>You have now a CRUSÖE account. Log in using your renater email %s.</p><p>If there is not your Renater email, please contact an administrator using the contact menu on the web site.</p><p>Best regards,</p><p>The COSO team</p>
+create.user.notification.subject: Votre compte CRUSÖE a été créé / Your CRUSÖE account has been created
+create.user.notification.orcid.fr.content: <p>Cher collègue,</p><p>Vous pouvez vous connecter en utilisant votre orcid %s.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+create.user.notification.renater.fr.content: <p>Cher collègue,</p><p>Vous pouvez vous connecter en utilisant votre courriel Renater %s.</p><p>Si ce n'est pas votre courriel Renater veuillez contacter un administrateur via le menu contact du site.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+create.user.notification.orcid.en.content: <p>Dear colleague,</p><p>You have now a CRUSÖE account. Log in using your orcid %s.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
+create.user.notification.renater.en.content: <p>Dear colleague,</p><p>You have now a CRUSÖE account. Log in using your renater email %s.</p><p>If there is not your Renater email, please contact an administrator using the contact menu on the web site.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 add.user.notification.subject: Accès à l'entrepôt %s accordé / %s repository access granted
-add.user.notification.fr.content: <p>Cher collègue,</p><p>Vous avez maintenant accès à l'entrepôt %s avec le rôle %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-add.user.notification.en.content: <p>Dear colleague,</p><p>You have now access to %s repository with %s role.</p><p>Best regards,</p><p>The COSO team</p>
+add.user.notification.fr.content: <p>Cher collègue,</p><p>Vous avez maintenant accès à l'entrepôt %s avec le rôle %s.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+add.user.notification.en.content: <p>Dear colleague,</p><p>You have now access to %s repository with %s role.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 remove.user.notification.subject: Accès à l'entrepôt %s révoqué / %s repository access removed
-remove.user.notification.fr.content: <p>Cher collègue,</p><p>Votre permission d'accès à l'entrepôt %s vous a été enlévée.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-remove.user.notification.en.content: <p>Dear colleague,</p><p>You have been removed from %s repository.</p><p>Best regards,</p><p>The COSO team</p>
+remove.user.notification.fr.content: <p>Cher collègue,</p><p>Votre permission d'accès à l'entrepôt %s vous a été enlévée.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+remove.user.notification.en.content: <p>Dear colleague,</p><p>You have been removed from %s repository.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 declined.user.notification.subject: Demande d'accès à l'entrepôt %s refusée / %s repository access request has been declined
-declined.user.notification.fr.content: <p>Cher collègue,</p><p>Votre demande d'accès à l'entrepôt %s vous a été refusée.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-declined.user.notification.en.content: <p>Dear colleague,</p><p>Your request on %s repository has been declined.</p><p>Best regards,</p><p>The COSO team</p>
+declined.user.notification.fr.content: <p>Cher collègue,</p><p>Votre demande d'accès à l'entrepôt %s vous a été refusée.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+declined.user.notification.en.content: <p>Dear colleague,</p><p>Your request on %s repository has been declined.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 report.validation.notification.subject: Un dossier de certification a été figé pour l'entrepôt %s / A report has been frozen on the %s repository
-report.validation.notification.fr.content: <p>Cher collègues,</p><p>Un nouveau dossier de certification a été figé pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-report.validation.notification.en.content: <p>Dear colleagues,</p><p>A new report has been frozen on the %s repository.</p><p>Best regards,</p><p>The COSO team</p>
+report.validation.notification.fr.content: <p>Cher collègues,</p><p>Un nouveau dossier de certification a été figé pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+report.validation.notification.en.content: <p>Dear colleagues,</p><p>A new report has been frozen on the %s repository.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 report.new.version.notification.subject: Nouvelle version du dossier de certification sur l'entrepôt %s / New report version available on %s repository
-report.new.version.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle version du dossier de certification est disponible pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-report.new.version.notification.en.content: <p>Dear colleagues,</p><p>A new report version is available on %s repository.</p><p>Best regards,</p><p>The COSO team</p>
+report.new.version.notification.fr.content: <p>Cher collègues,</p><p>Une nouvelle version du dossier de certification est disponible pour l'entrepôt %s.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+report.new.version.notification.en.content: <p>Dear colleagues,</p><p>A new report version is available on %s repository.</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 new.comment.notification.subject: Nouveau commentaire sur l'entrepôt %s / New comment has been posted on %s repository
-new.comment.notification.fr.content: <p>Cher collègues,</p><p>Un commentaire a été posté pour l'entrepôt %s.</p><p>%s</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-new.comment.notification.en.content: <p>Dear colleagues,</p><p>A new comment has been posted on %s repository.</p><p>%s</p><p>Best regards,</p><p>The COSO team</p>
+new.comment.notification.fr.content: <p>Cher collègues,</p><p>Un commentaire a été posté pour l'entrepôt %s.</p><p>%s</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+new.comment.notification.en.content: <p>Dear colleagues,</p><p>A new comment has been posted on %s repository.</p><p>%s</p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 repository.access.request.subject: Demande d'access à l'entrepôt %s / Access has been request on %s repository
 repository.access.request.fr.content: <p>Cher collègue,</p><p>%s (%s) a demandé le rôle %s sur l'entrepôt %s.</p><p>%s</p><p>Message de l'utilisateur:%s</p>
 repository.access.request.en.content: <p>Dear colleague,</p><p> %s (%s) has requested %s role on %s repository.</p><p>%s</p><p> User message:</p><p>%s</p>
 
 no.activity.subject: Un dossier de certification de l'entrepôt %s n'a pas été mis à jour depuis %s mois / A %s repository report has not been updated for %s months
-no.activity.fr.content: <p>Cher collègue,</p><p>Pour information, il n'y a eu aucune activité sur votre dossier de certification %s de l'entrepôt %s depuis %s mois.</p><p>Si votre auto-évaluation est terminée vous pouvez utiliser 'Figer cette version' pour la finaliser en rendant ce dossier de certification non modifiable. Vous ne recevrez alors plus de rappel. Vous pourrez créer un nouveau dossier de certification en partant de cette version si besoin.</p><p>Bien cordialement,</p><p>L'équipe COSO</p>
-no.activity.en.content: <p>Dear colleagues,</p><p>For you information, no update has been made on your report %s on %s repository for the last %s months.</p>If your self assessment is over you can use the button 'Freeze this version' to finalize it by making the report unchangeable. You will not receive reminder anymore. You will be able to create a new assessment report based on this version if you need.<p></p><p>Best regards,</p><p>The COSO team</p>
+no.activity.fr.content: <p>Cher collègue,</p><p>Pour information, il n'y a eu aucune activité sur votre dossier de certification %s de l'entrepôt %s depuis %s mois.</p><p>Si votre auto-évaluation est terminée vous pouvez utiliser 'Figer cette version' pour la finaliser en rendant ce dossier de certification non modifiable. Vous ne recevrez alors plus de rappel. Vous pourrez créer un nouveau dossier de certification en partant de cette version si besoin.</p><p>Bien cordialement,</p><p>L'équipe d'administration de CRUSÖE</p>
+no.activity.en.content: <p>Dear colleagues,</p><p>For you information, no update has been made on your report %s on %s repository for the last %s months.</p>If your self assessment is over you can use the button 'Freeze this version' to finalize it by making the report unchangeable. You will not receive reminder anymore. You will be able to create a new assessment report based on this version if you need.<p></p><p>Best regards,</p><p>CRUSÖE administrator team</p>
 
 ---
 
