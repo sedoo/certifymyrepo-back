@@ -103,8 +103,18 @@ Preprod swagger ``https://services.sedoo.fr/crusoe-preprod/swagger-ui.html``
 
 # 2 Dockerized application
 
+### 2.1 Publish image with maven
+
+The following command will publish the image on DockerHub:
+
+> mvn compile jib:build
+
+### 2.1 Run
+
 The application can be deployed using docker compose with the following command:
 > docker-compose --env-file ./.env.dev up --build
+
+The two files below must be present in the root folder
 
 .env.dev file:
 
@@ -119,6 +129,24 @@ MONGODB_PASSWORD=*
 SUPER_ADMIN_ORCID_LIST=*,*
 ADMIN_ORCID_LIST=*,*,*
 EMAIL_NOTIFICATION_DEV=*
+```
+
+mongo-init.js:
+
+```JS
+db = db.getSiblingDB('crusoe');
+db.createUser(
+        {
+            user: "**********",
+            pwd: "**********",
+            roles: [
+                {
+                    role: "readWrite",
+                    db: "dbAdmin"
+                }
+            ]
+        }
+);
 ```
 
 # 3 Environment variables description and authentication instructions
