@@ -120,7 +120,7 @@ mail:
 
 ---
 
-spring.profiles: tunnelssh-preprod
+spring.profiles: distant-preprod
 
 spring:
    data.mongodb:
