@@ -67,7 +67,7 @@ ssh tunnel
 
 > ssh -p 2222 wwwadm@sedur.sedoo.fr -L 27018:sedur.sedoo.fr:27017
 
-then use the spring profile **tunnelssh-preprod**
+then use the spring profile **distant-preprod**
 
 
 
