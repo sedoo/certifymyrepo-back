@@ -33,9 +33,6 @@ public class CertifyMyRepoRestApplication {
 	@PostConstruct
 	private void initAdmin() {
 		defaultAdminUtils.init();
-		LOG.info("-------------------------------------------------------------------------------");
-		LOG.info("------------------------------- NOUVEAU CODE ----------------------------------");
-		LOG.info("-------------------------------------------------------------------------------");
 	}
 	
 	
