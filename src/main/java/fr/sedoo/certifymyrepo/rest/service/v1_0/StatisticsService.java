@@ -32,7 +32,7 @@ public class StatisticsService {
 	@Autowired
 	StatsDao statsDao;
 	
-	//@Secured({Roles.AUTHORITY_ADMIN})
+	@Secured({Roles.AUTHORITY_ADMIN})
 	@RequestMapping(value = "/computedStats", method = RequestMethod.GET)
 	public Stats computedStats() {	
 		return statisticsProvider.compute();
