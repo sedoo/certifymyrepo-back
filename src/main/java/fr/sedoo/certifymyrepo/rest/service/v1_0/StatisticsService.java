@@ -34,18 +34,19 @@ public class StatisticsService {
 	
 	@Secured({Roles.AUTHORITY_ADMIN})
 	@RequestMapping(value = "/computedStats", method = RequestMethod.GET)
-	public Stats computedStats() {	
+	public Stats computedStats(@RequestHeader("Authorization") String authHeader) {	
 		return statisticsProvider.compute();
 	}
 	
 	@Secured({Roles.AUTHORITY_ADMIN})
 	@RequestMapping(value = "/getAnnualStats", method = RequestMethod.GET)
-	public List<Stats> getAnnualStats(@RequestHeader("Authorization") String authHeader, long year) {	
+	public List<Stats> getAnnualStats(@RequestHeader("Authorization") String authHeader, long year) {
 		return statsDao.findByYear(year);
 	}
 	
+	@Secured({Roles.AUTHORITY_ADMIN})
 	@RequestMapping(value = "/getStats", method = RequestMethod.GET)
-	public List<YearllyStatsDto> getStats() {	
+	public List<YearllyStatsDto> getStats(@RequestHeader("Authorization") String authHeader) {	
 		List<YearllyStatsDto> list = new ArrayList<YearllyStatsDto>();
 		Map<Long, List<Stats>> map = this.getStatsByYear();
 		
@@ -64,8 +65,6 @@ public class StatisticsService {
 						.max(Comparator.comparing(Stats::getMonth))
 						.get();
 			}
-			
-
 			
 			// get the list of data for the first semester
 			List<Stats> secondSemesterData = entry.getValue().stream()

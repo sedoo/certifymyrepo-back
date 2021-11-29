@@ -15,6 +15,7 @@ import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.Stats;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
+import fr.sedoo.certifymyrepo.rest.dto.RoleCounter;
 import fr.sedoo.certifymyrepo.rest.utils.RepositoryHealthCheck;
 
 @Component
@@ -50,6 +51,13 @@ public class StatisticsProvider {
 			stats.setOrangeReports(0);
 			stats.setRedReports(0);
 		}
+		
+		RoleCounter rolesCounter = statsDao.countRoles();
+		stats.setNumberOfContributors(rolesCounter.getNumberOfContributors());
+		stats.setNumberOfReaders(rolesCounter.getNumberOfReaders());
+		stats.setNumberOfEditors(rolesCounter.getNumberOfEditors());
+		stats.setNumberUsersWithoutRepo(rolesCounter.getNumberUsersWithoutRepo());
+		
 		stats.setUsers(profileDao.count());
 		List<Repository> repos = repositoryDao.findAll();
 		if(repos != null) {
