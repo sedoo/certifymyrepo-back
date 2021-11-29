@@ -1,6 +1,7 @@
 package fr.sedoo.certifymyrepo.rest.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = Affiliation.COLLECTION_NAME, language = "english")
+@TypeAlias("Affiliation")
 public class Affiliation {
 
 	public final static String COLLECTION_NAME = "affiliations";

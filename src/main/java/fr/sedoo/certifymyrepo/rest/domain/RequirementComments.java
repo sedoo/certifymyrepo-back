@@ -3,6 +3,7 @@ package fr.sedoo.certifymyrepo.rest.domain;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = RequirementComments.COMMENTS_COLLECTION_NAME, language = "english")
+@TypeAlias("RequirementComments")
 public class RequirementComments {
 	
 	public final static String COMMENTS_COLLECTION_NAME = "comments";

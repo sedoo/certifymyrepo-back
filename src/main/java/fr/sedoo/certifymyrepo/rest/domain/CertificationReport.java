@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = CertificationReport.REPOSITORY_COLLECTION_NAME, language = "english")
+@TypeAlias("CertificationReport")
 public class CertificationReport {
 	
 	public CertificationReport() {
