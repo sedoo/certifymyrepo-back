@@ -1,6 +1,7 @@
+## Cleann temporary folder every monday at 12pm
 temporary:
    folder: /tmp/crusoe/temporary
-   cronExpression: 0 30 20 * * *
+   cronExpression: 0 0 12 ? * MON 
    storageDuration: 2
 
 server:
@@ -47,12 +48,14 @@ ftp:
     username: crusoe
     password: ${FTP_PASSWORD}
 
+## check for notification (no activity on a repo) Every Monday at noon
 notification:
-    cronExpression: 00 12 * * * *
+    cronExpression: 0 0 12 ? * MON 
     unused.report.months.delay: 2
-    
+
+## Update statistics Every day at noon - 12pm
 statistics:
-    cronExpression: 00 12 * * * *
+    cronExpression: 0 0 12 * * ?
     
 app.url: http://localhost:8080
 
