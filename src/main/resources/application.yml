@@ -134,15 +134,30 @@ spring:
       
 ---
 
+spring.profiles: distant-prod
+
+spring:
+   data.mongodb:
+      host: localhost
+      port: 27019
+      database: crusoe
+      username: crusoe
+      
+---
+
 spring.profiles: prod
 spring:
    data.mongodb:
       host: 193.52.225.51
       database: crusoe
+      username: crusoe
         
 tmpFolder: /export1/crusoe/tmp
 
-app.url: https://coso.sedoo.fr/application
+app.url: https://crusoe.ouvrirlascience.fr/application
+
+logging:
+   file: ../logs/crusoe-prod.log
         
 ---
 
@@ -152,6 +167,10 @@ spring:
       host: 193.52.225.51
       database: crusoe-preprod
       username: crusoe-preprod
+
+ftp:
+    username: crusoepreprod
+    password: ${FTP_PASSWORD}
 
 tmpFolder: /export1/crusoe-preprod/tmp
 
