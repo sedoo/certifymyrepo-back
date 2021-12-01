@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
@@ -120,7 +121,7 @@ public class AdminService {
 		List<Admin> functionalAdmins = adminDao.findAllFunctaionalAdmin();
 		for(Admin functionalAdmin : functionalAdmins) {
 			Optional<fr.sedoo.certifymyrepo.rest.domain.Profile> userProfile = profileDao.findById(functionalAdmin.getUserId());
-			if(userProfile.isPresent()) {
+			if(userProfile.isPresent() && StringUtils.isNotBlank(userProfile.get().getEmail())) {
 				functionalAdminEmails.add(userProfile.get().getEmail());
 			}
 		}
