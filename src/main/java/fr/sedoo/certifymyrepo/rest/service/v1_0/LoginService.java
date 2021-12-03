@@ -141,6 +141,7 @@ public class LoginService {
 				LOG.error("Error while parsing /Shibboleth.sso/DiscoFeed response", e);
 			}
 		} else {
+			LOG.error(clientResponse.toString());
 			response.setStatus(clientResponse.getStatus());
 		}
 		return result;
