@@ -65,7 +65,7 @@ Dev swagger: ``http://localhost:8485/swagger-ui.html``
 
 ssh tunnel
 
-> ssh -p 2222 username@host -L port-y:host:port-x
+> ssh -p host-port username@host -L port-y:host:port-x
 
 then use the spring profile **distant-preprod**
 
