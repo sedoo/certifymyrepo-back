@@ -65,7 +65,7 @@ Dev swagger: ``http://localhost:8485/swagger-ui.html``
 
 ssh tunnel
 
-> ssh -p 2222 wwwadm@sedur.sedoo.fr -L 27018:sedur.sedoo.fr:27017
+> ssh -p 2222 username@host -L port-y:host:port-x
 
 then use the spring profile **distant-preprod**
 
@@ -73,7 +73,7 @@ then use the spring profile **distant-preprod**
 
 ### 1.3 Deploy as init.d service
 
-> scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar wwwadm@twodoo.sedoo.fr:/export1/crusoe-preprod/services/crusoe-rest.jar
+> scp ./target/sedoo-certifymyrepo-rest-0.0.1-SNAPSHOT.jar username@host:/export1/crusoe-preprod/services/crusoe-rest.jar
 
 
 Reboot
