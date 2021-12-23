@@ -56,31 +56,36 @@ public class NotificationUtils {
 	
 	@Autowired
 	private ApplicationConfig appConfig;
+	
+	@Value("${notification.enabled:true}")
+	private boolean isEnabled;
 
 	@Scheduled(cron = "${notification.cronExpression}")
 	public void notificationUnsedRepository() {
-		
-		Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        c.add(Calendar.MONTH, -this.getDelay());
-		List<CertificationReport> reportList = reportDao.findInProgressByUpdateDateLowerThan(c.getTime());
-		if(reportList != null) {
-			logger.info("{} notifications has to be sent", reportList.size());
-			for(CertificationReport report : reportList) {
-				String reportName = report.getTemplateId();
-				String formatUpdateDate = new SimpleDateFormat("yyyyMMdd").format(report.getUpdateDate());
-				reportName = reportName.concat(formatUpdateDate)
-						.concat("_v").concat(report.getVersion());
-				
-				logger.info("A notification will be send for the report {} in the repository id {}", reportName, report.getRepositoryId());
-				
-				buildNotification(reportName, report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
-						appConfig.getNoActivityNotificationFrenchContent(),
-						appConfig.getNoActivityNotificationEnglishContent());
-				report.setLastNotificationDate(new Date());
-				reportDao.save(report);
+		if(isEnabled) {
+			Calendar c = Calendar.getInstance();
+	        c.setTime(new Date());
+	        c.add(Calendar.MONTH, -this.getDelay());
+			List<CertificationReport> reportList = reportDao.findInProgressByUpdateDateLowerThan(c.getTime());
+			if(reportList != null) {
+				logger.info("{} notifications has to be sent", reportList.size());
+				for(CertificationReport report : reportList) {
+					String reportName = report.getTemplateId();
+					String formatUpdateDate = new SimpleDateFormat("yyyyMMdd").format(report.getUpdateDate());
+					reportName = reportName.concat(formatUpdateDate)
+							.concat("_v").concat(report.getVersion());
+					
+					logger.info("A notification will be send for the report {} in the repository id {}", reportName, report.getRepositoryId());
+					
+					buildNotification(reportName, report.getRepositoryId(), appConfig.getNoActivityNotificationSubject(), 
+							appConfig.getNoActivityNotificationFrenchContent(),
+							appConfig.getNoActivityNotificationEnglishContent());
+					report.setLastNotificationDate(new Date());
+					reportDao.save(report);
+				}
 			}
 		}
+
 	}
 	
 	/**

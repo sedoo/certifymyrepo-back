@@ -1,7 +1,7 @@
 ## Cleann temporary folder every monday at 12pm
 temporary:
    folder: /tmp/crusoe/temporary
-   cronExpression: 0 0 12 ? * MON 
+   cronExpression: 0 0 12 ? * MON
    storageDuration: 2
 
 server:
@@ -52,6 +52,7 @@ ftp:
 notification:
     cronExpression: 0 0 12 ? * MON 
     unused.report.months.delay: 2
+    enabled: true
 
 ## Update statistics Every day at noon - 12pm
 statistics:
@@ -167,6 +168,8 @@ spring:
       host: 193.52.225.51
       database: crusoe-preprod
       username: crusoe-preprod
+
+notification.enabled: false
 
 ftp:
     username: crusoepreprod
