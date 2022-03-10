@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.mail.EmailConstants;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.slf4j.Logger;
@@ -47,9 +48,10 @@ public class ProdEmailSender implements EmailSender {
 		}
 		try {
 			HtmlEmail email = new HtmlEmail();
+			email.setCharset(EmailConstants.UTF_8);
 			email.setHostName(mailConfig.getHostname());
 			email.addTo(contact.getTo().toArray(new String[contact.getTo().size()]));
-			email.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
+			email.addBcc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 			if(contact.getFromEmail() != null) {
 				if(contact.getFromName() != null) {
 					email.setFrom(contact.getFromEmail(), contact.getFromName());
