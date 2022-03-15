@@ -21,4 +21,5 @@ public class Profile {
 	private String orcid;
 	private String name;
 	private String email;
+	private Boolean isNotificationOff;
 }

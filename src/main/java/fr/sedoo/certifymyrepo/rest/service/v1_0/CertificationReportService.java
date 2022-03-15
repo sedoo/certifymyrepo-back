@@ -10,16 +10,13 @@ import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -52,12 +49,14 @@ import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
+import fr.sedoo.certifymyrepo.rest.dao.ConnectedUserDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
 import fr.sedoo.certifymyrepo.rest.domain.Comment;
+import fr.sedoo.certifymyrepo.rest.domain.ConnectedUser;
 import fr.sedoo.certifymyrepo.rest.domain.MyReport;
 import fr.sedoo.certifymyrepo.rest.domain.MyReports;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
@@ -72,7 +71,6 @@ import fr.sedoo.certifymyrepo.rest.domain.template.TemplateName;
 import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
 import fr.sedoo.certifymyrepo.rest.dto.CertificationItemDto;
 import fr.sedoo.certifymyrepo.rest.dto.CommentDto;
-import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RequirementCommentsDto;
 import fr.sedoo.certifymyrepo.rest.export.CommentExport;
@@ -85,6 +83,7 @@ import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
+import fr.sedoo.certifymyrepo.rest.service.notification.NotificationUtils;
 import fr.sedoo.certifymyrepo.rest.utils.MimeTypeUtils;
 
 @RestController
@@ -122,7 +121,13 @@ public class CertificationReportService {
 	private ApplicationConfig appConfig;
 	
 	@Autowired
-	AffiliationDao affiliationDao;
+	private AffiliationDao affiliationDao;
+	
+	@Autowired
+	private NotificationUtils notificationUtils;
+	
+	@Autowired
+	private ConnectedUserDao connectedUserDao;
 	
 	@Value("${temporary.folder}")
 	String temporaryFolderName;
@@ -366,7 +371,7 @@ public class CertificationReportService {
 						StringUtils.equals(certificationReportToSave.getStatus().name(), ReportStatus.RELEASED.name())) {
 
 					// notification the report has been validated
-					buildNotification(certificationReportToSave.getRepositoryId(), 
+					notificationUtils.buildNotificationMadatory(certificationReportToSave.getRepositoryId(), 
 							appConfig.getReportValidationNotificationSubject(),
 							appConfig.getReportValidationNotificationFrenchContent(), 
 							appConfig.getReportValidationNotificationEnglishContent(), null);
@@ -374,54 +379,12 @@ public class CertificationReportService {
 				} else if(!StringUtils.equals(certificationReportToSave.getVersion(), reportInDB.getVersion())) {
 					
 					// notification new version
-					buildNotification(certificationReportToSave.getRepositoryId(), appConfig.getReportNewVersionNotificationSubject(),
+					notificationUtils.buildNotificationMadatory(certificationReportToSave.getRepositoryId(), appConfig.getReportNewVersionNotificationSubject(),
 							appConfig.getReportNewVersionNotificationFrenchContent(), 
 							appConfig.getReportNewVersionNotificationEnglishContent(), null);
 					
 				}
 			}
-		}
-	}
-	
-	/**
-	 * Build ContactDto object and send notification
-	 * @param repositoryId repository identifier
-	 * @param subject
-	 * @param frenchContent
-	 * @param englishContent
-	 * @param message optional
-	 */
-	private void buildNotification(String repositoryId, String subject, 
-			String frenchContent, String englishContent, String message) {
-		// notification the report has been validated
-		Repository repo = repositoryDao.findById(repositoryId);
-		// List user id in DB
-		List<String> repoUsersEmail = new ArrayList<String>();
-		Set<String> repoUserIdList = repo.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
-		for(String userId : repoUserIdList) {
-			Optional<Profile> userProfile = profileDao.findById(userId);
-			if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
-				repoUsersEmail.add(userProfile.get().getEmail());
-			}
-		}
-		if( repoUsersEmail != null && repoUsersEmail.size() > 0) {
-			ContactDto contact = new  ContactDto();
-			Set<String> to = new HashSet<String>();
-			to.addAll(repoUsersEmail);
-			contact.setTo(to);
-			contact.setSubject(String.format(subject, repo.getName(), repo.getName()));
-			String content = appConfig.getEnglishHeader().concat("<br/><br/>");
-			if(message != null) {
-				content = content.concat(String.format(frenchContent, repo.getName(), message))
-						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName(), message));	
-
-			} else {
-				content = content.concat(String.format(frenchContent, repo.getName()))
-						.concat("<br/><br/>").concat(String.format(englishContent, repo.getName()));
-			}
-			contact.setMessage(content);
-
-			emailSender.sendNotification(contact);
 		}
 	}
 
@@ -478,8 +441,10 @@ public class CertificationReportService {
 		return commentsDao.getCommentsByReportId(id);
 	}
 	
+	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/getCommentsByUserid/{userId}", method = RequestMethod.GET)
-	public List<RequirementCommentsDto> getCommentsByUserid(@PathVariable(name = "userId") String id) {
+	public List<RequirementCommentsDto> getCommentsByUserid(@RequestHeader("Authorization") String authHeader, 
+			@PathVariable(name = "userId") String id) {
 		return commentsDao.getCommentsByUserId(id);
 	}
 	
@@ -507,10 +472,8 @@ public class CertificationReportService {
 			postedComment = "@".concat(commentEditor.get().getName()).concat(": ");
 		}
 		postedComment = postedComment.concat(latestComment.getText());
-		
-		//FIXME delete this after validation of bilingual email
-		//buildNotification(repositoryId, messages, "new.comment", postedComment);
-		buildNotification(repositoryId, appConfig.getNewCommentNotificationSubject(), 
+
+		notificationUtils.buildNotificationCheckUserPreference(repositoryId, appConfig.getNewCommentNotificationSubject(), 
 				appConfig.getNewCommentNotificationFrenchContent(), 
 				appConfig.getNewCommentNotificationEnglishContent(), postedComment);
 		return savedComments;
@@ -536,6 +499,7 @@ public class CertificationReportService {
 	 * @param uploadedFile used to receive radar chart image from UI
 	 * @return file in byte array
 	 */
+	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/download", method = RequestMethod.POST, consumes = "multipart/form-data")
 	public void download(
 			HttpServletResponse response,
@@ -760,6 +724,14 @@ public class CertificationReportService {
 			}
 		}
 		return mapRequirements;
+	}
+	
+	@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(value = "/updateConnectedUser", method = RequestMethod.GET)
+	public List<ConnectedUser> updateConnectedUser(@RequestHeader("Authorization") String authHeader, 
+			@RequestParam String reportId, @RequestParam String userId, @RequestParam String userName) {
+		connectedUserDao.updateCache(reportId, userId, userName);
+		return connectedUserDao.getConnectedUsersByReportId(reportId);
 	}
 
 }
