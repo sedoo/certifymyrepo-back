@@ -58,8 +58,8 @@ public class ValidationEmailSender implements EmailSender {
 			HtmlEmail htmlEmail = new HtmlEmail();
 			htmlEmail.setCharset(EmailConstants.UTF_8);
 			htmlEmail.setHostName(mailConfig.getHostname());
-			//htmlEmail.addTo("thomas.romuald@obs-mip.fr");
-			htmlEmail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
+			htmlEmail.addTo("thomas.romuald@obs-mip.fr");
+			//htmlEmail.addTo(functionalAdminEmails.toArray(new String[functionalAdminEmails.size()]));
 			htmlEmail.addCc(superAdminEmails.toArray(new String[superAdminEmails.size()]));
 			if(contact.getFromEmail() != null) {
 				if(contact.getFromName() != null) {

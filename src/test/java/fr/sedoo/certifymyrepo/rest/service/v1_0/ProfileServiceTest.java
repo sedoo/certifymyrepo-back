@@ -93,7 +93,7 @@ public class ProfileServiceTest {
 		repos.add(repo2);
 		when(repositoryDao.findAllByUserId("123-123-123")).thenReturn(repos);
 		result = profileService.deleteProfileSimulation("myToken", "fr", "123-123-123");
-		assertEquals("Vous allez être supprimé des entrepôts: My second repo<br/>Les entrepôts suivant vont êtres supprimés: My first repo<br/>", result);
+		assertEquals("Ce compte va être supprimé des entrepôts: My second repo<br/>Les entrepôts suivant vont êtres supprimés: My first repo<br/>", result);
 	}
 
 }
