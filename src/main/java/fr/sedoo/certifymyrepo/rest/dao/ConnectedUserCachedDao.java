@@ -1,10 +1,7 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,28 +20,8 @@ public class ConnectedUserCachedDao implements ConnectedUserDao {
 
 	@Override
 	public void updateCache(String reportId, String userId, String userName) {
-		boolean isReadOnly = false;
-		List<ConnectedUser> connectedUsers = getConnectedUsersByReportId(reportId);
-		Date creationDate = new Date();
-		if(connectedUsers.size() > 0) {
-			// Get from the list in cache the user currently connected
-			Optional<ConnectedUser> user = connectedUsers.stream().filter(p -> StringUtils.equals(p.getUserId(), userId)).findFirst();
-			if(user.isPresent()) {
-				creationDate = user.get().getCreationDate();
-				// If the currently connected user has read only awaiting for write access, need to check if he is first in the waiting list
-				if(user.get().isReadOnly()) {
-					Collections.sort(connectedUsers);
-					if(connectedUsers.get(0).getCreationDate().compareTo(creationDate) != 0) {
-						isReadOnly = true;
-					};
-				}
-			} else {
-				// if the list contains already an or some users, the current user has to get read only access.
-				isReadOnly = true;
-			}
-		}
 		String key = reportId.concat("%").concat(userId);
-		cache.put(key, new ConnectedUser(userId, userName, userName.replaceAll("\\B.|\\P{L}", "").toUpperCase(), isReadOnly, creationDate));
+		cache.put(key, new ConnectedUser(userId, userName, userName.replaceAll("\\B.|\\P{L}", "").toUpperCase()));
 	}
 
 	@Override

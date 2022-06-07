@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -728,10 +729,26 @@ public class CertificationReportService {
 	
 	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/updateConnectedUser", method = RequestMethod.GET)
-	public List<ConnectedUser> updateConnectedUser(@RequestHeader("Authorization") String authHeader, 
+	public void updateConnectedUser(@RequestHeader("Authorization") String authHeader, 
 			@RequestParam String reportId, @RequestParam String userId, @RequestParam String userName) {
 		connectedUserDao.updateCache(reportId, userId, userName);
-		return connectedUserDao.getConnectedUsersByReportId(reportId);
+	}
+	
+	//@Secured({Roles.AUTHORITY_USER})
+	@RequestMapping(value = "/listConnectedUser", method = RequestMethod.GET)
+	public List<ConnectedUser> listConnectedUser(/**@RequestHeader("Authorization") String authHeader, */
+			@RequestParam List<String> reportIdList, @RequestParam String userId) {
+		
+		List<ConnectedUser> users = new ArrayList<ConnectedUser>();
+		for(String reportId : reportIdList) {
+			List<ConnectedUser> res = connectedUserDao.getConnectedUsersByReportId(reportId);
+			if(res != null) {
+				users.addAll(res);
+			}
+		}
+		
+		return users.stream().filter(u -> !StringUtils.equals(u.getUserId(), userId)).
+			    collect(Collectors.toList());
 	}
 
 }
