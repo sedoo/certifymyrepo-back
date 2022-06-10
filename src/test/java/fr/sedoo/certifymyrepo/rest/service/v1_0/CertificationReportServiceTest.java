@@ -28,6 +28,7 @@ import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportTemplateDao;
 import fr.sedoo.certifymyrepo.rest.dao.CommentsDao;
+import fr.sedoo.certifymyrepo.rest.dao.ConnectedUserDao;
 import fr.sedoo.certifymyrepo.rest.dao.RepositoryDao;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationItem;
 import fr.sedoo.certifymyrepo.rest.domain.CertificationReport;
@@ -67,6 +68,9 @@ public class CertificationReportServiceTest {
 	Authentication authentication;
 	@Mock
 	SecurityContext securityContext;
+	
+	@Mock
+	ConnectedUserDao connectedUserDao;
 	
 	@InjectMocks
 	private CertificationReportService reportService;

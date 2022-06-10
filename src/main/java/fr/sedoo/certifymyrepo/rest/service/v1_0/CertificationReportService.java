@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -227,7 +228,12 @@ public class CertificationReportService {
 		CertificationReport report = certificationReportDao.findById(id);
 		result.setReport(report);
 		
+
+		
 		if(ReportStatus.RELEASED.equals(report.getStatus())) {
+			result.setEditExistingAllowed(false);
+			result.setValidationAllowed(false);
+		} else if(isUserEditingReport(id, loggedUser.getUserId())) { 
 			result.setEditExistingAllowed(false);
 			result.setValidationAllowed(false);
 		} else if (loggedUser.isSuperAdmin()) {
@@ -267,6 +273,24 @@ public class CertificationReportService {
 		result.setTemplate(certificationReportTemplateDao.getCertificationReportTemplate(report.getTemplateId()));
 		result.setAttachments(ftpClient.listFiles(id));
 		return result;
+	}
+	
+	/**
+	 * 
+	 * @param reportId
+	 * @param userId
+	 * @return true if the report is currently edited
+	 */
+	private boolean isUserEditingReport(String reportId, String userId) {
+		boolean isEditing = false;
+		List<ConnectedUser> res = connectedUserDao.getConnectedUsersByReportId(reportId);
+		if(res != null && !res.isEmpty()) {
+			List<ConnectedUser> editingUser = res.stream().filter(u -> !StringUtils.equals(u.getUserId(), userId)).collect(Collectors.toList());
+			if(editingUser != null && editingUser.size() > 0) {
+				isEditing = true;
+			}
+		}
+		return isEditing;
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
@@ -728,27 +752,40 @@ public class CertificationReportService {
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
-	@RequestMapping(value = "/updateConnectedUser", method = RequestMethod.GET)
+	@RequestMapping(value = "/updateConnectedUser", method = RequestMethod.POST)
 	public void updateConnectedUser(@RequestHeader("Authorization") String authHeader, 
 			@RequestParam String reportId, @RequestParam String userId, @RequestParam String userName) {
 		connectedUserDao.updateCache(reportId, userId, userName);
 	}
 	
 	//@Secured({Roles.AUTHORITY_USER})
-	@RequestMapping(value = "/listConnectedUser", method = RequestMethod.GET)
-	public List<ConnectedUser> listConnectedUser(/**@RequestHeader("Authorization") String authHeader, */
+	@RequestMapping(value = "/listConnectedUser", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public Map<String, List<ConnectedUser>> listConnectedUser(/**@RequestHeader("Authorization") String authHeader, */
 			@RequestParam List<String> reportIdList, @RequestParam String userId) {
+		
+		Map<String, List<ConnectedUser>> result = new HashMap<String, List<ConnectedUser>>();
 		
 		List<ConnectedUser> users = new ArrayList<ConnectedUser>();
 		for(String reportId : reportIdList) {
 			List<ConnectedUser> res = connectedUserDao.getConnectedUsersByReportId(reportId);
-			if(res != null) {
+			if(res != null && res.size() > 0) {
 				users.addAll(res);
+				result.put(reportId, users.stream().filter(u -> !StringUtils.equals(u.getUserId(), userId)).
+					    collect(Collectors.toList()));
 			}
 		}
 		
-		return users.stream().filter(u -> !StringUtils.equals(u.getUserId(), userId)).
-			    collect(Collectors.toList());
+		/** TEST PURPOSE
+		if(reportIdList != null && reportIdList.size() > 0) {
+			ConnectedUser test = new ConnectedUser("62962e8f2949e275e7451304", "Thomas Romuald", "TR");
+			List<ConnectedUser> list = new ArrayList<ConnectedUser>();
+			list.add(test);
+			result.put("618e65702f2e982b9bd52d26", list);
+		}
+
+		 END TEST*/
+		
+		return result;
 	}
 
 }
