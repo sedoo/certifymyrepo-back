@@ -18,5 +18,6 @@ public class MyReport {
 	boolean isEditExistingAllowed;
 	boolean isValidationAllowed;
 	Map<String, List<String>> attachments;
+	String currentEditor;
 
 }

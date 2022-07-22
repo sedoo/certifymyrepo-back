@@ -233,38 +233,42 @@ public class CertificationReportService {
 		if(ReportStatus.RELEASED.equals(report.getStatus())) {
 			result.setEditExistingAllowed(false);
 			result.setValidationAllowed(false);
-		} else if(isUserEditingReport(id, loggedUser.getUserId())) { 
-			result.setEditExistingAllowed(false);
-			result.setValidationAllowed(false);
-		} else if (loggedUser.isSuperAdmin()) {
-			// super admin has all rights unless if the status is release no body can edit or re-validate it
-			result.setEditExistingAllowed(true);
-			result.setValidationAllowed(true);
 		} else {
-			// an admin (COSO co-pilot) has only read access if he is not declared as user on the repository
-			result.setEditExistingAllowed(false);
-			result.setValidationAllowed(false);
-			if(report != null) {
-				Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
-				if (null != repo) {
-					for( RepositoryUser user : repo.getUsers()) {
-						if(StringUtils.equals(user.getId(),loggedUser.getUserId())) {
-							if(StringUtils.equals(Roles.EDITOR, user.getRole())) {
-								result.setEditExistingAllowed(true);
-								result.setValidationAllowed(true);
-							} else if(StringUtils.equals(Roles.CONTRIBUTOR, user.getRole())) {
-								result.setEditExistingAllowed(true);
-								result.setValidationAllowed(false);
-							} else {
-								result.setEditExistingAllowed(false);
-								result.setValidationAllowed(false);
+			String currentEditor = isUserEditingReport(id, loggedUser.getUserId());
+			if(null != currentEditor) { 
+				result.setEditExistingAllowed(false);
+				result.setValidationAllowed(false);
+				result.setCurrentEditor(currentEditor);
+			} else if (loggedUser.isSuperAdmin()) {
+				// super admin has all rights unless if the status is release no body can edit or re-validate it
+				result.setEditExistingAllowed(true);
+				result.setValidationAllowed(true);
+			} else {
+				// an admin (COSO co-pilot) has only read access if he is not declared as user on the repository
+				result.setEditExistingAllowed(false);
+				result.setValidationAllowed(false);
+				if(report != null) {
+					Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
+					if (null != repo) {
+						for( RepositoryUser user : repo.getUsers()) {
+							if(StringUtils.equals(user.getId(),loggedUser.getUserId())) {
+								if(StringUtils.equals(Roles.EDITOR, user.getRole())) {
+									result.setEditExistingAllowed(true);
+									result.setValidationAllowed(true);
+								} else if(StringUtils.equals(Roles.CONTRIBUTOR, user.getRole())) {
+									result.setEditExistingAllowed(true);
+									result.setValidationAllowed(false);
+								} else {
+									result.setEditExistingAllowed(false);
+									result.setValidationAllowed(false);
+								}
+								break;
 							}
-							break;
 						}
+					} else if(!loggedUser.isAdmin()) {
+						LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
+						throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 					}
-				} else if(!loggedUser.isAdmin()) {
-					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
-					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 				}
 			}
 		}
@@ -281,16 +285,16 @@ public class CertificationReportService {
 	 * @param userId
 	 * @return true if the report is currently edited
 	 */
-	private boolean isUserEditingReport(String reportId, String userId) {
-		boolean isEditing = false;
+	private String isUserEditingReport(String reportId, String userId) {
+		String editor = null;
 		List<ConnectedUser> res = connectedUserDao.getConnectedUsersByReportId(reportId);
 		if(res != null && !res.isEmpty()) {
 			List<ConnectedUser> editingUser = res.stream().filter(u -> !StringUtils.equals(u.getUserId(), userId)).collect(Collectors.toList());
 			if(editingUser != null && editingUser.size() > 0) {
-				isEditing = true;
+				editor = editingUser.get(0).getFullName();
 			}
 		}
-		return isEditing;
+		return editor;
 	}
 	
 	@Secured({Roles.AUTHORITY_USER})
