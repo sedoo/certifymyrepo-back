@@ -21,7 +21,7 @@ public class ReportDto {
 		this.setUpdateDate(report.getUpdateDate());
 		
 		this.setTemplateName(template.getName());
-		if(template.getLevels() != null) {
+		if(template != null && template.getLevels() != null) {
 			this.setLevelMaxValue(template.getLevels().size()-1);
 		}
 

@@ -762,9 +762,9 @@ public class CertificationReportService {
 		connectedUserDao.updateCache(reportId, userId, userName);
 	}
 	
-	//@Secured({Roles.AUTHORITY_USER})
+	@Secured({Roles.AUTHORITY_USER})
 	@RequestMapping(value = "/listConnectedUser", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public Map<String, List<ConnectedUser>> listConnectedUser(/**@RequestHeader("Authorization") String authHeader, */
+	public Map<String, List<ConnectedUser>> listConnectedUser(@RequestHeader("Authorization") String authHeader,
 			@RequestParam List<String> reportIdList, @RequestParam String userId) {
 		
 		Map<String, List<ConnectedUser>> result = new HashMap<String, List<ConnectedUser>>();
@@ -778,17 +778,6 @@ public class CertificationReportService {
 					    collect(Collectors.toList()));
 			}
 		}
-		
-		/** TEST PURPOSE
-		if(reportIdList != null && reportIdList.size() > 0) {
-			ConnectedUser test = new ConnectedUser("62962e8f2949e275e7451304", "Thomas Romuald", "TR");
-			List<ConnectedUser> list = new ArrayList<ConnectedUser>();
-			list.add(test);
-			result.put("618e65702f2e982b9bd52d26", list);
-		}
-
-		 END TEST*/
-		
 		return result;
 	}
 

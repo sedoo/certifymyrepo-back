@@ -14,9 +14,10 @@ public class TemplateName implements Comparable<TemplateName>{
 	
 	private String id;
 	private String name;
+	
 	@Override
 	public int compareTo(TemplateName arg) {
-		return this.getName().compareTo(arg.getName());
+		return arg.getId().compareTo(this.getId());
 	}
 
 }

@@ -2,7 +2,6 @@ package fr.sedoo.certifymyrepo.rest.filter.jwt;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
