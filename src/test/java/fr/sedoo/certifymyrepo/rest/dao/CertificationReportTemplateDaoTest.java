@@ -25,10 +25,11 @@ public class CertificationReportTemplateDaoTest {
 	@Test
 	public void testTemplateList() {
 		List<TemplateName> list = dao.getTemplateNameList();
-		assertEquals(3, list.size());
-		assertEquals("CTS-2023-2025-en", list.get(0).getId());
-		assertEquals("CTS-2020-2022-fr", list.get(1).getId());
-		assertEquals("CTS-2020-2022-en", list.get(2).getId());
+		assertEquals(4, list.size());
+		assertEquals("CTS-2023-2025-fr", list.get(0).getId());
+		assertEquals("CTS-2023-2025-en", list.get(1).getId());
+		assertEquals("CTS-2020-2022-fr", list.get(2).getId());
+		assertEquals("CTS-2020-2022-en", list.get(3).getId());
 	}
 
 }
