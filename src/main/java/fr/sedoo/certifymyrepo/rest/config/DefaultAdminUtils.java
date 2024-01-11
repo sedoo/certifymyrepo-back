@@ -28,10 +28,10 @@ public class DefaultAdminUtils {
 	@Autowired
 	private OrcidDao orcidDao;
 	
-	@Value("${ADMIN_ORCID_LIST}")
+	@Value("${orcid.admins}")
 	private String[] admins;
 
-	@Value("${SUPER_ADMIN_ORCID_LIST}")
+	@Value("${orcid.superAdmins}")
 	private String[] superAdmins;
 	
 	/**

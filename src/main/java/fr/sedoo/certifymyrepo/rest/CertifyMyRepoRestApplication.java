@@ -21,8 +21,6 @@ import fr.sedoo.certifymyrepo.rest.config.DefaultAdminUtils;
 @ComponentScan(basePackages = {"fr.sedoo.certifymyrepo"} )
 public class CertifyMyRepoRestApplication {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(CertifyMyRepoRestApplication.class);
-	
 	@Autowired
 	DefaultAdminUtils defaultAdminUtils;
 	

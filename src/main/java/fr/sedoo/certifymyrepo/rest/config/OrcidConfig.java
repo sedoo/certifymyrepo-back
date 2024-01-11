@@ -11,10 +11,10 @@ import lombok.Setter;
 @Component
 public class OrcidConfig {
 
-	@Value("${CLIENT_ID}")
+	@Value("${orcid.clientId}")
 	private String clientId;
 	
-	@Value("${CLIENT_SECRET}")
+	@Value("${orcid.clientSecret}")
 	private String clientSecret;
 	
 	@Value("${orcid.tokenUrl}")

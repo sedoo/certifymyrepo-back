@@ -15,6 +15,9 @@ import lombok.Setter;
 @Component
 public class ApplicationConfig {
 	
+	@Value("${cors.allowed.origins}")
+	private String[] corsAllowadOrigins;
+	
 	@Value("${tmpFolder}/download")
 	private String temporaryDownloadFolderName;
 	

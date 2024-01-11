@@ -1,38 +1,55 @@
 package fr.sedoo.certifymyrepo.rest.dao;
 
+import java.util.Collections;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.OrcidService;
-import fr.sedoo.certifymyrepo.rest.utils.JerseyClient;
+import lombok.Setter;
 
 @Component
+@Setter
 public class OrcidDaoImpl implements OrcidDao {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(OrcidService.class);
 	
-	JerseyClient client;
-	
-	@Autowired
-	public OrcidDaoImpl(JerseyClient client) {
-		this.client = client;
-	}
+	private RestTemplate restTemplate = new RestTemplate();
 
 	@Override
 	public ProfileDto getUserInfoByOrcid(String orcid) {
-		String response = client.getJsonResponse(String.format("https://pub.orcid.org/v3.0/%s", orcid));
-		if(response != null) {
-			return parseResponse(response, orcid);
-		} else {
-			return null;
-		}
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+        		String.format("https://pub.orcid.org/v3.0/%s", orcid),
+                HttpMethod.GET,
+                requestEntity,
+                String.class
+        );
+
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            String response = responseEntity.getBody();
+            if (response != null) {
+                return parseResponse(response, orcid);
+            }	
+        }
+        
+        return null;
 	}
 	
 	private ProfileDto parseResponse(String content, String orcid) {

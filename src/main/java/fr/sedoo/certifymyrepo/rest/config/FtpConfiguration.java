@@ -17,6 +17,6 @@ public class FtpConfiguration {
 	@Value("${ftp.username}")
 	private String login;
 
-	@Value("${FTP_PASSWORD}")
+	@Value("${ftp.password}")
 	private String password;
 }

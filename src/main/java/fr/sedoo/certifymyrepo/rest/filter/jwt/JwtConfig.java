@@ -3,21 +3,31 @@ package fr.sedoo.certifymyrepo.rest.filter.jwt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.Getter;
 import lombok.Setter;
 
-@Getter
 @Setter
 @Component
 public class JwtConfig {
 
-	@Value("${SIGNIN_KEY}")
+	@Value("${jwt.signingKey}")
 	private String signingKey;
 	
-	@Value("${TOKEN_VALIDITY}")
-	private Integer tokenValidity;
+	@Value("${jwt.token.validity}")
+	private String tokenValidity;
 	
-	@Value("${TOKEN_ACCESS_REQUEST_VALIDITY}")
-	private Integer tokenAccessResquestValidity;
+	@Value("${jwt.token.access.resquest.validity}")
+	private String tokenAccessResquestValidity;
+	
+	public Integer getTokenValidity() {
+		return Integer.valueOf(this.tokenValidity);
+	}
+	
+	public Integer getTokenAccessResquestValidity() {
+		return Integer.valueOf(this.tokenAccessResquestValidity);
+	}
+
+	public String getSigningKey() {
+		return this.signingKey;
+	}
 	
 }

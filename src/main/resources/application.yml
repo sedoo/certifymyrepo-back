@@ -1,8 +1,24 @@
+eureka:
+  client:
+    enabled: false
+    
+endpoints:
+    enabled: true
+    health:
+        enabled: true
+
 ## Cleann temporary folder every monday at 12pm
 temporary:
    folder: /tmp/crusoe/temporary
    cronExpression: 0 0 12 ? * MON
    storageDuration: 2
+   
+cors.allowed.origins: http://127.0.0.1:8080,http://localhost:8080,https://www.sedoo.fr,https://crusoe.ouvrirlascience.fr,https://coso-preprod.sedoo.fr
+
+jwt:
+    signingKey: ENC(Kk3QSFlnhwMd12IEt59oezOtQSHExg4S)
+    token.validity: ENC(NbVr8F4ZCg9gBHKnHCG4Pw==)
+    token.access.resquest.validity: ENC(8m6zgGXwCHmpL55OswN4BQ==)
 
 server:
     port: 8485
@@ -12,8 +28,8 @@ spring:
       host: localhost
       port: 27017
       database: crusoe
-      username: crusoe
-      password: ${MONGODB_PASSWORD}
+      username: ENC(UQhjsOY6PLd80nd1PB+M6Q==)
+      password: ENC(Fn87XueUaQubl7mbo5F4/g==)
    servlet:
       multipart:
          max-file-size: 25MB
@@ -21,9 +37,6 @@ spring:
    profiles:
       include:
       - local
-      
-logging:
-   file: ../logs/crusoe-preprod.log
    
 tmpFolder: /tmp/crusoe/tmp
       
@@ -32,21 +45,25 @@ management:
 
 mail:
    hostname: localhost
-   subjectPrefix: '[Crusöe]'
+   subjectPrefix: '[CRUSOE]'
    from: noreply@crusoe.fr
    
 
 orcid:
+   clientId: ENC(UuDEqoj+3WyNszUmqf5T89rluQ4DCxUE2hPdW6YXF0g=)
+   clientSecret: ENC(y22Q4f2wYjFi8UGYt1+FARfqlXIx57PMO8QUrUSlLpTH9Qjc0yzcLs92LaoDyUM9)
    tokenUrl: https://orcid.org/oauth/token
    publicApiUrl: https://pub.orcid.org/v2.1
+   superAdmins: ENC(efNcA98YIW08HO8ovT2zNRnFaQ1ZQH/QsA5xt3WoMkzJrc/PceFJNT2X1FGLSKM/)
+   admins: ENC(o8Xje/otTEQEDxTE5phNAphH9C68/gHVRdXzvfkH1dldevsxlfA+F+1EQzntizm/dijDzECFK+7xbuop2+vh/ttj6H01ee0+tKV1atkkN/KHkxQGiQ+I5A==)
 
 shibboleth:
    url: https://services-shib.sedoo.fr
         
 ftp:
     host: sedur.sedoo.fr
-    username: crusoe
-    password: ${FTP_PASSWORD}
+    username: ENC(+OrYdf9k5Ec1YllPehstqA==)
+    password: ENC(BTqmeqii32r8gGeY7X+NKwVSGwK884y+)
 
 ## check for notification (no activity on a repo) Every Monday at noon
 notification:
@@ -59,6 +76,12 @@ statistics:
     cronExpression: 0 0 12 * * ?
     
 app.url: http://localhost:8080
+
+springdoc:
+  server.url: http://localhost:${server.port}/
+  oAuthFlow:
+    authorizationUrl: http://localhost:8485/auth/v1_0/signin
+    tokenUrl: http://localhost:8485/auth/v1_0/login
 
 
 english.header: See below for the English translation.
@@ -103,81 +126,123 @@ no.activity.en.content: <p>Dear colleagues,</p><p>For you information, no update
 
 ---
 
-spring.profiles: dev
+spring:
+   config.activate.on-profile: dev
       
 notification.cronExpression: 0 * * ? * *
 
 ---
 
-spring.profiles: docker
-
 spring:
-   data.mongodb:
-      port: 27017
-      host: container-mongodb
-      
-ftp:
-    host: container-ftp-server
-    
-mail:
-   hostname: container-smtp
-
----
-
-spring.profiles: distant-preprod
-
-spring:
+   config.activate.on-profile: distant-preprod
    data.mongodb:
       host: localhost
       port: 27018
       database: crusoe-preprod
-      username: crusoe-preprod
+      username: ENC(dd++TAvuVjOhnL/nazq20rEvIgVKT6F9)
       
 ---
 
-spring.profiles: distant-prod
-
 spring:
+   config.activate.on-profile: distant-prod
    data.mongodb:
       host: localhost
-      port: 27019
+      port: 27018
       database: crusoe
-      username: crusoe
+      username: ENC(xDG3WKOeQqaxxS1ywUAOLQ==)
       
 ---
 
-spring.profiles: prod
 spring:
+   config.activate.on-profile: prod
    data.mongodb:
-      host: 193.52.225.51
+      host: ENC(VxaOpB6o02ylzWwZDXmZ4gNwbFSPOwfL)
       database: crusoe
-      username: crusoe
+      username: ENC(xDG3WKOeQqaxxS1ywUAOLQ==)
+
+server:
+  port: 0
+
         
-tmpFolder: /export1/crusoe/tmp
+tmpFolder: ${application.folder}/tmp
 
 app.url: https://crusoe.ouvrirlascience.fr/application
-
-logging:
-   file: ../logs/crusoe-prod.log
         
 ---
 
-spring.profiles: preprod
 spring:
+   config.activate.on-profile: preprod
    data.mongodb:
-      host: 193.52.225.51
+      host: ENC(BkGnjmgEm4DhGG/euQpbVqZEqqVy1ImJ)
       database: crusoe-preprod
-      username: crusoe-preprod
+      username: ENC(GHG9Tv3+Vt+/ivCecy52KsZ+fp892RR7)
 
+
+server:
+  port: 0
+  
 notification.enabled: false
 
 ftp:
     username: crusoepreprod
-    password: ${FTP_PASSWORD}
+    password: ENC(WwjTuYoQmEziqKQmXDCJ0KvXrZgBKS2l)
 
-tmpFolder: /export1/crusoe-preprod/tmp
+tmpFolder: ${application.folder}/tmp
 
 app.url: https://coso-preprod.sedoo.fr/application
 
+---
+spring:
+   config.activate.on-profile: monitoring
+   cloud:
+      discovery:
+         enabled: true
+       
+info:
+  api: https://api.sedoo.fr/${spring.application.name}/swagger-ui/index.html
+  code:
+    front: https://gitlab.in2p3.fr/thomas.romuald/gestionpic-vjs
+    back: https://gitlab.in2p3.fr/thomas.romuald/gestionpic-rest
+  folders: ${archive.folder}/sedoo/sss
+  database:
+    type: MongoDB
+    location: CHET
+  archive:  CHET
+         
+endpoints:
+    enabled: true
+    health:
+        enabled: true
+management:
+    info.env.enabled: true
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+    endpoint:
+        health:
+            show-details: "ALWAYS"
+            northstar:
+                cacheup: 240
+                cachedown: 120 
+
+eureka:
+  client:
+    enabled: true
+    serviceUrl:
+      defaultZone:  http://ada:8761/eureka
+  instance:
+    preferIpAddress: true
+    lease-renewal-interval-in-seconds: 3
+    lease-expiration-duration-in-seconds: 5
+ 
+springdoc:
+  oAuthFlow:
+    authorizationUrl:
+    tokenUrl: https://api.sedoo.fr/${spring.application.name}/auth/v1_0/signin
+  swagger-ui:
+    configUrl: /${spring.application.name}/v3/api-docs/swagger-config
+    url: /${spring.application.name}/v3/api-docs/
+  server.url:  https://api.sedoo.fr/${spring.application.name}
 
         

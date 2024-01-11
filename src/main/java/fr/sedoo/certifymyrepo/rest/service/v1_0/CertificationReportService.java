@@ -548,10 +548,11 @@ public class CertificationReportService {
 			File localFolder = new File(workDirectory, UUID.randomUUID().toString());
 			localFolder.mkdirs();
 			
-			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+			ApplicationUser loggedUser = null;//LoginUtils.getLoggedUser();
 			Report printableReport = getFullReportInformation(loggedUser, reportId, language, Boolean.parseBoolean(comments));
 			String fileName = printableReport.getTitle();
 			fileName = fileName.replace(" ", "_");
+			fileName = fileName.replace("/", "-");
 			fileName = Normalizer
 			           .normalize(fileName, Normalizer.Form.NFD)
 			           .replaceAll("[^\\p{ASCII}]", "");;
@@ -634,7 +635,7 @@ public class CertificationReportService {
 			// Get repository name and check access in mean time
 			if(report != null ) {
 				Repository repo = null;
-				if (!loggedUser.isAdmin()) {
+				if (loggedUser != null && !loggedUser.isAdmin()) {
 					repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
 				} else {
 					repo = repositoryDao.findById(report.getRepositoryId());

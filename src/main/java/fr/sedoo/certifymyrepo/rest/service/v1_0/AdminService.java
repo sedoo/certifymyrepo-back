@@ -29,7 +29,6 @@ import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
-import io.swagger.annotations.ApiOperation;
 
 @RestController
 @CrossOrigin
@@ -69,7 +68,6 @@ public class AdminService {
 		return adminId;
 	}
 	
-	@ApiOperation(value = "Delete an admin by Id")
 	@Secured({Roles.AUTHORITY_ADMIN})
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
 	public boolean delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String  id) {

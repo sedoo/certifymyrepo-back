@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.2.2.RELEASE</version>
+		<version>2.6.4</version>
 	</parent>
 
 	<groupId>fr.sedoo</groupId>
@@ -20,7 +20,11 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>1.8</java.version>
+	    <prefix>preprod</prefix>
+		<java.version>11</java.version>
+		<spring-boot-admin.version>2.6.4</spring-boot-admin.version>
+		<spring-cloud.version>2021.0.4</spring-cloud.version>
+		<spring-docapi.version>1.6.3</spring-docapi.version>
 	</properties>
 
 	<dependencies>
@@ -50,7 +54,11 @@
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-
+		<dependency>
+		        <groupId>com.github.ulisesbocchio</groupId>
+		        <artifactId>jasypt-spring-boot-starter</artifactId>
+		        <version>2.1.2</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -91,25 +99,17 @@
 			<version>1.5</version>
 		</dependency>
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>2.7.0</version>
+			<groupId>de.codecentric</groupId>
+			<artifactId>spring-boot-admin-starter-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
-			<version>2.7.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>1.8</version>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-json</artifactId>
-			<version>1.8</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>${spring-docapi.version}</version>
 		</dependency>
 
 		<dependency>
@@ -122,6 +122,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+			<version>1.18.22</version>
 			<scope>provided</scope>
 		</dependency>
 		
@@ -148,6 +149,7 @@
 		<dependency>
 		    <groupId>joda-time</groupId>
 		    <artifactId>joda-time</artifactId>
+		    <version>2.12.4</version>
 		</dependency>
 		
 		<dependency>
@@ -162,7 +164,24 @@
 		</dependency>
 
 	</dependencies>
-
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>de.codecentric</groupId>
+				<artifactId>spring-boot-admin-dependencies</artifactId>
+				<version>${spring-boot-admin.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<build>
 		<plugins>
 		
@@ -175,16 +194,27 @@
 	          </includes>
 	          <!--  Execute integration test by default. Exlude them if needed.			  -->
 			  <excludedGroups>fr.sedoo.IntegrationTest</excludedGroups>
-
 	        </configuration>
 	      </plugin>
-		
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 			<!-- Package as an executable jar/war -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<executable>true</executable>
+					<layout>ZIP</layout>
 				</configuration>
 
 				<executions>
@@ -200,41 +230,35 @@
 					</execution>
 				</executions>
 			</plugin>
-			
-            <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.1.4</version>
-                <configuration>
-                    <to>
-                        <image>registry.hub.docker.com/tromuald/sedoo-crusoe-rest</image>
-                        <auth>
-                        	<username>${DOCKER_USERNAME}</username>
-                        	<password>${DOCKER_PASSWORD}</password>
-                        </auth>
-                    </to>
-			        <ports>
-			            <port>8485</port>
-			        </ports>
-                </configuration>
-            </plugin>
-
-			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<inherited>false</inherited>
+				<executions>
+					<execution>
+						<id>uploadToSedooRepo</id>
+						<phase>install</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>curl</executable>
+							<commandlineArgs>--request POST --header 'Content-Type: multipart/form-data' -F 'file=@./target/${project.artifactId}-${project.version}.jar' https://api.sedoo.fr/aeris-cdn-rest/jarrepo/v1_0/upload?prefix=${prefix}</commandlineArgs>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
 	<repositories>
-
 		<repository>
-			<id>sourcesup-releases</id>
-			<url>http://sourcesup.renater.fr/nexus/content/repositories/reposedoo-releases/</url>
-		</repository>
-
-		<repository>
-			<id>sourcesup-snapshots</id>
-			<url>http://sourcesup.renater.fr/nexus/content/repositories/reposedoo-snapshots/</url>
-		</repository>
-
+            <id>sedoorepo</id>
+            <url>https://api.sedoo.fr/aeris-cdn-rest/mavenrepo</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
 	</repositories>
 
 	<distributionManagement>

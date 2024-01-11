@@ -12,26 +12,29 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.client.RestTemplate;
 
 import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
-import fr.sedoo.certifymyrepo.rest.utils.JerseyClient;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class OrcidDaoImplTest {
 	
 	@Mock
-	JerseyClient client;
+	RestTemplate restTemplate;
 	
 	@Test
 	public void parseOrcidResponseWithEmail() throws IOException {
 		
 		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource("orcid-response-email-public.json").getFile());
-		String content = FileUtils.readFileToString(file, Charset.defaultCharset());
-		when(client.getJsonResponse(any())).thenReturn(content);
+		ResponseEntity<String> content = new ResponseEntity<>(FileUtils.readFileToString(file, Charset.defaultCharset()), HttpStatus.OK);
+		when(restTemplate.getForEntity(any(), String.class)).thenReturn(content);
 		
-		OrcidDao orcidDao = new OrcidDaoImpl(client);
+		OrcidDaoImpl orcidDao = new OrcidDaoImpl();
+		orcidDao.setRestTemplate(restTemplate);
 		ProfileDto user = orcidDao.getUserInfoByOrcid("0000-0000-0000-0000");
 		assertEquals(user.getName(), "Toto Titi");
 		assertEquals(user.getEmail(), "titi@gmail.com");
@@ -42,10 +45,11 @@ public class OrcidDaoImplTest {
 		
 		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource("orcid-response-email-private.json").getFile());
-		String content = FileUtils.readFileToString(file, Charset.defaultCharset());
-		when(client.getJsonResponse(any())).thenReturn(content);
+		ResponseEntity<String> content = new ResponseEntity<>(FileUtils.readFileToString(file, Charset.defaultCharset()), HttpStatus.OK);
+		when(restTemplate.getForEntity(any(), String.class)).thenReturn(content);
 		
-		OrcidDao orcidDao = new OrcidDaoImpl(client);
+		OrcidDaoImpl orcidDao = new OrcidDaoImpl();
+		orcidDao.setRestTemplate(restTemplate);
 		ProfileDto user = orcidDao.getUserInfoByOrcid("0000-0000-0000-0000");
 		assertEquals(user.getName(), "Toto Titi");
 		assertEquals(user.getEmail(), null);

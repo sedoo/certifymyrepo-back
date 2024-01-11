@@ -1,35 +1,30 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MultivaluedMap;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.springframework.web.client.RestTemplate;
 
 import fr.sedoo.certifymyrepo.rest.config.OrcidConfig;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
@@ -78,19 +73,16 @@ public class LoginService {
 	@RequestMapping(value="/login",method=RequestMethod.POST)
 	public LoggedUser login(HttpServletResponse response, 
 			@RequestParam String code, 
-			@RequestParam String type, 
+			@RequestParam(required = false) String type, 
 			@RequestParam(name="redirect_uri") String redirectUri) throws Exception{
 		
 		LoggedUser loggedUser = null;
 		
-		ClientConfig config = new DefaultClientConfig();
-		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-		Client client = Client.create(config);
+		RestTemplate restTemplate = new RestTemplate();
 		if(StringUtils.equals(type, SHIBBOLETH_AUTHENTIFICATION_TYPE)) {
-			WebResource service = client.resource(shibbolethUrl.concat("/shibboleth/userbycode?code=").concat(code));
-			ClientResponse clientResponse =  service.accept("application/json").get(ClientResponse.class);
-			if (clientResponse.getStatus() == 200){
-				ShibbolethToken shibbolethToken = clientResponse.getEntity(ShibbolethToken.class);
+			ResponseEntity<ShibbolethToken> clientResponse = restTemplate.getForEntity(shibbolethUrl.concat("/shibboleth/userbycode?code=").concat(code), ShibbolethToken.class);
+			if (clientResponse.getStatusCode().is2xxSuccessful()){
+				ShibbolethToken shibbolethToken = clientResponse.getBody();
 				// An email can have upper case letter it must be stored  in  lower case
 				String email = null;
 				if(shibbolethToken.getMail() != null) {
@@ -98,19 +90,25 @@ public class LoginService {
 				}
 				loggedUser = this.getLoggedUser(null, email, shibbolethToken.getGivenname().concat(" ").concat(shibbolethToken.getName()));
 			} else {
-				response.setStatus(clientResponse.getStatus());
+				response.setStatus(clientResponse.getStatusCodeValue());
 			}
 		} else {
-			WebResource service = client.resource(orcidConfig.getTokenUrl());	
-			MultivaluedMap<String, String> data = new MultivaluedMapImpl();	
-			data.add("client_id", orcidConfig.getClientId());
-			data.add("client_secret", orcidConfig.getClientSecret());
-			data.add("grant_type", "authorization_code");
-			data.add("redirect_uri", redirectUri);
-			data.add("code", code);
-			ClientResponse clientResponse =  service.accept("application/json").post(ClientResponse.class, data);
-			if (clientResponse.getStatus() == 200){
-				OrcidToken orcidToken = clientResponse.getEntity(OrcidToken.class);
+			
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+	        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+	        
+	        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();	
+			requestBody.add("client_id", orcidConfig.getClientId());
+			requestBody.add("client_secret", orcidConfig.getClientSecret());
+			requestBody.add("grant_type", "authorization_code");
+			requestBody.add("redirect_uri", redirectUri);
+			requestBody.add("code", code);
+			
+			HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(requestBody, headers);
+			ResponseEntity<OrcidToken> postResponse = restTemplate.postForEntity(orcidConfig.getTokenUrl(), request, OrcidToken.class);
+			if (postResponse.getStatusCode().is2xxSuccessful()){
+				OrcidToken orcidToken = postResponse.getBody();
 				ProfileDto orcidProfile = orcidDao.getUserInfoByOrcid(orcidToken.getOrcid());
 				// An email can have upper case letter it must be stored  in  lower case
 				String email = null;
@@ -119,7 +117,7 @@ public class LoginService {
 				}
 				loggedUser = this.getLoggedUser(orcidToken.getOrcid(), email, orcidToken.getName());
 			} else {
-				response.setStatus(clientResponse.getStatus());
+				response.setStatus(postResponse.getStatusCodeValue());
 			}
 		}
 		return loggedUser;
@@ -128,21 +126,15 @@ public class LoginService {
 	@RequestMapping(value="/DiscoFeed",method=RequestMethod.GET)
 	public String discoFeed(HttpServletResponse response) {
 		String result = null;
-		ClientConfig config = new DefaultClientConfig();
-		config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-		Client client = Client.create(config);
-		WebResource service = client.resource(shibbolethUrl.concat("/Shibboleth.sso/DiscoFeed"));
-		ClientResponse clientResponse =  service.accept("application/json").get(ClientResponse.class);
-		if (clientResponse.getStatus() == 200){
-			InputStream eis = clientResponse.getEntityInputStream();
-			try {
-				result = IOUtils.toString(eis, StandardCharsets.UTF_8.name());
-			} catch (IOException e) {
-				LOG.error("Error while parsing /Shibboleth.sso/DiscoFeed response", e);
-			}
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> clientResponse = restTemplate.getForEntity(shibbolethUrl.concat("/Shibboleth.sso/DiscoFeed"), String.class);
+		
+
+		if (clientResponse.getStatusCode().is2xxSuccessful()){
+			result = clientResponse.getBody();
 		} else {
 			LOG.error(clientResponse.toString());
-			response.setStatus(clientResponse.getStatus());
+			response.setStatus(clientResponse.getStatusCodeValue());
 		}
 		return result;
 	}
