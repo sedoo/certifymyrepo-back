@@ -163,7 +163,7 @@ spring:
 server:
   port: 0
 
-        
+ftp.password: ENC(kShx0LIsDEHIyQSf+BZuZDig3TCD8z8k)
 tmpFolder: ${application.folder}/tmp
 
 app.url: https://crusoe.ouvrirlascience.fr/application
@@ -201,13 +201,15 @@ spring:
 info:
   api: https://api.sedoo.fr/${spring.application.name}/swagger-ui/index.html
   code:
-    front: https://gitlab.in2p3.fr/thomas.romuald/gestionpic-vjs
-    back: https://gitlab.in2p3.fr/thomas.romuald/gestionpic-rest
-  folders: ${archive.folder}/sedoo/sss
+    front: https://github.com/sedoo/certifymyrepo-back
+    back: https://github.com/sedoo/certifymyrepo
+  folders: ${tmpFolder}
   database:
     type: MongoDB
-    location: CHET
-  archive:  CHET
+    location: SEDUR
+  archive: none
+  authentication: ${shibboleth.url}
+  ftp: ${ftp.host}
          
 endpoints:
     enabled: true
