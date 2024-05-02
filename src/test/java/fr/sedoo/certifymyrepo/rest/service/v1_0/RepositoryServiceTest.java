@@ -173,7 +173,7 @@ public class RepositoryServiceTest {
 		value.setRequirements(requirements);
 		when(templateDao.getCertificationReportTemplate(any())).thenReturn(value);
 		
-        List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
+        List<FullRepositoryDto> result = repositoryService.listAllFullRepositories(null);
         
         assertTrue(result.size() == 2);
         assertEquals(result.get(0).getRepository().getName(), "AERIS");
@@ -187,7 +187,7 @@ public class RepositoryServiceTest {
 		
 		when(templateDao.getCertificationReportTemplate(any())).thenReturn(createTemplate());
 		
-        List<FullRepositoryDto> result = repositoryService.listAllFullRepositories("myToken");
+        List<FullRepositoryDto> result = repositoryService.listAllFullRepositories(null);
         
         assertTrue(result.size() == 2);
         assertEquals(result.get(0).getRepository().getName(), "AERIS");
@@ -202,7 +202,7 @@ public class RepositoryServiceTest {
 		List<Repository> list = Arrays.asList(new Repository[] {repo1});
 		when(repositoryDaoMock.findByNameOrKeywords("toto")).thenReturn(list);
 		
-        List<Repository> result = repositoryService.search("my_token", Collections.singletonList("toto"));
+        List<Repository> result = repositoryService.search(null, Collections.singletonList("toto"));
         
         assertEquals(repo1.getName(),  result.get(0).getName());
 	}
@@ -215,7 +215,7 @@ public class RepositoryServiceTest {
 		List<Repository> list = Arrays.asList(new Repository[] {repo1});
 		when(repositoryDaoMock.findByNameOrKeywords("toto|tintin")).thenReturn(list);
 		
-        List<Repository> result = repositoryService.search("my_token", Arrays.asList(new String[] {"toto", "tintin"}));
+        List<Repository> result = repositoryService.search(null, Arrays.asList(new String[] {"toto", "tintin"}));
         
         assertEquals(repo1.getName(),  result.get(0).getName());
 	}
@@ -251,7 +251,7 @@ public class RepositoryServiceTest {
 			when(appConfig.getRemoveUserNotificationFrenchContent()).thenReturn("");
 			when(appConfig.getRemoveUserNotificationEnglishContent()).thenReturn("");
 
-			Repository result = repositoryService.save("myToken", repoToSave, "fr");
+			Repository result = repositoryService.save(null, repoToSave, "fr");
 			assertTrue("The notification have not been reached", result != null);
 
 		} catch (Exception e) {
@@ -267,7 +267,7 @@ public class RepositoryServiceTest {
 	@Test
     public void testDeleteForbidenAcces() {
 		try {
-			repositoryService.delete("myToken", "789");
+			repositoryService.delete(null, "789");
 			assertTrue("An exception had to be thrown", false);
 		} catch (ForbiddenException e) {
 			assertTrue(true);
@@ -278,7 +278,7 @@ public class RepositoryServiceTest {
     public void testDelete() {
 		when(repositoryDaoMock.findByIdAndUserId("456", "0000-0000-0000-1234")).thenReturn(new Repository());
 		try {
-			repositoryService.delete("myToken", "456");
+			repositoryService.delete(null, "456");
 			assertTrue("No exception", true);
 		} catch (ForbiddenException e) {
 			assertTrue("No exception had to be thrown", false);

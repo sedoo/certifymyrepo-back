@@ -12,17 +12,18 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
+import fr.sedoo.certifymyrepo.rest.config.SsoPermissionEvaluator;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -53,14 +55,14 @@ import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
-import fr.sedoo.certifymyrepo.rest.filter.JwtAuthenticationFilter;
-import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtConfig;
-import fr.sedoo.certifymyrepo.rest.filter.jwt.JwtUtil;
 import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
+import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
+import fr.sedoo.sso.utils.jwt.Credential;
+import fr.sedoo.sso.utils.jwt.JwtUtils;
 
 @RestController
 @CrossOrigin
@@ -69,6 +71,9 @@ public class RepositoryService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RepositoryService.class);
 
+	@Autowired
+	SsoPermissionEvaluator permissionEvaluator;
+	
 	@Autowired
 	RepositoryDao repositoryDao;
 	
@@ -93,9 +98,6 @@ public class RepositoryService {
 	@Autowired
 	private ApplicationConfig appConfig;
 	
-	@Autowired
-	JwtConfig jwtConfig;
-	
 	@Value("${app.url}")
 	private String appUrl;
 
@@ -110,9 +112,9 @@ public class RepositoryService {
 	 * @param id repository identifier
 	 * @return {@link Repository}
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/getRepository/{id}", method = RequestMethod.GET)
-	public RepositoryDto getRepository(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String id) {
+	public RepositoryDto getRepository(HttpServletRequest request, @PathVariable(name = "id") String id) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		Repository repo = null;
 		if (loggedUser.isAdmin()) {
@@ -149,18 +151,27 @@ public class RepositoryService {
 	 * @param authHeader
 	 * @return {@link FullRepositoryDto}
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/listAllFullRepositories", method = RequestMethod.GET)
-	public List<FullRepositoryDto> listAllFullRepositories(@RequestHeader("Authorization") String authHeader) {
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+	public List<FullRepositoryDto> listAllFullRepositories(HttpServletRequest request) {
 		
+		Credential credentials = permissionEvaluator.getCredentials(request);
 		List<Repository> repos = null;
-		if (loggedUser.isAdmin()) {
+		boolean isAdmin = permissionEvaluator.isAdmin(request);
+		if (isAdmin) {
 			repos = repositoryDao.findAll();
 		} else {
-			repos = repositoryDao.findAllByUserId(loggedUser.getUserId());
+			repos = repositoryDao.findAllByUserId(credentials.getId());
 		}
-		return getHealthInformationList(repos, loggedUser.getUserId(), loggedUser.isAdmin());
+		return getHealthInformationList(repos, credentials.getId(), isAdmin);
+	}
+	
+	@RequestMapping(value = "/listUserWithRepo", method = RequestMethod.GET)
+	public List<FullRepositoryDto> listUserWithRepo(HttpServletRequest request) {
+		
+		List<Repository> repos = repositoryDao.findAll();
+
+		return null;
 	}
 	
 	/**
@@ -168,9 +179,10 @@ public class RepositoryService {
 	 * @param authHeader
 	 * @return {@link Repository}
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/listMyRepositories", method = RequestMethod.GET)
-	public List<RepositoryDto> listMyRepositories(@RequestHeader("Authorization") String authHeader) {
+	public List<RepositoryDto> listMyRepositories(HttpServletRequest request) {
+		
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		List<Repository> repos =  repositoryDao.findAllByUserId(loggedUser.getUserId());
 		List<RepositoryDto> result = new ArrayList<>();
@@ -319,9 +331,9 @@ public class RepositoryService {
 	 * @return the saved element
 	 * @throws {@link BadRequestException} if the element to be saved is null
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
-	public Repository save(@RequestHeader("Authorization") String authHeader,
+	public Repository save(HttpServletRequest request,
 			@RequestBody(required = true) Repository repository,
 			@RequestParam String language) {
 		Repository result = null;
@@ -470,9 +482,9 @@ public class RepositoryService {
 	 * @param id of the repository
 	 * @throws {@link ForbiddenException} if the user is not MANAGER or ADMIN
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
-	public void delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String  id) {
+	public void delete(HttpServletRequest request, @PathVariable(name = "id") String  id) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		if (loggedUser.isAdmin()) {
 			repositoryDao.delete(id);
@@ -494,9 +506,9 @@ public class RepositoryService {
 	 * @param keywords used by the search query
 	 * @return a list of repository elements
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/search", method = RequestMethod.GET)
-	public List<Repository> search(@RequestHeader("Authorization") String authHeader, @RequestParam List<String> keywords) {
+	public List<Repository> search(HttpServletRequest request, @RequestParam List<String> keywords) {
 		StringBuilder regex = new StringBuilder();
 		if(keywords.size()>1) {
 			for (int i=0; i<keywords.size()-1;i++ ) {
@@ -517,9 +529,9 @@ public class RepositoryService {
 	 * @param authHeader authorization token form logged user
 	 * @param accessRequest with repositoryId, orcid the user identifier, text optional  user's message, email user email and requested role
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/requestAccess", method = RequestMethod.POST)
-	public void requestAccess(@RequestHeader("Authorization") String authHeader, 
+	public void requestAccess(HttpServletRequest request,
 			@RequestBody AccessRequest accessRequest,
 			@RequestParam String language) {
 		
@@ -588,10 +600,7 @@ public class RepositoryService {
 	 */
 	private String generateToken() {
 		try {
-			Map<String, String> infos = new HashMap<>();
-			infos.put(JwtAuthenticationFilter.UUID_KEY, "000-000-000");
-			String token;
-			token = JwtUtil.generateToken("robot", jwtConfig.getSigningKey(), jwtConfig.getTokenAccessResquestValidity(), null, infos);
+			String token = null;
 			return token;
 		} catch (Exception e) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "YCould not generate a token");
@@ -615,9 +624,9 @@ public class RepositoryService {
 	 * @param userId
 	 * @return true if the user has been accepted, false if the user had not a pending request anymore
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/validRequest/{repositoryId}/{userId}", method = RequestMethod.GET)
-	public boolean validRequest(@RequestHeader("Authorization") String authHeader, 
+	public boolean validRequest(HttpServletRequest request, 
 			@PathVariable(name = "repositoryId") String repositoryId,
 			@PathVariable(name = "userId") String userId) {
 		boolean result = false;

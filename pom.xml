@@ -25,6 +25,7 @@
 		<spring-boot-admin.version>2.6.4</spring-boot-admin.version>
 		<spring-cloud.version>2021.0.4</spring-cloud.version>
 		<spring-docapi.version>1.6.3</spring-docapi.version>
+		<sedoo-sso.version>0.0.1-SNAPSHOT</sedoo-sso.version>
 	</properties>
 
 	<dependencies>
@@ -63,7 +64,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>fr.sedoo</groupId>
+		    <artifactId>sedoo-sso-utils</artifactId>
+		    <version>${sedoo-sso.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -110,12 +115,6 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
 			<version>${spring-docapi.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.6.0</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->

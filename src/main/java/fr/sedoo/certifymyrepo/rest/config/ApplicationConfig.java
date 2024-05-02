@@ -1,6 +1,7 @@
 package fr.sedoo.certifymyrepo.rest.config;
 
 import java.io.File;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 
@@ -128,5 +129,11 @@ public class ApplicationConfig {
 	private String noActivityNotificationFrenchContent;
 	@Value("${no.activity.en.content}")
 	private String noActivityNotificationEnglishContent;
+	
+	@Value("${sso.adminrole}")
+	private List<String> adminRoles;
+	
+	@Value("${sso.userrole}")
+	private List<String> userRoles;
 
 }

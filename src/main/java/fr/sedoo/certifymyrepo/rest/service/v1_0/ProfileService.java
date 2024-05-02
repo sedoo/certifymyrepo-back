@@ -9,12 +9,15 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,9 +75,9 @@ public class ProfileService {
 	@Autowired
 	private ApplicationConfig appConfig;
 	
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
-    public Profile profile(@RequestHeader("Authorization") String authHeader) {	
+    public Profile profile(HttpServletRequest request) {	
 		Optional<Profile> profile = profileDao.findById(LoginUtils.getLoggedUser().getUserId());
 		if(profile.isPresent()) {
 			return profile.get();
@@ -83,9 +86,9 @@ public class ProfileService {
 		}
     }
 	
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
     @RequestMapping(value = "/saveProfile", method = RequestMethod.POST)
-    public Profile saveProfile(@RequestHeader("Authorization") String authHeader, 
+    public Profile saveProfile(HttpServletRequest request, 
     		@RequestBody Profile profile,
     		@RequestParam String language) {
 		
@@ -109,9 +112,9 @@ public class ProfileService {
 		return profileDao.save(profile);
     }
 	
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
     @RequestMapping(value = "/createNewProfile", method = RequestMethod.POST)
-    public Profile createNewProfile(@RequestHeader("Authorization") String authHeader, 
+    public Profile createNewProfile(HttpServletRequest request,
     		@RequestBody Profile profile,
     		@RequestParam String language) {
 		
@@ -153,27 +156,27 @@ public class ProfileService {
 		return createdProfile;
     }
 	
-	@Secured({Roles.AUTHORITY_USER})
+	//@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/listAllUsers", method = RequestMethod.GET)
-	public List<Profile> listAll(@RequestHeader("Authorization") String authHeader) {
+	public List<Profile> listAll(HttpServletRequest request) {
 		List<Profile> usersProfile = profileDao.findAll();
 		return usersProfile;
 	}
 	
 	/**
 	 */
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
     @RequestMapping(value = "/deleteProfileSimulation/{language}/{id}", method = RequestMethod.GET)
-    public String deleteProfileSimulation(@RequestHeader("Authorization") String authHeader, 
+    public String deleteProfileSimulation(HttpServletRequest request, 
     		@PathVariable(name = "language") String language,
     		@PathVariable(name = "id") String id) {
 		
 		return delete(language, id, true);
 	}
 	
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
     @RequestMapping(value = "/deleteProfile/{language}/{id}", method = RequestMethod.DELETE)
-    public String deleteProfile(@RequestHeader("Authorization") String authHeader, 
+    public String deleteProfile(HttpServletRequest request,
     		@PathVariable(name = "language") String language,
     		@PathVariable(name = "id") String id) {
 		

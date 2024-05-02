@@ -15,10 +15,13 @@ temporary:
    
 cors.allowed.origins: http://127.0.0.1:8080,http://localhost:8080,https://www.sedoo.fr,https://crusoe.ouvrirlascience.fr,https://coso-preprod.sedoo.fr
 
-jwt:
-    signingKey: ENC(Kk3QSFlnhwMd12IEt59oezOtQSHExg4S)
-    token.validity: ENC(NbVr8F4ZCg9gBHKnHCG4Pw==)
-    token.access.resquest.validity: ENC(8m6zgGXwCHmpL55OswN4BQ==)
+sso:
+    login: ENC(dSbUtoK5k2TE0p1YMZoxDia3+uUx2njw+ujxsOoVFyQ=)
+    password: ENC(l2Ogu+dMtAvH83QYCTDmDGZS6C2njE0u)
+    backendclientname: gestionpic-vjs
+    authorizedUrls: https://sso.aeris-data.fr/auth/realms/aeris
+    adminrole: GESTIONPIC_USER, GESTIONPIC_ADMIN
+    userrole: GESTIONPIC_USER
 
 server:
     port: 8485

@@ -45,7 +45,7 @@ public class ProfileServiceTest {
 			existingProfile.setEmail("toto@gmail.com");
 			
 			when(profileDao.findByEmail("toto@gmail.com")).thenReturn(existingProfile);
-			profileService.createNewProfile("myToken", profile, "fr");
+			profileService.createNewProfile(null, profile, "fr");
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 			assertEquals("Ce courriel est déjà dans la base de données pour l'utilisateur TOTO", e.getReason());
@@ -61,7 +61,7 @@ public class ProfileServiceTest {
 			profile.setOrcid("111-222-333");
 			
 			when(profileDao.findByOrcid("111-222-333")).thenReturn(new Profile());
-			profileService.createNewProfile("myToken", profile, "fr");
+			profileService.createNewProfile(null, profile, "fr");
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
 			assertEquals("Cet ORCID est déjà dans la base de données pour l'utilisateur TEST", e.getReason());
@@ -72,7 +72,7 @@ public class ProfileServiceTest {
 	public void testDeleteUser() {
 		List<Repository> repos = new ArrayList<Repository>();
 		when(repositoryDao.findAllByUserId("123-123-123")).thenReturn(repos);
-		String result = profileService.deleteProfileSimulation("myToken", "fr", "123-123-123");
+		String result = profileService.deleteProfileSimulation(null, "fr", "123-123-123");
 		assertEquals("", result);
 		
 		Repository repo1 = new Repository();
@@ -92,7 +92,7 @@ public class ProfileServiceTest {
 		repos.add(repo1);
 		repos.add(repo2);
 		when(repositoryDao.findAllByUserId("123-123-123")).thenReturn(repos);
-		result = profileService.deleteProfileSimulation("myToken", "fr", "123-123-123");
+		result = profileService.deleteProfileSimulation(null, "fr", "123-123-123");
 		assertEquals("Ce compte va être supprimé des entrepôts: My second repo<br/>Les entrepôts suivant vont êtres supprimés: My first repo<br/>", result);
 	}
 
