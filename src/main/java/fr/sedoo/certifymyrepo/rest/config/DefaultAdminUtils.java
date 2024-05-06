@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDaoMongoImpl;
-import fr.sedoo.certifymyrepo.rest.dao.OrcidDao;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
@@ -24,9 +23,6 @@ public class DefaultAdminUtils {
 	
 	@Autowired
 	private AdminDao adminDao;
-	
-	@Autowired
-	private OrcidDao orcidDao;
 	
 	@Value("${orcid.admins}")
 	private String[] admins;
@@ -69,25 +65,6 @@ public class DefaultAdminUtils {
 				LOG.info("{} has been updated as Super Admin", userProfile.getName());
 			} else {
 				LOG.info("{} has been updated as Admin", userProfile.getName());
-			}
-		} else {
-			ProfileDto user = orcidDao.getUserInfoByOrcid(orcid);
-			if(user != null){	
-				userProfile = new Profile();
-				userProfile.setOrcid(orcid);
-				userProfile.setName(user.getName());
-				userProfile.setEmail(user.getEmail());
-				userProfile = profileDao.save(userProfile);
-				Admin entity = new Admin();
-				entity.setName(userProfile.getName());
-				entity.setUserId(userProfile.getId());
-				entity.setSuperAdmin(isSuperAdmin);
-				adminDao.save(entity);
-				if(isSuperAdmin) {
-					LOG.info("{} has been added as Super Admin", user.getName());
-				} else {
-					LOG.info("{} has been added as Admin", user.getName());
-				}
 			}
 		}
 	}

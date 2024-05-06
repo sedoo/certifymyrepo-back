@@ -63,13 +63,13 @@ import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 import fr.sedoo.sso.utils.jwt.Credential;
 import fr.sedoo.sso.utils.jwt.JwtUtils;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @CrossOrigin
+@Slf4j
 @RequestMapping(value = "/repository/v1_0")
 public class RepositoryService {
-
-	private static final Logger LOG = LoggerFactory.getLogger(RepositoryService.class);
 
 	@Autowired
 	SsoPermissionEvaluator permissionEvaluator;
@@ -115,12 +115,12 @@ public class RepositoryService {
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/getRepository/{id}", method = RequestMethod.GET)
 	public RepositoryDto getRepository(HttpServletRequest request, @PathVariable(name = "id") String id) {
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		Profile loggedUser = permissionEvaluator.getUser(request);
 		Repository repo = null;
-		if (loggedUser.isAdmin()) {
+		if (permissionEvaluator.isAdmin(request)) {
 			repo = repositoryDao.findById(id);
 		} else {
-			repo = repositoryDao.findByIdAndUserId(id, loggedUser.getUserId());
+			repo = repositoryDao.findByIdAndUserId(id, loggedUser.getId());
 		}
 		Affiliation affiliation = null;
 		if(repo != null) {
@@ -155,23 +155,15 @@ public class RepositoryService {
 	@RequestMapping(value = "/listAllFullRepositories", method = RequestMethod.GET)
 	public List<FullRepositoryDto> listAllFullRepositories(HttpServletRequest request) {
 		
-		Credential credentials = permissionEvaluator.getCredentials(request);
+		Profile user = permissionEvaluator.getUser(request);
 		List<Repository> repos = null;
 		boolean isAdmin = permissionEvaluator.isAdmin(request);
 		if (isAdmin) {
 			repos = repositoryDao.findAll();
 		} else {
-			repos = repositoryDao.findAllByUserId(credentials.getId());
+			repos = repositoryDao.findAllByUserId(user.getId());
 		}
-		return getHealthInformationList(repos, credentials.getId(), isAdmin);
-	}
-	
-	@RequestMapping(value = "/listUserWithRepo", method = RequestMethod.GET)
-	public List<FullRepositoryDto> listUserWithRepo(HttpServletRequest request) {
-		
-		List<Repository> repos = repositoryDao.findAll();
-
-		return null;
+		return getHealthInformationList(repos, user.getId(), isAdmin);
 	}
 	
 	/**
@@ -183,8 +175,8 @@ public class RepositoryService {
 	@RequestMapping(value = "/listMyRepositories", method = RequestMethod.GET)
 	public List<RepositoryDto> listMyRepositories(HttpServletRequest request) {
 		
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-		List<Repository> repos =  repositoryDao.findAllByUserId(loggedUser.getUserId());
+		Profile user = permissionEvaluator.getUser(request);
+		List<Repository> repos =  repositoryDao.findAllByUserId(user.getId());
 		List<RepositoryDto> result = new ArrayList<>();
 		for(Repository repo : repos) {
 			Affiliation affiliation = null;
@@ -588,7 +580,7 @@ public class RepositoryService {
 				emailSender.sendNotification(contact);
 			}
 		} else {
-			LOG.error("No repository found. No access can be granted.");
+			log.error("No repository found. No access can be granted.");
 		}
 
 	}

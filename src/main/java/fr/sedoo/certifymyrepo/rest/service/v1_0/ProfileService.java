@@ -12,16 +12,12 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
+import fr.sedoo.certifymyrepo.rest.config.SsoPermissionEvaluator;
 import fr.sedoo.certifymyrepo.rest.dao.AdminDao;
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -48,8 +45,6 @@ import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 @CrossOrigin
 @RequestMapping(value = "/profile/v1_0")
 public class ProfileService {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(ProfileService.class);
 	
 	@Autowired
 	private ProfileDao profileDao;
@@ -73,17 +68,15 @@ public class ProfileService {
 	private EmailSender emailSender;
 	
 	@Autowired
+	SsoPermissionEvaluator permissionEvaluator;
+	
+	@Autowired
 	private ApplicationConfig appConfig;
 	
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
-    public Profile profile(HttpServletRequest request) {	
-		Optional<Profile> profile = profileDao.findById(LoginUtils.getLoggedUser().getUserId());
-		if(profile.isPresent()) {
-			return profile.get();
-		} else {
-			return null;
-		}
+    public Profile profile(HttpServletRequest request) {
+		return permissionEvaluator.getUser(request);
     }
 	
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
@@ -94,6 +87,8 @@ public class ProfileService {
 		
         Locale locale = new Locale(language);
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
+        
+        profile.setSsoId(permissionEvaluator.getSsoId(request));
         
 		if(profile.getEmail() != null) {
 			Profile existingProfile = profileDao.findByEmail(profile.getEmail());

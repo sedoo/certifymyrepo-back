@@ -63,4 +63,9 @@ public class ProfileDaoMongoImpl implements ProfileDao {
 		return profileRepository.findByEmail(email.toLowerCase());
 	}
 
+	@Override
+	public Profile findBySsoId(String ssoId) {
+		return profileRepository.findBySsoId(ssoId);
+	}
+
 }

@@ -13,6 +13,8 @@ public interface ProfileRepository extends MongoRepository<Profile, String> {
 	
 	Profile findByEmail(String email);
 	
+	Profile findBySsoId(String ssoId);
+	
 	List<Profile> findByIdIn(List<String> idList);
 	
 	@Query(value = "{$or:[{'name':{$regex : ?0, $options: 'i'}},{'email':{$regex : ?0, $options: 'i'}}]}")

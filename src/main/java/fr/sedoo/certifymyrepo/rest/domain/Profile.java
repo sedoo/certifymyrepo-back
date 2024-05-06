@@ -18,6 +18,7 @@ public class Profile {
 
 	@Id
 	private String id;
+	private String ssoId;
 	private String orcid;
 	private String name;
 	private String email;

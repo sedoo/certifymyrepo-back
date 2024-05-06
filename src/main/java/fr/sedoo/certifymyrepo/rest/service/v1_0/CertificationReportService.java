@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -145,9 +147,9 @@ public class CertificationReportService {
 	 * @param repositoryId
 	 * @return list of all reports for a given repository and rights of the user on this repository
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/listByRepositoryId/{repositoryId}", method = RequestMethod.GET)
-	public MyReports listByRepositoryId(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "repositoryId") String repositoryId) {
+	public MyReports listByRepositoryId(HttpServletRequest request, @PathVariable(name = "repositoryId") String repositoryId) {
 		MyReports result = new MyReports();
 		
 		// Get All the reports from the given repository id
@@ -212,15 +214,15 @@ public class CertificationReportService {
 	 * @param authHeader
 	 * @return list of all templates
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/getTemplatesList", method = RequestMethod.GET)
-	public List<TemplateName> getTemplateList(@RequestHeader("Authorization") String authHeader) {
+	public List<TemplateName> getTemplateList(HttpServletRequest request) {
 		return certificationReportTemplateDao.getTemplateNameList();
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/getReport/{reportId}", method = RequestMethod.GET)
-	public MyReport getReport(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "reportId") String id) {
+	public MyReport getReport(HttpServletRequest request, @PathVariable(name = "reportId") String id) {
 		
 		MyReport result = new MyReport();
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
@@ -297,9 +299,9 @@ public class CertificationReportService {
 		return editor;
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/copy/{reportId}/to/{repositoryIdDestination}", method = RequestMethod.GET)
-	public CertificationReport copy(@RequestHeader("Authorization") String authHeader, 
+	public CertificationReport copy(HttpServletRequest request, 
 			@PathVariable(name = "reportId") String reportId,
 			@PathVariable(name = "repositoryIdDestination") String repositoryIdDestination) {
 		
@@ -349,9 +351,9 @@ public class CertificationReportService {
 		return result;
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
-	public CertificationReport saveJson(@RequestHeader("Authorization") String authHeader, 
+	public CertificationReport saveJson(HttpServletRequest request, 
 			@RequestBody CertificationReport certificationReport,
 			@RequestParam String language) {
 		CertificationReport result = null;
@@ -432,9 +434,9 @@ public class CertificationReportService {
 		}
 	}
 
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
-	public void delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String  id) {
+	public void delete(HttpServletRequest request, @PathVariable(name = "id") String  id) {
 		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		
 		checkStatus(id);
@@ -464,22 +466,22 @@ public class CertificationReportService {
 		}
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/getComments/{reportId}", method = RequestMethod.GET)
-	public List<RequirementCommentsDto> getComments(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "reportId") String id) {
+	public List<RequirementCommentsDto> getComments(HttpServletRequest request, @PathVariable(name = "reportId") String id) {
 		return commentsDao.getCommentsByReportId(id);
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/getCommentsByUserid/{userId}", method = RequestMethod.GET)
-	public List<RequirementCommentsDto> getCommentsByUserid(@RequestHeader("Authorization") String authHeader, 
+	public List<RequirementCommentsDto> getCommentsByUserid(HttpServletRequest request,
 			@PathVariable(name = "userId") String id) {
 		return commentsDao.getCommentsByUserId(id);
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/saveComments", method = RequestMethod.POST)
-	public RequirementComments saveComments(@RequestHeader("Authorization") String authHeader, 
+	public RequirementComments saveComments(HttpServletRequest request, 
 			@RequestParam String reportId,
 			@RequestParam String repositoryId,
 			@RequestParam String requirementCode,
@@ -528,11 +530,11 @@ public class CertificationReportService {
 	 * @param uploadedFile used to receive radar chart image from UI
 	 * @return file in byte array
 	 */
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/download", method = RequestMethod.POST, consumes = "multipart/form-data")
 	public void download(
+			HttpServletRequest request,
 			HttpServletResponse response,
-			@RequestHeader("Authorization") String authHeader, 
 			@RequestParam String reportId,
 			@RequestParam String language,
 			@RequestParam String format,
@@ -756,16 +758,16 @@ public class CertificationReportService {
 		return mapRequirements;
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/updateConnectedUser", method = RequestMethod.POST)
-	public void updateConnectedUser(@RequestHeader("Authorization") String authHeader, 
+	public void updateConnectedUser(HttpServletRequest request, 
 			@RequestParam String reportId, @RequestParam String userId, @RequestParam String userName) {
 		connectedUserDao.updateCache(reportId, userId, userName);
 	}
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/listConnectedUser", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public Map<String, List<ConnectedUser>> listConnectedUser(@RequestHeader("Authorization") String authHeader,
+	public Map<String, List<ConnectedUser>> listConnectedUser(HttpServletRequest request,
 			@RequestParam List<String> reportIdList, @RequestParam String userId) {
 		
 		Map<String, List<ConnectedUser>> result = new HashMap<String, List<ConnectedUser>>();

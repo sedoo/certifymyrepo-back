@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -47,10 +49,10 @@ public class FileService {
 	@Autowired
 	private ApplicationConfig config;
 	
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(path = "/{reportId}/{codeRequirement}/{fileName}", method = RequestMethod.GET)
 	public void download(
-			@RequestHeader("Authorization") String authHeader,
+			HttpServletRequest request,
 			HttpServletResponse response,
 			@PathVariable ("reportId") String reportId,         
 			@PathVariable ("codeRequirement") String codeRequirement,
@@ -73,10 +75,10 @@ public class FileService {
 		}
 	}
 
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(path = "/upload", method = RequestMethod.POST)
 	public List<String> uploadFile(
-			@RequestHeader("Authorization") String authHeader,
+			HttpServletRequest request,
 	        @RequestPart("files") MultipartFile[] files, 
 	        @RequestParam("reportId") String reportId,         
 	        @RequestParam("codeRequirement") String codeRequirement) { 
@@ -129,10 +131,10 @@ public class FileService {
 				.replaceAll("[^\\p{ASCII}]", "");
 	}
 
-	@Secured({Roles.AUTHORITY_USER})
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(path = "/delete", method = RequestMethod.DELETE)
 	public ResponseEntity<String> delete(
-			@RequestHeader("Authorization") String authHeader,
+			HttpServletRequest request,
 	        @RequestParam("reportId") String reportId,         
 	        @RequestParam("codeRequirement") String codeRequirement,
 	        @RequestParam("fileName") String fileName) { 

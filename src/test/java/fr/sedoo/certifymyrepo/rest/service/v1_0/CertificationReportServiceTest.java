@@ -107,7 +107,7 @@ public class CertificationReportServiceTest {
 		value.setRequirements(requirements);
 		when(certificationReportTemplateMock.getCertificationReportTemplate(any())).thenReturn(value);
 		
-		MyReports result = reportService.listByRepositoryId("myToken", "repository_id");
+		MyReports result = reportService.listByRepositoryId(null, "repository_id");
         assertTrue(result.getReports().size() == 1);
         assertEquals(result.getReports().get(0).getVersion(), "1.1");
 	}
@@ -117,7 +117,7 @@ public class CertificationReportServiceTest {
 		CertificationReport report = new CertificationReport();
 		report.setVersion("1.1");
 		try {
-			reportService.listByRepositoryId("myToken", "123");
+			reportService.listByRepositoryId(null, "123");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -134,7 +134,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.findById("report_id")).thenReturn(report);
 		
 		try {
-			MyReport result = reportService.getReport("myToken", "report_id");
+			MyReport result = reportService.getReport(null, "report_id");
 	        assertNotNull(result.getReport());
 	        assertFalse("Must be in READ ONLY mode",result.isEditExistingAllowed());
 	        assertFalse("Must be in READ ONLY mode",result.isValidationAllowed());
@@ -153,7 +153,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.findById("report_id")).thenReturn(report);
 		
 		try {
-			MyReport result = reportService.getReport("myToken", "report_id");
+			MyReport result = reportService.getReport(null, "report_id");
 			assertNotNull(result.getReport());
 	        assertTrue("An editor can edit an existing report",result.isEditExistingAllowed());
 	        assertTrue("An editor can validate a report",result.isValidationAllowed());
@@ -171,7 +171,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.findById("report_id")).thenReturn(report);
 		
 		try {
-			reportService.getReport("myToken", "report_id");
+			reportService.getReport(null, "report_id");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -186,7 +186,7 @@ public class CertificationReportServiceTest {
 		report.setRepositoryId("repository_id");
 		
 		try {
-			reportService.saveJson("myToken", report, "fr");
+			reportService.saveJson(null, report, "fr");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -202,7 +202,7 @@ public class CertificationReportServiceTest {
 		report.setRepositoryId("repository_id");
 		
 		try {
-			reportService.saveJson("myToken", report, "fr");
+			reportService.saveJson(null, report, "fr");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -220,7 +220,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.save(report)).thenReturn(report);
 		
 		try {
-			CertificationReport result = reportService.saveJson("myToken", report, "fr");
+			CertificationReport result = reportService.saveJson(null, report, "fr");
 			assertEquals(report.getVersion(),result.getVersion());
 		} catch(ForbiddenException e) {
 			assertTrue("An exception had to be thrown", false);
@@ -237,7 +237,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.findById("report_id")).thenReturn(report);
 		
 		try {
-			reportService.delete("myToken", "report_id");
+			reportService.delete(null, "report_id");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());
@@ -255,7 +255,7 @@ public class CertificationReportServiceTest {
 		when(certificationReportDaoMock.findById("report_id")).thenReturn(report);
 		
 		try {
-			reportService.delete("myToken", "report_id");
+			reportService.delete(null, "report_id");
 			assertTrue("An exception had to be thrown", false);
 		} catch(ResponseStatusException e) {
 			assertEquals("Precondition Failed", e.getStatus().getReasonPhrase());

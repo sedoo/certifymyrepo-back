@@ -10,6 +10,7 @@ public interface ProfileDao {
 	Optional<Profile> findById(String id);
 	Profile findByOrcid(String orcid);
 	Profile findByEmail(String email);
+	Profile findBySsoId(String ssoId);
 	List<Profile> findByOrcidIn(List<String> orcidList);
 	List<Profile> findAll();
 	List<Profile> findByNameOrEmail(String regex);

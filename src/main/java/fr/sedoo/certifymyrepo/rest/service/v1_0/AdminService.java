@@ -8,10 +8,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,9 +52,9 @@ public class AdminService {
 		return "yes";
 	}
 	
-	@Secured({Roles.AUTHORITY_ADMIN})
+	@PreAuthorize("@permissionEvaluator.isAdmin(#request)")
 	@RequestMapping(value = "/save/{userId}", method = RequestMethod.POST)
-	public String save(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "userId") String  userId) {
+	public String save(HttpServletRequest request, @PathVariable(name = "userId") String  userId) {
 		String adminId = null;
 		Optional<Profile> user = profileDao.findById(userId);
 		if(user.isPresent()) {
@@ -68,16 +71,16 @@ public class AdminService {
 		return adminId;
 	}
 	
-	@Secured({Roles.AUTHORITY_ADMIN})
+	@PreAuthorize("@permissionEvaluator.isAdmin(#request)")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
-	public boolean delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String  id) {
+	public boolean delete(HttpServletRequest request, @PathVariable(name = "id") String  id) {
 		adminDao.delete(id);
 		return true;
 	}
 	
-	@Secured({Roles.AUTHORITY_ADMIN})
+	@PreAuthorize("@permissionEvaluator.isAdmin(#request)")
 	@RequestMapping(value = "/listAllUsers", method = RequestMethod.GET)
-	public List<ProfileDto> listAll(@RequestHeader("Authorization") String authHeader) {
+	public List<ProfileDto> listAll(HttpServletRequest request) {
 		List<ProfileDto> result = new ArrayList<>();
 		List<Profile> usersProfile = profileDao.findAll();
 		Map<String, Admin> mapAdmin = getAllAdmin();

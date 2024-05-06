@@ -4,24 +4,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.domain.Affiliation;
 import fr.sedoo.certifymyrepo.rest.dto.AffiliationDto;
-import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
-import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
-import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 
 @RestController
 @CrossOrigin
@@ -36,9 +32,9 @@ public class AffiliationService {
 		return "yes";
 	}
 
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
-	public List<AffiliationDto> list() {
+	public List<AffiliationDto> list(HttpServletRequest request) {
 
 		List<AffiliationDto> result = new ArrayList<AffiliationDto>();
 
@@ -50,26 +46,16 @@ public class AffiliationService {
 		return result;
 	}
 
-	@Secured({ Roles.AUTHORITY_USER })
+	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/save", method = RequestMethod.POST)
-	public Affiliation saveAffiliation(@RequestBody Affiliation affiliation) {
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-		if (loggedUser == null) {
-			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "Not logged");
-		} else {
-			return affiliationDao.save(affiliation);
-		}
+	public Affiliation saveAffiliation(HttpServletRequest request, @RequestBody Affiliation affiliation) {
+		return affiliationDao.save(affiliation);
 	}
 	
-	@Secured({ Roles.AUTHORITY_ADMIN })
+	@PreAuthorize("@permissionEvaluator.isAdmin(#request)")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
-	public void delete(@RequestHeader("Authorization") String authHeader, @PathVariable(name = "id") String id) {
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-		if (loggedUser == null) {
-			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "Not logged");
-		} else {
-			affiliationDao.deleteById(id);
-		}
+	public void delete(HttpServletRequest request, @PathVariable(name = "id") String id) {
+		affiliationDao.deleteById(id);
 	}
 
 }
