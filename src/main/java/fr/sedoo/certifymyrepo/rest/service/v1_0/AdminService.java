@@ -13,14 +13,13 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,12 +29,13 @@ import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.dto.ContactDto;
 import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
-import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @CrossOrigin
 @RequestMapping(value = "/admin/v1_0")
+@Slf4j
 public class AdminService {
 
 	@Autowired
@@ -51,6 +51,19 @@ public class AdminService {
 	public String isalive() {
 		return "yes";
 	}
+	
+	@RequestMapping(value = "/isAdmin", method = RequestMethod.GET)
+	public boolean isAdmin(@RequestParam(name = "email") String  email) {
+		Profile user = profileDao.findByEmail(email);
+		if(user != null) {
+			boolean isSuperAdmin = adminDao.isSuperAdmin(user.getId());
+			boolean isAdmin = adminDao.isAdmin(user.getId());
+			log.info("Is {} super admin {} ; is admin {}", email, isSuperAdmin, isAdmin);
+			return isSuperAdmin || isAdmin;
+		}
+		return false;
+	}
+	
 	
 	@PreAuthorize("@permissionEvaluator.isAdmin(#request)")
 	@RequestMapping(value = "/save/{userId}", method = RequestMethod.POST)
