@@ -11,7 +11,6 @@ import fr.sedoo.certifymyrepo.rest.dao.AdminDaoMongoImpl;
 import fr.sedoo.certifymyrepo.rest.dao.ProfileDao;
 import fr.sedoo.certifymyrepo.rest.domain.Admin;
 import fr.sedoo.certifymyrepo.rest.domain.Profile;
-import fr.sedoo.certifymyrepo.rest.dto.ProfileDto;
 
 @Component
 public class DefaultAdminUtils {

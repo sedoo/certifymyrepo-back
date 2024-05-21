@@ -19,7 +19,6 @@ import fr.sedoo.certifymyrepo.rest.domain.Profile;
 import fr.sedoo.certifymyrepo.rest.domain.Repository;
 import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
-import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProfileServiceTest {
