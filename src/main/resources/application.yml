@@ -26,6 +26,7 @@ sso:
 server:
     port: 8485
     max-http-header-size: 128000
+    error.include-message: always
 spring:
    data.mongodb:
       host: localhost
