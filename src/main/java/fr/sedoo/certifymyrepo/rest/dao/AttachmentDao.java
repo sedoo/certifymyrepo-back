@@ -24,7 +24,7 @@ public interface AttachmentDao {
 	boolean deleteAllFilesInFolder(String folderName);
 	
 	/**
-	 * List all files on crusöe FTP
+	 * List all files on CRUSOE FTP
 	 * report-uuid
 	 * 	|_ requirement code 0
 	 * 	|		|_ files

@@ -71,9 +71,9 @@ public class ValidationEmailSender implements EmailSender {
 				htmlEmail.setFrom(mailConfig.getFrom());
 			}
 			if(StringUtils.isNotEmpty(contact.getCategory())) {
-				htmlEmail.setSubject("[Crusöe validation platform] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));
+				htmlEmail.setSubject("[CRUSOE validation platform] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));
 			} else {
-				htmlEmail.setSubject("[Crusöe validation platform] ".concat(contact.getSubject()));
+				htmlEmail.setSubject("[CRUSOE validation platform] ".concat(contact.getSubject()));
 			}
 			
 			StringBuilder msg = new StringBuilder();
