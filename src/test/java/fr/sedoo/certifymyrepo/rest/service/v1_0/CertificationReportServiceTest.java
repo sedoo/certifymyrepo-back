@@ -40,7 +40,6 @@ import fr.sedoo.certifymyrepo.rest.domain.RepositoryUser;
 import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
-import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
 
@@ -63,8 +62,6 @@ public class CertificationReportServiceTest {
 	AttachmentDao ftpClient;
 	
 	@Mock
-	ApplicationUser applicationUser;
-	@Mock
 	Authentication authentication;
 	@Mock
 	SecurityContext securityContext;
@@ -80,14 +77,11 @@ public class CertificationReportServiceTest {
 		// security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(applicationUser);
         when(authentication.isAuthenticated()).thenReturn(true);
         
         // Authenticated user has an USER role
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority(Roles.AUTHORITY_USER));
-        ApplicationUser user = new ApplicationUser("1234","Mister Test", authorities);
-        when(authentication.getPrincipal()).thenReturn(user);
         
     }
 	

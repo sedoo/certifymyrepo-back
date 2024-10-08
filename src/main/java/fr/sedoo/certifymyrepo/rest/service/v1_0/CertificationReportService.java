@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import fr.sedoo.certifymyrepo.rest.config.ApplicationConfig;
+import fr.sedoo.certifymyrepo.rest.config.SsoPermissionEvaluator;
 import fr.sedoo.certifymyrepo.rest.dao.AffiliationDao;
 import fr.sedoo.certifymyrepo.rest.dao.AttachmentDao;
 import fr.sedoo.certifymyrepo.rest.dao.CertificationReportDao;
@@ -82,8 +83,6 @@ import fr.sedoo.certifymyrepo.rest.export.PdfPrinter;
 import fr.sedoo.certifymyrepo.rest.export.Report;
 import fr.sedoo.certifymyrepo.rest.export.Requirement;
 import fr.sedoo.certifymyrepo.rest.ftp.DomainFilter;
-import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
-import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.exception.BusinessException;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
@@ -133,6 +132,9 @@ public class CertificationReportService {
 	@Autowired
 	private ConnectedUserDao connectedUserDao;
 	
+	@Autowired
+	SsoPermissionEvaluator permissionEvaluator;
+	
 	@Value("${temporary.folder}")
 	String temporaryFolderName;
 
@@ -176,19 +178,19 @@ public class CertificationReportService {
 			reportsDto.add(reportDto);
 		}
 		result.setReports(reportsDto);
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 		// super admin has all rights
-		if (loggedUser.isSuperAdmin()) {
+		if (permissionEvaluator.isAdmin(request)) {
 			result.setEditExistingAllowed(true);
 			result.setCreationValidationAllowed(true);
 		} else {
+			Profile loggedUser = permissionEvaluator.getUser(request);
 			// an admin (COSO co-pilot) has only read access if he is not declared as user on the repository
 			result.setEditExistingAllowed(false);
 			result.setCreationValidationAllowed(false);
-			Repository repo = repositoryDao.findByIdAndUserId(repositoryId, loggedUser.getUserId());
+			Repository repo = repositoryDao.findByIdAndUserId(repositoryId, loggedUser.getId());
 			if (null != repo) {
 				for( RepositoryUser user : repo.getUsers()) {
-					if(StringUtils.equals(user.getId(),loggedUser.getUserId())) {
+					if(StringUtils.equals(user.getId(),loggedUser.getId())) {
 						if(StringUtils.equals(Roles.EDITOR, user.getRole())) {
 							result.setEditExistingAllowed(true);
 							result.setCreationValidationAllowed(true);
@@ -202,8 +204,8 @@ public class CertificationReportService {
 						break;
 					}
 				}
-			} else if(!loggedUser.isAdmin()) {
-				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), repositoryId));
+			} else {
+				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getId(), repositoryId));
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access thoses reports");
 			}
 		}
@@ -225,7 +227,7 @@ public class CertificationReportService {
 	public MyReport getReport(HttpServletRequest request, @PathVariable(name = "reportId") String id) {
 		
 		MyReport result = new MyReport();
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		Profile loggedUser = permissionEvaluator.getUser(request);
 		
 		CertificationReport report = certificationReportDao.findById(id);
 		result.setReport(report);
@@ -236,12 +238,12 @@ public class CertificationReportService {
 			result.setEditExistingAllowed(false);
 			result.setValidationAllowed(false);
 		} else {
-			String currentEditor = isUserEditingReport(id, loggedUser.getUserId());
+			String currentEditor = isUserEditingReport(id, loggedUser.getId());
 			if(null != currentEditor) { 
 				result.setEditExistingAllowed(false);
 				result.setValidationAllowed(false);
 				result.setCurrentEditor(currentEditor);
-			} else if (loggedUser.isSuperAdmin()) {
+			} else if (permissionEvaluator.isAdmin(request)) {
 				// super admin has all rights unless if the status is release no body can edit or re-validate it
 				result.setEditExistingAllowed(true);
 				result.setValidationAllowed(true);
@@ -250,10 +252,10 @@ public class CertificationReportService {
 				result.setEditExistingAllowed(false);
 				result.setValidationAllowed(false);
 				if(report != null) {
-					Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
+					Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getId());
 					if (null != repo) {
 						for( RepositoryUser user : repo.getUsers()) {
-							if(StringUtils.equals(user.getId(),loggedUser.getUserId())) {
+							if(StringUtils.equals(user.getId(),loggedUser.getId())) {
 								if(StringUtils.equals(Roles.EDITOR, user.getRole())) {
 									result.setEditExistingAllowed(true);
 									result.setValidationAllowed(true);
@@ -267,8 +269,8 @@ public class CertificationReportService {
 								break;
 							}
 						}
-					} else if(!loggedUser.isAdmin()) {
-						LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
+					} else {
+						LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getId(), report.getRepositoryId()));
 						throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 					}
 				}
@@ -306,21 +308,22 @@ public class CertificationReportService {
 			@PathVariable(name = "repositoryIdDestination") String repositoryIdDestination) {
 		
 		CertificationReport result = null;
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		
+		Profile loggedUser = permissionEvaluator.getUser(request);
 		
 		// Double check on API side only administrators or EDITOR can create a new report
-		Repository repo = repositoryDao.findByIdAndUserId(repositoryIdDestination, loggedUser.getUserId());
+		Repository repo = repositoryDao.findByIdAndUserId(repositoryIdDestination, loggedUser.getId());
 		if (null != repo) {
 			for( RepositoryUser user : repo.getUsers()) {
-				if(StringUtils.equals(user.getId(),loggedUser.getUserId())) {
+				if(StringUtils.equals(user.getId(),loggedUser.getId())) {
 					if(!StringUtils.equals(Roles.EDITOR, user.getRole())) {
 						throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 					}
 					break;
 				}
 			}
-		} else if(!loggedUser.isAdmin()) {
-			LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), repositoryIdDestination));
+		} else if(!permissionEvaluator.isAdmin(request)) {
+			LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getId(), repositoryIdDestination));
 			throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 		}
 		
@@ -357,27 +360,27 @@ public class CertificationReportService {
 			@RequestBody CertificationReport certificationReport,
 			@RequestParam String language) {
 		CertificationReport result = null;
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		Profile loggedUser = permissionEvaluator.getUser(request);
 		
 		checkStatus(certificationReport.getId());
 		
-		if (loggedUser.isAdmin()) {
+		if (permissionEvaluator.isAdmin(request)) {
 			checkNotifications(certificationReport);
 			result = certificationReportDao.save(certificationReport);
 		} else {
-			Repository repo = repositoryDao.findByIdAndUserId(certificationReport.getRepositoryId(), loggedUser.getUserId());
+			Repository repo = repositoryDao.findByIdAndUserId(certificationReport.getRepositoryId(), loggedUser.getId());
 			if (null != repo) {
 				if(repo.getUsers().stream().anyMatch(
-						s -> StringUtils.equals(s.getId(),loggedUser.getUserId()) 
+						s -> StringUtils.equals(s.getId(),loggedUser.getId()) 
 						&& !StringUtils.equals(s.getRole(), Roles.EDITOR))) {
-					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
+					LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot edit this report", loggedUser.getId(), certificationReport.getRepositoryId()));
 					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 				} else {
 					checkNotifications(certificationReport);
 					result = certificationReportDao.save(certificationReport);
 				}
 			} else {
-				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot edit this report", loggedUser.getUserId(), certificationReport.getRepositoryId()));
+				LOG.error(String.format("Le user %s does not own the repository id %s. He cannot edit this report", loggedUser.getId(), certificationReport.getRepositoryId()));
 				throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to edit this report");
 			}
 		}
@@ -437,29 +440,29 @@ public class CertificationReportService {
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
 	public void delete(HttpServletRequest request, @PathVariable(name = "id") String  id) {
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
+		Profile loggedUser = permissionEvaluator.getUser(request);
 		
 		checkStatus(id);
 		
-		if (loggedUser.isAdmin()) {
+		if (permissionEvaluator.isAdmin(request)) {
 			certificationReportDao.delete(id);
 			ftpClient.deleteAllFilesInFolder(id);
 		} else {
 			CertificationReport report = certificationReportDao.findById(id);
 			if(report != null ) {
-				Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
+				Repository repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getId());
 				if (null != repo) {
 					if(repo.getUsers().stream().anyMatch(
-							s -> StringUtils.equals(s.getId(),loggedUser.getUserId()) 
+							s -> StringUtils.equals(s.getId(),loggedUser.getId()) 
 							&& StringUtils.equals(s.getRole(),"READER"))) {
-						LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot read delete a report", loggedUser.getUserId(), report.getRepositoryId()));
+						LOG.error(String.format("Le user %s is not MANAGER of the repository id %s. He cannot read delete a report", loggedUser.getId(), report.getRepositoryId()));
 						throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to delete this report");
 					} else {
 						certificationReportDao.delete(id);
 						ftpClient.deleteAllFilesInFolder(id);
 					}
 				} else {
-					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
+					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getId(), report.getRepositoryId()));
 					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to delete this report");
 				}
 			}
@@ -550,8 +553,7 @@ public class CertificationReportService {
 			File localFolder = new File(workDirectory, UUID.randomUUID().toString());
 			localFolder.mkdirs();
 			
-			ApplicationUser loggedUser = null;//LoginUtils.getLoggedUser();
-			Report printableReport = getFullReportInformation(loggedUser, reportId, language, Boolean.parseBoolean(comments));
+			Report printableReport = getFullReportInformation(request, reportId, language, Boolean.parseBoolean(comments));
 			String fileName = printableReport.getTitle();
 			fileName = fileName.replace(" ", "_");
 			fileName = fileName.replace("/", "-");
@@ -616,7 +618,7 @@ public class CertificationReportService {
 	 * @param service
 	 * @return PrintableReport
 	 */
-	private Report getFullReportInformation(ApplicationUser loggedUser, String reportId, String language, boolean isCommentsRequested) {
+	private Report getFullReportInformation(HttpServletRequest request, String reportId, String language, boolean isCommentsRequested) {
 		
         Locale locale = new Locale(language);
         ResourceBundle messages = ResourceBundle.getBundle("messages", locale);
@@ -636,11 +638,13 @@ public class CertificationReportService {
 			
 			// Get repository name and check access in mean time
 			if(report != null ) {
+				Profile loggedUser = permissionEvaluator.getUser(request);
 				Repository repo = null;
-				if (loggedUser != null && !loggedUser.isAdmin()) {
-					repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getUserId());
-				} else {
+				if (permissionEvaluator.isAdmin(request)) {
 					repo = repositoryDao.findById(report.getRepositoryId());
+				} else {
+					loggedUser = permissionEvaluator.getUser(request);
+					repo = repositoryDao.findByIdAndUserId(report.getRepositoryId(), loggedUser.getId());
 				}
 				if (null != repo) {
 					if(repo.getAffiliationId() != null) {
@@ -654,7 +658,7 @@ public class CertificationReportService {
 						}
 					}
 				} else {
-					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getUserId(), report.getRepositoryId()));
+					LOG.error(String.format("Le user %s does not own the repository id %s. He cannot read the reports", loggedUser.getId(), report.getRepositoryId()));
 					throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "You do not have rights to access this report");
 				}
 			}

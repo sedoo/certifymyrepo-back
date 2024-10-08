@@ -53,8 +53,6 @@ import fr.sedoo.certifymyrepo.rest.dto.ReportDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryDto;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryHealth;
 import fr.sedoo.certifymyrepo.rest.dto.RepositoryUserDto;
-import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
-import fr.sedoo.certifymyrepo.rest.habilitation.LoginUtils;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.BadRequestException;
@@ -327,11 +325,26 @@ public class RepositoryService {
 		Repository result = null;
 		Repository repo = repositoryDao.findByName(repository.getName());
 		if(repo == null || StringUtils.equals(repository.getId(), repo.getId())) {
+			Profile loggedUser = permissionEvaluator.getUser(request);
 			if(repository.getId() != null) {
-				checkUsersNotification(repository);
+				checkUsersNotification(repository, loggedUser.getId());
 			}
 			if(repository.getId() == null) {
 				repository.setCreationDate(new Date());
+				if(repository.getUsers() == null || repository.getUsers().size() == 0) {
+					List<RepositoryUser> listUsers = new ArrayList<RepositoryUser>();
+					RepositoryUser user = new RepositoryUser(loggedUser.getId(), Roles.EDITOR);
+					listUsers.add(user);
+					repository.setUsers(listUsers);	
+				} else {
+					if(repository.getUsers()
+							.stream()
+							.filter(i -> StringUtils.equals(i.getId(), loggedUser.getId()))
+							.findAny().orElse(null) == null) {
+						repository.getUsers().add(new RepositoryUser(loggedUser.getId(), Roles.EDITOR));
+					}
+				}
+
 			}
 			result =  repositoryDao.save(repository);	
 		} else {
@@ -349,8 +362,9 @@ public class RepositoryService {
 	 * <li>An user access request has been declined</li>
 	 * Then a notification if needed
 	 * @param repository updated
+	 * @param connectedUserId 
 	 */
-	private void checkUsersNotification(Repository repository) {
+	private void checkUsersNotification(Repository repository, String connectedUserId) {
         ResourceBundle messagesFr = ResourceBundle.getBundle("messages", new Locale("fr"));
         ResourceBundle messagesEn = ResourceBundle.getBundle("messages", new Locale("en"));
         
@@ -428,9 +442,8 @@ public class RepositoryService {
 				}
 			}
 		} else {
-			ApplicationUser loggedUser = LoginUtils.getLoggedUser();
 			Set<String> newUserId = repository.getUsers().stream().map(repoUser -> repoUser.getId()).collect(Collectors.toSet());
-			newUserId.remove(loggedUser.getUserId());
+			newUserId.remove(connectedUserId);
 			for (String userId : newUserId) {
 				Optional<Profile> userProfile = profileDao.findById(userId);
 				if(userProfile.isPresent() && userProfile.get().getEmail() != null) {
@@ -473,12 +486,12 @@ public class RepositoryService {
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
 	public void delete(HttpServletRequest request, @PathVariable(name = "id") String  id) {
-		ApplicationUser loggedUser = LoginUtils.getLoggedUser();
-		if (loggedUser.isAdmin()) {
+		if (permissionEvaluator.isAdmin(request)) {
 			repositoryDao.delete(id);
 			certificationReportDao.deleteByRepositoryId(id);
 		} else {
-			if (null != repositoryDao.findByIdAndUserId(id, loggedUser.getUserId())) {
+			Profile loggedUser = permissionEvaluator.getUser(request);
+			if (null != repositoryDao.findByIdAndUserId(id, loggedUser.getId())) {
 				repositoryDao.delete(id);
 				certificationReportDao.deleteByRepositoryId(id);
 			} else {

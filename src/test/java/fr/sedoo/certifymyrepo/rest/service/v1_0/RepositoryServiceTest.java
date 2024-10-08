@@ -42,7 +42,6 @@ import fr.sedoo.certifymyrepo.rest.domain.template.CertificationTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.LevelTemplate;
 import fr.sedoo.certifymyrepo.rest.domain.template.RequirementTemplate;
 import fr.sedoo.certifymyrepo.rest.dto.FullRepositoryDto;
-import fr.sedoo.certifymyrepo.rest.habilitation.ApplicationUser;
 import fr.sedoo.certifymyrepo.rest.habilitation.Roles;
 import fr.sedoo.certifymyrepo.rest.service.notification.EmailSender;
 import fr.sedoo.certifymyrepo.rest.service.v1_0.exception.ForbiddenException;
@@ -55,10 +54,7 @@ public class RepositoryServiceTest {
 	
 	@Mock
 	CertificationReportDao certificationReportDaoMock;
-	
-	@Mock
-	private ApplicationUser applicationUser;
-	
+
 	@Mock
 	private Authentication authentication;
 	
@@ -88,14 +84,11 @@ public class RepositoryServiceTest {
 		// security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        when(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).thenReturn(applicationUser);
         when(authentication.isAuthenticated()).thenReturn(true);
         
         // Authenticated user has an USER role
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority(Roles.AUTHORITY_USER));
-        ApplicationUser user = new ApplicationUser("0000-0000-0000-1234","Mister Test", authorities);
-        when(authentication.getPrincipal()).thenReturn(user);
         
         // mock repository
         when(repositoryDaoMock.findAllByUserId("0000-0000-0000-1234")).thenReturn(createRepositoryList());
