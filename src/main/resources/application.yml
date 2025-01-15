@@ -50,7 +50,7 @@ management:
 mail:
    hostname: localhost
    subjectPrefix: '[CRUSOE]'
-   from: noreply@crusoe.fr
+   from: smtp@sedoo.fr
    
 
 orcid:
