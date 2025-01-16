@@ -68,7 +68,7 @@ public class ValidationEmailSender implements EmailSender {
 					htmlEmail.setFrom(contact.getFromEmail());
 				}
 			} else {
-				htmlEmail.setFrom(mailConfig.getFrom());
+				htmlEmail.setFrom(mailConfig.getFrom(), "CRUSOE no-reply");
 			}
 			if(StringUtils.isNotEmpty(contact.getCategory())) {
 				htmlEmail.setSubject("[CRUSOE validation platform] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));

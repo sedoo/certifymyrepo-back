@@ -59,7 +59,7 @@ public class ProdEmailSender implements EmailSender {
 					email.setFrom(contact.getFromEmail());
 				}
 			} else {
-				email.setFrom(mailConfig.getFrom());
+				email.setFrom(mailConfig.getFrom(), "CRUSOE no-reply");
 			}
 			if(StringUtils.isNotEmpty(contact.getCategory())) {
 				email.setSubject("[CRUSOE] [".concat(contact.getCategory()).concat("] ").concat(contact.getSubject()));
