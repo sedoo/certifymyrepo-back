@@ -65,9 +65,9 @@ shibboleth:
    url: https://services-shib.sedoo.fr
         
 ftp:
-    host: sedur.sedoo.fr
-    username: ENC(+OrYdf9k5Ec1YllPehstqA==)
-    password: ENC(BTqmeqii32r8gGeY7X+NKwVSGwK884y+)
+    host: repo.sedoo.fr
+    username: ENC(XvOJptRBPpsmZ13L0njdkUrQL/KPdskx)
+    password: ENC(KxNcarRB+lLXpgziv46rDBAQjpfWxkKE)
 
 ## check for notification (no activity on a repo) Every Monday at noon
 notification:
@@ -167,7 +167,9 @@ spring:
 server:
   port: 0
 
-ftp.password: ENC(kShx0LIsDEHIyQSf+BZuZDig3TCD8z8k)
+ftp:
+    username: ENC(0rzDr/vdmlNUxyO/rIl4gfvG0iNnPLoG)
+    password: ENC(8IL4LXGN2uY9Fit0e1QKiJ3RC9ggZwBq)
 tmpFolder: ${application.folder}/tmp
 
 app.url: https://crusoe.ouvrirlascience.fr/application
