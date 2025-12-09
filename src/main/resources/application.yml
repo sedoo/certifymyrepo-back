@@ -15,6 +15,8 @@ temporary:
    
 cors.allowed.origins: http://127.0.0.1:8080,http://localhost:8080,https://www.sedoo.fr,https://crusoe.ouvrirlascience.fr,https://coso-preprod.sedoo.fr
 
+root.dir: ${archive.folder}/sedoo/crusoe
+
 sso:
     login: ENC(dSbUtoK5k2TE0p1YMZoxDia3+uUx2njw+ujxsOoVFyQ=)
     password: ENC(l2Ogu+dMtAvH83QYCTDmDGZS6C2njE0u)
@@ -32,8 +34,11 @@ spring:
       host: localhost
       port: 27017
       database: crusoe
-      username: ENC(UQhjsOY6PLd80nd1PB+M6Q==)
+      superusername: ENC(JFIs5W+NUWNUqroUPvikTg==)
+      superuserpassword: ENC(9CErD4BUapFJA7i6d4KK+g==)
+      username: crusoe
       password: ENC(Fn87XueUaQubl7mbo5F4/g==)
+      forceuserdeletion: false
    servlet:
       multipart:
          max-file-size: 25MB
@@ -63,11 +68,6 @@ orcid:
 
 shibboleth:
    url: https://services-shib.sedoo.fr
-        
-ftp:
-    host: repo.sedoo.fr
-    username: ENC(XvOJptRBPpsmZ13L0njdkUrQL/KPdskx)
-    password: ENC(KxNcarRB+lLXpgziv46rDBAQjpfWxkKE)
 
 ## check for notification (no activity on a repo) Every Monday at noon
 notification:
@@ -141,9 +141,9 @@ spring:
    config.activate.on-profile: distant-preprod
    data.mongodb:
       host: localhost
-      port: 27018
-      database: crusoe-preprod
-      username: ENC(dd++TAvuVjOhnL/nazq20rEvIgVKT6F9)
+      port: 7027
+      database: ENC(ys6rI3p8r8DEVDqB0vHnw6qOCmb33hUb)
+      username: ENC(jxdctr7PZ56jv++MhP/Y9w==)
       
 ---
 
@@ -151,47 +151,47 @@ spring:
    config.activate.on-profile: distant-prod
    data.mongodb:
       host: localhost
-      port: 27018
-      database: crusoe
+      port: 7027
+      database: ENC(wMYgYmU6e2AwhVe6V3TQyw==)
       username: ENC(xDG3WKOeQqaxxS1ywUAOLQ==)
-      
+
+archive.folder: /data/archive/
+root.dir: ${archive.folder}/sedoo/crusoe/prod
+
 ---
 
 spring:
    config.activate.on-profile: prod
    data.mongodb:
-      host: ENC(VxaOpB6o02ylzWwZDXmZ4gNwbFSPOwfL)
-      database: crusoe
-      username: ENC(xDG3WKOeQqaxxS1ywUAOLQ==)
+      host: mongo1.sedoo
+      database: ENC(yk6bgTm64ZCfeqvgm/qS0A==)
+      username: ENC(9mJOmrLaFvpYvKgybbe+sw==)
+      password: ENC(9u59Gl+ElR4adXiMS7AISw==)
 
 server:
   port: 0
 
-ftp:
-    username: ENC(0rzDr/vdmlNUxyO/rIl4gfvG0iNnPLoG)
-    password: ENC(8IL4LXGN2uY9Fit0e1QKiJ3RC9ggZwBq)
 tmpFolder: ${application.folder}/tmp
 
 app.url: https://crusoe.ouvrirlascience.fr/application
+
+root.dir: ${archive.folder}/sedoo/crusoe/prod
         
 ---
 
 spring:
    config.activate.on-profile: preprod
    data.mongodb:
-      host: ENC(BkGnjmgEm4DhGG/euQpbVqZEqqVy1ImJ)
+      host: mongo1.sedoo
       database: crusoe-preprod
-      username: ENC(GHG9Tv3+Vt+/ivCecy52KsZ+fp892RR7)
+      username: ENC(9mJOmrLaFvpYvKgybbe+sw==)
+      password: ENC(Fn87XueUaQubl7mbo5F4/g==)
 
 
 server:
   port: 0
   
 notification.enabled: false
-
-ftp:
-    username: crusoepreprod
-    password: ENC(WwjTuYoQmEziqKQmXDCJ0KvXrZgBKS2l)
 
 tmpFolder: ${application.folder}/tmp
 
@@ -207,15 +207,14 @@ spring:
 info:
   api: https://api.sedoo.fr/${spring.application.name}/swagger-ui/index.html
   code:
-    front: https://github.com/sedoo/certifymyrepo-back
+    front: https://github.com/sedoo/certifymy-back
     back: https://github.com/sedoo/certifymyrepo
   folders: ${tmpFolder}
   database:
     type: MongoDB
-    location: SEDUR
+    location: fats
   archive: none
   authentication: ${shibboleth.url}
-  ftp: ${ftp.host}
          
 endpoints:
     enabled: true
@@ -238,7 +237,7 @@ eureka:
   client:
     enabled: true
     serviceUrl:
-      defaultZone:  http://ada:8761/eureka
+      defaultZone:  http://localhost:8761/eureka
   instance:
     preferIpAddress: true
     lease-renewal-interval-in-seconds: 3

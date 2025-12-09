@@ -1,13 +1,14 @@
 package fr.sedoo.certifymyrepo.rest.service.v1_0;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -49,28 +50,62 @@ public class FileService {
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(path = "/{reportId}/{codeRequirement}/{fileName}", method = RequestMethod.GET)
 	public void download(
-			HttpServletRequest request,
-			HttpServletResponse response,
-			@PathVariable ("reportId") String reportId,         
-			@PathVariable ("codeRequirement") String codeRequirement,
-			@PathVariable ("fileName") String fileName) { 
-		
-		File workDirectory = new File(config.getTemporaryDownloadFolderName());
-		if (workDirectory.exists() == false) {
-			workDirectory.mkdirs();
-		}
-		File localFolder = new File(workDirectory, UUID.randomUUID().toString());
-		localFolder.mkdirs();
-		
-		ftpClient.downloadFile(fileName, localFolder, reportId.concat("/").concat(codeRequirement));
-        response.setContentType(MimeTypeUtils.getMimeType(fileName));
-        
-		try (InputStream inputStream = new FileInputStream(new File(localFolder, fileName))) {
-	        IOUtils.copyLarge(inputStream, response.getOutputStream());
-		} catch (IOException e) {
-			LOG.error("Error while downloading file",e);
-		}
+	        HttpServletRequest request,
+	        HttpServletResponse response,
+	        @PathVariable("reportId") String reportId,
+	        @PathVariable("codeRequirement") String codeRequirement,
+	        @PathVariable("fileName") String fileName) {
+
+	    try {
+	        // Construction sécurisée du chemin
+	        Path root = Paths.get(config.getRootDir()).toAbsolutePath().normalize();
+	        Path filePath = root
+	                .resolve(reportId)
+	                .resolve(codeRequirement)
+	                .resolve(fileName)
+	                .normalize();
+
+	        // Protection contre les chemins malicieux
+	        if (!filePath.startsWith(root)) {
+	            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
+	            return;
+	        }
+
+	        // Vérification existence
+	        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+	            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found");
+	            return;
+	        }
+
+	        // Type MIME
+	        response.setContentType(MimeTypeUtils.getMimeType(fileName));
+
+	        // Taille du fichier
+	        response.setContentLengthLong(Files.size(filePath));
+
+	        // Force le téléchargement (évite certains comportements navigateurs)
+	        response.setHeader(
+	                "Content-Disposition",
+	                "attachment; filename=\"" + fileName + "\""
+	        );
+
+	        // Stream du fichier
+	        try (InputStream in = Files.newInputStream(filePath);
+	             OutputStream out = response.getOutputStream()) {
+	            IOUtils.copyLarge(in, out);
+	            out.flush();
+	        }
+
+	    } catch (IOException e) {
+	        LOG.error("Error while downloading file {}", fileName, e);
+	        try {
+	            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to download file");
+	        } catch (IOException ex) {
+	            LOG.error("Unable to send error response", ex);
+	        }
+	    }
 	}
+
 
 	@PreAuthorize("@permissionEvaluator.isUser(#request)")
 	@RequestMapping(path = "/upload", method = RequestMethod.POST)

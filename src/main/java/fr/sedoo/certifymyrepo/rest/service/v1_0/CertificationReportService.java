@@ -344,13 +344,6 @@ public class CertificationReportService {
 		}
 		result = certificationReportDao.save(copiedReport);
 		
-		File workDirectory = new File(temporaryFolderName);
-		if (workDirectory.exists() == false) {
-			workDirectory.mkdirs();
-		}
-		File localFolder = new File(workDirectory, UUID.randomUUID().toString());
-		localFolder.mkdirs();
-		ftpClient.copyFiles(localFolder, reportId, copiedReport.getId());
 		return result;
 	}
 	
@@ -589,7 +582,7 @@ public class CertificationReportService {
 			
 			if(Boolean.parseBoolean(attachments)) {
 				
-				ftpClient.downloadFiles(localFolder, reportId, new DomainFilter());
+				ftpClient.copyDirectory(new File(appConfig.getRootDir(), reportId), localFolder);
 				
 				String zipFileName = printableReport.getTitle().concat(".zip");
 				File zipFile = new File(workDirectory, zipFileName);

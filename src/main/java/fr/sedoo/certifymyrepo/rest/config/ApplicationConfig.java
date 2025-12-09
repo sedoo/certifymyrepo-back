@@ -33,6 +33,8 @@ public class ApplicationConfig {
 		}
 	}
 	
+	@Value("${root.dir}")
+	private String rootDir;
 	
 	@Value("${english.header}")
 	private String englishHeader;

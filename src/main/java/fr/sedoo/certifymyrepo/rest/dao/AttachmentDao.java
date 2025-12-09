@@ -62,12 +62,12 @@ public interface AttachmentDao {
 	 */
 	void uploadFile(InputStream inputStream, String path, String fileName);
 	
-	/**
-	 * Upload files on FTP server
-	 * @param localFolder destination file on local machine
-	 * @param folderName root folder name of the file on the FTP server
-	 */
-	void uploadFiles(File localFolder, String folderName);
+//	/**
+//	 * Upload files on FTP server
+//	 * @param localFolder destination file on local machine
+//	 * @param folderName root folder name of the file on the FTP server
+//	 */
+//	void uploadFiles(File localFolder, String folderName);
 	
 	/**
 	 * Copy files from on folder to another on the FTP server
@@ -77,5 +77,7 @@ public interface AttachmentDao {
 	 */
 	@Async
 	void copyFiles(File localFolder, String originalFolderName, String destinationFolderName);
+	
+	void copyDirectory(File sourceFolder, File targetFolder);
 
 }
