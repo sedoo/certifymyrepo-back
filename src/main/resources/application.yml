@@ -185,8 +185,9 @@ spring:
       host: mongo1.sedoo
       database: crusoe-preprod
       username: ENC(9mJOmrLaFvpYvKgybbe+sw==)
-      password: ENC(Fn87XueUaQubl7mbo5F4/g==)
+      password: ENC(9u59Gl+ElR4adXiMS7AISw==)
 
+root.dir: ${archive.folder}/sedoo/crusoe/preprod
 
 server:
   port: 0
