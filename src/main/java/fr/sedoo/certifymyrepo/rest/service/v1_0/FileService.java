@@ -42,7 +42,7 @@ public class FileService {
 	private static final Logger LOG = LoggerFactory.getLogger(FileService.class);
 	
 	@Autowired
-	AttachmentDao ftpClient;
+	AttachmentDao attachmentDao;
 	
 	@Autowired
 	private ApplicationConfig config;
@@ -121,7 +121,7 @@ public class FileService {
 				for(MultipartFile file : files) {
 					is = file.getInputStream();
 					String formattedName = formatFileName(file.getOriginalFilename());
-					ftpClient.uploadFile(is, reportId.concat("/").concat(codeRequirement), formattedName);
+					attachmentDao.saveFile(is, reportId.concat("/").concat(codeRequirement), formattedName);
 					is.close();
 					filesUploaded.add(formattedName);
 				}
@@ -171,7 +171,7 @@ public class FileService {
 	        @RequestParam("codeRequirement") String codeRequirement,
 	        @RequestParam("fileName") String fileName) { 
 		ResponseEntity<String> result = null;
-		if(ftpClient.deleteFile(reportId.concat("/").concat(codeRequirement), fileName)) {
+		if(attachmentDao.deleteFile(reportId.concat("/").concat(codeRequirement), fileName)) {
 			result = new ResponseEntity<String>(HttpStatus.OK);
 		} else {
 			result = new ResponseEntity<String>(fileName.concat(" file could not be deleted"),HttpStatus.INTERNAL_SERVER_ERROR);

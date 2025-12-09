@@ -52,7 +52,7 @@ public class ApplicationIntegrationTest {
 	private CertificationReportDao reportDao;
 	
 	@Autowired
-	private AttachmentDao ftpClient;
+	private AttachmentDao attachmentDao;
 	
 	@Value("classpath:Test.txt")
 	Resource testFile;
@@ -111,12 +111,12 @@ public class ApplicationIntegrationTest {
 	}
 	
 	@Test
-	public void ftpTest() throws IOException {	
-		ftpClient.uploadFile(testFile.getInputStream(), "junit/0", testFile.getFilename());
-		assertEquals("Test.txt", ftpClient.listFiles("junit").get("0").get(0));
-		assertTrue(ftpClient.deleteFile("junit/0", "Test.txt"));
-		assertEquals(0, ftpClient.listFiles("junit").get("0").size());
-		assertTrue(ftpClient.deleteAllFilesInFolder("junit"));
+	public void attachmentTest() throws IOException {	
+		attachmentDao.saveFile(testFile.getInputStream(), "junit/0", testFile.getFilename());
+		assertEquals("Test.txt", attachmentDao.listFiles("junit").get("0").get(0));
+		assertTrue(attachmentDao.deleteFile("junit/0", "Test.txt"));
+		assertEquals(0, attachmentDao.listFiles("junit").get("0").size());
+		assertTrue(attachmentDao.deleteAllFilesInFolder("junit"));
 	}
 
 }

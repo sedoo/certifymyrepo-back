@@ -112,7 +112,7 @@ public class AttachmentDaoImpl implements AttachmentDao {
 	}
 
 	@Override
-	public void uploadFile(InputStream inputStream, String path, String fileName) {
+	public void saveFile(InputStream inputStream, String path, String fileName) {
 	    if (inputStream == null || fileName == null || fileName.isEmpty()) {
 	        throw new IllegalArgumentException("Invalid input stream or file name");
 	    }
@@ -144,79 +144,6 @@ public class AttachmentDaoImpl implements AttachmentDao {
 	        throw new RuntimeException("Upload failed", e);
 	    }
 	}
-	
-	@Override
-	public void copyFiles(File localFolder, String originalFolderName, String destinationFolderName) {
-	    boolean isFiles = this.downloadFiles(localFolder, originalFolderName, new DomainFilter());
-	    if (isFiles) {
-	        this.uploadFiles(localFolder, destinationFolderName);
-	    }
-	}
-
-	private void uploadFiles(File localFolder, String rootFolderName) {
-
-	    if (localFolder == null || !localFolder.isDirectory()) {
-	        throw new IllegalArgumentException("localFolder must be a directory");
-	    }
-
-	    try {
-	        Path root = Paths.get(config.getRootDir()).toAbsolutePath().normalize();
-
-	        // Dossier racine où tout sera uploadé
-	        Path destinationRoot = (rootFolderName == null || rootFolderName.isEmpty())
-	                ? root
-	                : root.resolve(rootFolderName).normalize();
-
-	        // Sécurité
-	        if (!destinationRoot.startsWith(root)) {
-	            throw new SecurityException("Invalid root folder");
-	        }
-
-	        // Crée le dossier racine s'il n'existe pas
-	        Files.createDirectories(destinationRoot);
-
-	        // Collecte les fichiers comme dans la version FTP
-	        List<File> attachments = new ArrayList<>();
-
-	        File[] allRequirementFolders = localFolder.listFiles();
-	        if (allRequirementFolders != null) {
-	            for (File requirementFolder : allRequirementFolders) {
-	                if (requirementFolder.isDirectory()) {
-	                    File[] requirementFiles = requirementFolder.listFiles();
-	                    if (requirementFiles != null) {
-	                        for (File requirementFile : requirementFiles) {
-	                            if (requirementFile.isFile()) {
-	                                attachments.add(requirementFile);
-	                            }
-	                        }
-	                    }
-	                }
-	            }
-	        }
-
-	        // Upload des fichiers
-	        for (File attachment : attachments) {
-	            try (InputStream fis = new FileInputStream(attachment)) {
-
-	                // Equivalent du code FTP : récupérer le nom du sous-dossier
-	                String parentPath = attachment.getParent();
-	                String folder = parentPath.substring(parentPath.lastIndexOf(File.separator));
-
-	                String fullTargetFolder = rootFolderName + folder;
-
-	                uploadFile(fis, fullTargetFolder, attachment.getName());
-
-	            } catch (IOException e) {
-	                log.error("Error while uploading file {}", attachment.getName(), e);
-	                throw e;
-	            }
-	        }
-
-	    } catch (IOException e) {
-	        log.error("Error while handling upload to {}", rootFolderName, e);
-	    }
-	}
-
 
 	@Override
 	public boolean downloadFiles(File localFolder, String folderName, DomainFilter domainFilter) {

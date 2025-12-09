@@ -24,7 +24,7 @@ public interface AttachmentDao {
 	boolean deleteAllFilesInFolder(String folderName);
 	
 	/**
-	 * List all files on CRUSOE FTP
+	 * List all files
 	 * report-uuid
 	 * 	|_ requirement code 0
 	 * 	|		|_ files
@@ -42,42 +42,31 @@ public interface AttachmentDao {
 	 * Download the 
 	 * @param fileName  fileName
 	 * @param localFolder destination file on local machine
-	 * @param ftpPath path of the file on the FTP server
+	 * @param filePath path of the file on the server
 	 */
-	void downloadFile(String fileName, File localFolder, String ftpPath);
+	void downloadFile(String fileName, File localFolder, String filePath);
 	
 	/**
 	 * Download files from a folder and its sub folder
 	 * @param localFolder folder on local machine where files will be downloaded
-	 * @param folderName root folder name on FTP server
+	 * @param folderName root folder name on server
 	 * @param domainFilter optional filter (not implemented yet)
 	 */
 	boolean downloadFiles(File localFolder, String folderName, DomainFilter domainFilter);
 	
 	/**
-	 * Upload file on FTP server
+	 * Save file on server
 	 * @param inputStream file input stream to upload
 	 * @param path folder separated by / (Example: toto/tata) will be created if needed
-	 * @param fileName name of the file on the FTP server (can be different than original file name)
+	 * @param fileName name of the file on the server (can be different than original file name)
 	 */
-	void uploadFile(InputStream inputStream, String path, String fileName);
-	
-//	/**
-//	 * Upload files on FTP server
-//	 * @param localFolder destination file on local machine
-//	 * @param folderName root folder name of the file on the FTP server
-//	 */
-//	void uploadFiles(File localFolder, String folderName);
+	void saveFile(InputStream inputStream, String path, String fileName);
 	
 	/**
-	 * Copy files from on folder to another on the FTP server
-	 * @param localFolder destination file on local machine
-	 * @param originalFolderName original root folder
-	 * @param destinationFolderName destination root folder
+	 * Copy File source to target
+	 * @param sourceFolder
+	 * @param targetFolder
 	 */
-	@Async
-	void copyFiles(File localFolder, String originalFolderName, String destinationFolderName);
-	
 	void copyDirectory(File sourceFolder, File targetFolder);
 
 }
