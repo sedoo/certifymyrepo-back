@@ -34,10 +34,6 @@ spring:
       host: localhost
       port: 27017
       database: crusoe
-      superusername: ENC(JFIs5W+NUWNUqroUPvikTg==)
-      superuserpassword: ENC(9CErD4BUapFJA7i6d4KK+g==)
-      username: crusoe
-      password: ENC(Fn87XueUaQubl7mbo5F4/g==)
       forceuserdeletion: false
    servlet:
       multipart:
@@ -134,6 +130,7 @@ spring:
    config.activate.on-profile: dev
       
 notification.cronExpression: 0 * * ? * *
+archive.folder: /data/archive/
 
 ---
 
@@ -164,9 +161,13 @@ spring:
    config.activate.on-profile: prod
    data.mongodb:
       host: mongo1.sedoo
+      port: 27017
       database: ENC(yk6bgTm64ZCfeqvgm/qS0A==)
+      superusername: ENC(JFIs5W+NUWNUqroUPvikTg==)
+      superuserpassword: ENC(9CErD4BUapFJA7i6d4KK+g==)
       username: ENC(9mJOmrLaFvpYvKgybbe+sw==)
       password: ENC(9u59Gl+ElR4adXiMS7AISw==)
+      forceuserdeletion: false
 
 server:
   port: 0
@@ -183,9 +184,13 @@ spring:
    config.activate.on-profile: preprod
    data.mongodb:
       host: mongo1.sedoo
+      port: 27017
       database: crusoe-preprod
+      superusername: ENC(JFIs5W+NUWNUqroUPvikTg==)
+      superuserpassword: ENC(9CErD4BUapFJA7i6d4KK+g==)
       username: ENC(9mJOmrLaFvpYvKgybbe+sw==)
       password: ENC(9u59Gl+ElR4adXiMS7AISw==)
+      forceuserdeletion: false
 
 root.dir: ${archive.folder}/sedoo/crusoe/preprod
 

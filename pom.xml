@@ -4,13 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<!-- Inherit defaults from Spring Boot -->
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.6.4</version>
-	</parent>
+    <parent>
+        <groupId>fr.sedoo</groupId>
+        <artifactId>sedoo-spring264-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
-	<groupId>fr.sedoo</groupId>
 	<artifactId>sedoo-certifymyrepo-rest</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -183,52 +182,116 @@
 	</dependencyManagement>
 	<build>
 		<plugins>
-		
-	      <plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-	        <artifactId>maven-surefire-plugin</artifactId>
-	        <configuration>
-	          <includes>
-	            <include>**/*.class</include>
-	          </includes>
-	          <!--  Execute integration test by default. Exlude them if needed.			  -->
-			  <excludedGroups>fr.sedoo.IntegrationTest</excludedGroups>
-	        </configuration>
-	      </plugin>
+	        <plugin>
+	            <groupId>org.springframework.boot</groupId>
+	            <artifactId>spring-boot-maven-plugin</artifactId>
+	
+	            <executions>
+	                <execution>
+	                    <goals>
+	                        <goal>build-info</goal>
+	                    </goals>
+	                </execution>
+	            </executions>
+	        </plugin>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+					</archive>
 				</configuration>
 			</plugin>
-			<!-- Package as an executable jar/war -->
+
+
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<executable>true</executable>
-					<layout>ZIP</layout>
-				</configuration>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
 
 				<executions>
 					<execution>
+						<phase>package</phase>
+
 						<goals>
-							<goal>build-info</goal>
+							<goal>shade</goal>
 						</goals>
+
 						<configuration>
-							<additionalProperties>
-								<java.version>${java.version}</java.version>
-							</additionalProperties>
+
+							<!-- Exclusion des artefacts Maven -->
+							<artifactSet>
+								<excludes>
+
+									<!-- SLF4J -->
+									<exclude>org.slf4j:*</exclude>
+
+									<!-- Logback -->
+									<exclude>ch.qos.logback:*</exclude>
+
+									<!-- Log4j -->
+									<exclude>org.apache.logging.log4j:*</exclude>
+
+									<!-- Commons Logging -->
+									<exclude>commons-logging:*</exclude>
+
+									<!-- Spring logging starter -->
+									<exclude>
+										org.springframework.boot:spring-boot-starter-logging</exclude>
+
+								</excludes>
+							</artifactSet>
+
+							<!-- Exclusion physique des classes -->
+							<filters>
+
+								<filter>
+									<artifact>*:*</artifact>
+
+									<excludes>
+
+										<!-- SLF4J -->
+										<exclude>org/slf4j/**</exclude>
+
+										<!-- Logback -->
+										<exclude>ch/qos/logback/**</exclude>
+
+										<!-- Log4j -->
+										<exclude>org/apache/logging/log4j/**</exclude>
+
+										<!-- Commons Logging -->
+										<exclude>org/apache/commons/logging/**</exclude>
+
+										<!-- META-INF signatures -->
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+
+									</excludes>
+
+								</filter>
+
+							</filters>
+
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+
+							<shadedArtifactAttached>false</shadedArtifactAttached>
+
 						</configuration>
+
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
@@ -236,18 +299,20 @@
 				<executions>
 					<execution>
 						<id>uploadToSedooRepo</id>
-						<phase>install</phase>
+						<phase>deploy</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>
 						<configuration>
 							<executable>curl</executable>
-							<commandlineArgs>--request POST --header 'Content-Type: multipart/form-data' -F 'file=@./target/${project.artifactId}-${project.version}.jar' https://api.sedoo.fr/aeris-cdn-rest/jarrepo/v1_0/upload?prefix=${prefix}</commandlineArgs>
+							<commandlineArgs><![CDATA[--request POST --header 'Content-Type: multipart/form-data' -F 'file=@./target/${project.artifactId}-${project.version}.jar' https://api.sedoo.fr/aeris-cdn-rest/jarrepo/v1_0/upload?prefix=${prefix}]]></commandlineArgs>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
+
 	</build>
 
 	<repositories>
